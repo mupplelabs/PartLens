@@ -387,6 +387,57 @@ async def local_models(provider: Literal['lmstudio', 'ollama'] = 'lmstudio', url
             
     return {"success": False, "provider": provider, "url": target_url, "error": last_err, "models": []}
 
+@app.get("/api/gemini-models")
+async def gemini_models(api_key: Optional[str] = None):
+    """Fragt die aktuell verfügbaren Gemini-Modelle live über die Google Generative Language API ab."""
+    import httpx
+    key = api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    if not key or not key.strip():
+        return {"success": False, "error": "Kein API-Key angegeben.", "models": []}
+    
+    url = f"https://generativelanguage.googleapis.com/v1beta/models?key={key.strip()}"
+    try:
+        async with httpx.AsyncClient(timeout=10.0, verify=False) as client:
+            resp = await client.get(url)
+            if resp.status_code != 200:
+                err_msg = resp.text
+                try:
+                    err_json = resp.json()
+                    err_msg = err_json.get("error", {}).get("message", resp.text)
+                except Exception:
+                    pass
+                return {"success": False, "error": f"Google API Fehler ({resp.status_code}): {err_msg}", "models": []}
+            
+            data = resp.json()
+            models_list = data.get("models", [])
+            valid_models = []
+            for m in models_list:
+                methods = m.get("supportedGenerationMethods", [])
+                if "generateContent" in methods:
+                    name = m.get("name", "")
+                    clean_name = name.replace("models/", "").strip()
+                    display_name = m.get("displayName", clean_name)
+                    valid_models.append({
+                        "id": clean_name,
+                        "display_name": display_name,
+                        "description": m.get("description", "")
+                    })
+            
+            # Sortierung: Flash zuerst, dann Pro
+            def sort_key(m):
+                mid = m["id"].lower()
+                cat = 0 if "flash" in mid else (1 if "pro" in mid else 2)
+                return (cat, mid)
+            
+            valid_models.sort(key=sort_key)
+            return {
+                "success": True,
+                "models": [m["id"] for m in valid_models],
+                "details": valid_models
+            }
+    except Exception as e:
+        return {"success": False, "error": str(e), "models": []}
+
 @app.post("/api/auto-label", response_model=AutoLabelResponse)
 async def auto_label(req: AutoLabelRequest):
     import httpx
@@ -409,7 +460,7 @@ async def auto_label(req: AutoLabelRequest):
             if not api_key:
                 raise HTTPException(status_code=400, detail="Gemini API Key fehlt. Bitte im Eingabefeld eintragen oder GEMINI_API_KEY als Umgebungsvariable setzen.")
 
-            model_name = req.model_name or 'gemini-2.0-flash'
+            model_name = req.model_name or 'gemini-3.8-flash'
             model_used = f"google:{model_name}"
 
             gemini_schema = build_gemini_schema(

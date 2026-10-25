@@ -279,45 +279,158 @@ def parse_image_base64(data_url_or_b64: str) -> tuple[bytes, str, str]:
     raw_bytes = base64.b64decode(b64_str)
     return raw_bytes, media_type, b64_str
 
+DATASET_INDEX_FILE = DATASET_DIR / "dataset_index.json"
 _cached_stats: Optional[DatasetStatsResponse] = None
 _cached_samples_data: Optional[list[dict]] = None
+_index_lock = threading.Lock()
+
+def scan_full_dataset() -> tuple[list[dict], DatasetStatsResponse]:
+    """Scans all dataset folders and builds samples and stats from scratch."""
+    splits = ['train', 'val']
+    samples = []
+    counts = {name: 0 for name in CLASS_NAMES}
+    total_boxes = 0
+    train_count = 0
+    val_count = 0
+
+    for s in splits:
+        img_dir = DATASET_DIR / "images" / s
+        lbl_dir = DATASET_DIR / "labels" / s
+        if not img_dir.exists():
+            continue
+
+        for img_file in sorted(img_dir.glob("*.jpg"), key=os.path.getmtime, reverse=True):
+            if s == 'train':
+                train_count += 1
+            else:
+                val_count += 1
+            sample_id = img_file.stem
+            lbl_file = lbl_dir / f"{sample_id}.txt"
+            boxes = []
+            classes_in_sample = set()
+
+            if lbl_file.exists():
+                try:
+                    for line in lbl_file.read_text(encoding="utf-8").strip().splitlines():
+                        parts = line.strip().split()
+                        if len(parts) >= 5:
+                            cid = int(parts[0])
+                            xc, yc, bw, bh = map(float, parts[1:5])
+                            xmin = max(0.0, xc - bw / 2.0)
+                            ymin = max(0.0, yc - bh / 2.0)
+                            xmax = min(1.0, xc + bw / 2.0)
+                            ymax = min(1.0, yc + bh / 2.0)
+
+                            cname = CLASS_NAMES[cid] if 0 <= cid < len(CLASS_NAMES) else "other"
+                            classes_in_sample.add(cname)
+                            counts[cname] = counts.get(cname, 0) + 1
+                            total_boxes += 1
+                            boxes.append({
+                                "class_id": cid,
+                                "label": cname,
+                                "xmin": round(xmin, 4),
+                                "ymin": round(ymin, 4),
+                                "xmax": round(xmax, 4),
+                                "ymax": round(ymax, 4)
+                            })
+                except Exception:
+                    pass
+
+            try:
+                stat = img_file.stat()
+                mtime = int(stat.st_mtime)
+                size_bytes = stat.st_size
+            except Exception:
+                mtime = int(time.time())
+                size_bytes = 0
+
+            samples.append({
+                "id": sample_id,
+                "split": s,
+                "image_url": f"/dataset/images/{s}/{img_file.name}",
+                "thumb_url": f"/api/dataset/thumbnails/{s}/{sample_id}",
+                "boxes": boxes,
+                "box_count": len(boxes),
+                "classes": sorted(list(classes_in_sample)),
+                "created_at": mtime,
+                "size_bytes": size_bytes
+            })
+
+    stats = DatasetStatsResponse(
+        train_images=train_count,
+        val_images=val_count,
+        total_annotations=total_boxes,
+        class_counts=counts,
+        classes=CLASS_NAMES
+    )
+    return samples, stats
+
+def save_dataset_index(samples: list[dict], stats: DatasetStatsResponse):
+    """Saves the index file atomically to avoid corrupt reads."""
+    with _index_lock:
+        try:
+            data = {
+                "version": 1,
+                "saved_at": int(time.time()),
+                "stats": stats.model_dump(),
+                "samples": samples
+            }
+            tmp_file = DATASET_INDEX_FILE.with_suffix(".tmp")
+            tmp_file.write_text(json.dumps(data), encoding="utf-8")
+            tmp_file.replace(DATASET_INDEX_FILE)
+        except Exception as e:
+            print(f"Warning: could not write dataset_index.json: {e}", flush=True)
+
+def save_dataset_index_async():
+    """Triggers saving the current in-memory cache asynchronously in a background thread."""
+    global _cached_samples_data, _cached_stats
+    if _cached_samples_data is not None and _cached_stats is not None:
+        samples_snap = list(_cached_samples_data)
+        stats_snap = _cached_stats.model_copy()
+        threading.Thread(target=save_dataset_index, args=(samples_snap, stats_snap), daemon=True).start()
+
+def load_dataset_index() -> bool:
+    """Loads dataset index from disk if present and valid."""
+    global _cached_samples_data, _cached_stats
+    if DATASET_INDEX_FILE.exists():
+        try:
+            raw = json.loads(DATASET_INDEX_FILE.read_text(encoding="utf-8"))
+            if "samples" in raw and "stats" in raw:
+                _cached_samples_data = raw["samples"]
+                _cached_stats = DatasetStatsResponse.model_validate(raw["stats"])
+                return True
+        except Exception as e:
+            print(f"Warning: error loading dataset_index.json: {e}", flush=True)
+    return False
 
 def invalidate_dataset_cache():
+    """Forces cache refresh on next request or rebuilds it."""
     global _cached_stats, _cached_samples_data
     _cached_stats = None
     _cached_samples_data = None
 
 def get_stats(force_refresh: bool = False) -> DatasetStatsResponse:
-    global _cached_stats
+    global _cached_stats, _cached_samples_data
     if _cached_stats is not None and not force_refresh:
         return _cached_stats
-    train_imgs = len(list((DATASET_DIR / "images" / "train").glob("*.jpg")))
-    val_imgs = len(list((DATASET_DIR / "images" / "val").glob("*.jpg")))
-    
-    counts = {name: 0 for name in CLASS_NAMES}
-    total_boxes = 0
-    
-    for lbl_file in (DATASET_DIR / "labels").rglob("*.txt"):
-        try:
-            lines = lbl_file.read_text(encoding="utf-8").strip().splitlines()
-            for line in lines:
-                parts = line.strip().split()
-                if parts:
-                    cid = int(parts[0])
-                    if 0 <= cid < len(CLASS_NAMES):
-                        counts[CLASS_NAMES[cid]] += 1
-                        total_boxes += 1
-        except Exception:
-            pass
-            
-    _cached_stats = DatasetStatsResponse(
-        train_images=train_imgs,
-        val_images=val_imgs,
-        total_annotations=total_boxes,
-        class_counts=counts,
-        classes=CLASS_NAMES
-    )
+    if not force_refresh and load_dataset_index():
+        return _cached_stats
+
+    samples, stats = scan_full_dataset()
+    _cached_samples_data = samples
+    _cached_stats = stats
+    save_dataset_index_async()
     return _cached_stats
+
+# Schneller Cache-Start: Index beim Serverstart laden oder sofort initial anlegen
+try:
+    if not load_dataset_index():
+        _init_samples, _init_stats = scan_full_dataset()
+        _cached_samples_data = _init_samples
+        _cached_stats = _init_stats
+        save_dataset_index_async()
+except Exception as _ie:
+    print(f"Dataset initial index warning: {_ie}", flush=True)
 
 @app.get("/api/status")
 async def status():
@@ -639,6 +752,8 @@ async def save_sample(req: SaveSampleRequest):
 
         # YOLO Text-Annotations schreiben: class_id x_center y_center width height
         yolo_lines = []
+        sample_boxes = []
+        classes_in_sample = set()
         for box in req.boxes:
             clean_label = normalize_label_to_yolo(box.label)
             cid = CLASS_TO_ID.get(clean_label, CLASS_TO_ID["other"])
@@ -668,18 +783,60 @@ async def save_sample(req: SaveSampleRequest):
             bh = ymax - ymin
 
             yolo_lines.append(f"{cid} {xc:.6f} {yc:.6f} {bw:.6f} {bh:.6f}")
+            cname = CLASS_NAMES[cid] if 0 <= cid < len(CLASS_NAMES) else "other"
+            classes_in_sample.add(cname)
+            sample_boxes.append({
+                "class_id": cid,
+                "label": cname,
+                "xmin": round(xmin, 4),
+                "ymin": round(ymin, 4),
+                "xmax": round(xmax, 4),
+                "ymax": round(ymax, 4)
+            })
 
         lbl_path.write_text("\n".join(yolo_lines) + "\n", encoding="utf-8")
 
-        invalidate_dataset_cache()
-        stats = get_stats(force_refresh=True)
+        # Inkrementelles Update des In-Memory Caches & asynchrones Persistieren
+        global _cached_samples_data, _cached_stats
+        new_sample_entry = {
+            "id": sample_id,
+            "split": split,
+            "image_url": f"/dataset/images/{split}/{sample_id}.jpg",
+            "thumb_url": f"/api/dataset/thumbnails/{split}/{sample_id}",
+            "boxes": sample_boxes,
+            "box_count": len(sample_boxes),
+            "classes": sorted(list(classes_in_sample)),
+            "created_at": int(time.time()),
+            "size_bytes": len(raw_bytes)
+        }
+
+        if _cached_samples_data is not None:
+            _cached_samples_data.insert(0, new_sample_entry)
+        else:
+            if not load_dataset_index():
+                _cached_samples_data = [new_sample_entry]
+
+        if _cached_stats is not None:
+            if split == 'train':
+                _cached_stats.train_images += 1
+            else:
+                _cached_stats.val_images += 1
+            _cached_stats.total_annotations += len(sample_boxes)
+            for box_item in sample_boxes:
+                lbl = box_item["label"]
+                _cached_stats.class_counts[lbl] = _cached_stats.class_counts.get(lbl, 0) + 1
+        else:
+            _cached_stats = get_stats()
+
+        save_dataset_index_async()
+
         return {
             "success": True,
             "sample_id": sample_id,
             "image_file": str(img_path.relative_to(BASE_DIR)),
             "label_file": str(lbl_path.relative_to(BASE_DIR)),
             "annotations_saved": len(yolo_lines),
-            "stats": stats
+            "stats": _cached_stats
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save training sample: {str(e)}")
@@ -714,68 +871,20 @@ async def get_dataset_thumbnail(split: Literal['train', 'val'], sample_id: str):
 
 @app.get("/api/dataset/samples")
 async def list_dataset_samples(split: Optional[str] = None, force_refresh: bool = False):
-    """Gibt alle vorhandenen Samples des Datasets mit Bounding-Box Metadaten zurück (mit Cache)."""
-    global _cached_samples_data
+    """Gibt alle vorhandenen Samples des Datasets mit Bounding-Box Metadaten zurück (mit persistentem Cache)."""
+    global _cached_samples_data, _cached_stats
     if _cached_samples_data is None or force_refresh:
-        splits = ['train', 'val']
-        samples = []
-        
-        for s in splits:
-            img_dir = DATASET_DIR / "images" / s
-            lbl_dir = DATASET_DIR / "labels" / s
-            if not img_dir.exists():
-                continue
-                
-            for img_file in sorted(img_dir.glob("*.jpg"), key=os.path.getmtime, reverse=True):
-                sample_id = img_file.stem
-                lbl_file = lbl_dir / f"{sample_id}.txt"
-                boxes = []
-                classes_in_sample = set()
-                
-                if lbl_file.exists():
-                    try:
-                        for line in lbl_file.read_text(encoding="utf-8").strip().splitlines():
-                            parts = line.strip().split()
-                            if len(parts) >= 5:
-                                cid = int(parts[0])
-                                xc, yc, bw, bh = map(float, parts[1:5])
-                                xmin = max(0.0, xc - bw / 2.0)
-                                ymin = max(0.0, yc - bh / 2.0)
-                                xmax = min(1.0, xc + bw / 2.0)
-                                ymax = min(1.0, yc + bh / 2.0)
-                                
-                                cname = CLASS_NAMES[cid] if 0 <= cid < len(CLASS_NAMES) else "other"
-                                classes_in_sample.add(cname)
-                                boxes.append({
-                                    "class_id": cid,
-                                    "label": cname,
-                                    "xmin": round(xmin, 4),
-                                    "ymin": round(ymin, 4),
-                                    "xmax": round(xmax, 4),
-                                    "ymax": round(ymax, 4)
-                                })
-                    except Exception:
-                        pass
-                        
-                stat = img_file.stat()
-                samples.append({
-                    "id": sample_id,
-                    "split": s,
-                    "image_url": f"/dataset/images/{s}/{img_file.name}",
-                    "thumb_url": f"/api/dataset/thumbnails/{s}/{sample_id}",
-                    "boxes": boxes,
-                    "box_count": len(boxes),
-                    "classes": sorted(list(classes_in_sample)),
-                    "created_at": int(stat.st_mtime),
-                    "size_bytes": stat.st_size
-                })
-        _cached_samples_data = samples
+        if force_refresh or not load_dataset_index():
+            samples, stats = scan_full_dataset()
+            _cached_samples_data = samples
+            _cached_stats = stats
+            save_dataset_index_async()
 
-    results = _cached_samples_data
+    results = _cached_samples_data or []
     if split in ('train', 'val'):
-        results = [s for s in _cached_samples_data if s["split"] == split]
+        results = [s for s in results if s["split"] == split]
 
-    return {"samples": results, "total": len(results), "stats": get_stats(force_refresh=force_refresh)}
+    return {"samples": results, "total": len(results), "stats": get_stats()}
 
 @app.get("/api/dataset/samples/{split}/{sample_id}")
 async def get_dataset_sample(split: Literal['train', 'val'], sample_id: str):
@@ -830,8 +939,24 @@ async def delete_dataset_sample(split: Literal['train', 'val'], sample_id: str):
     if not deleted:
         raise HTTPException(status_code=404, detail="Sample nicht gefunden.")
         
-    invalidate_dataset_cache()
-    return {"success": True, "deleted_id": sample_id, "stats": get_stats(force_refresh=True)}
+    global _cached_samples_data, _cached_stats
+    if _cached_samples_data is not None:
+        idx = next((i for i, s in enumerate(_cached_samples_data) if s.get("id") == sample_id and s.get("split") == split), None)
+        if idx is not None:
+            removed = _cached_samples_data.pop(idx)
+            if _cached_stats is not None:
+                if split == 'train':
+                    _cached_stats.train_images = max(0, _cached_stats.train_images - 1)
+                else:
+                    _cached_stats.val_images = max(0, _cached_stats.val_images - 1)
+                _cached_stats.total_annotations = max(0, _cached_stats.total_annotations - removed.get("box_count", 0))
+                for b in removed.get("boxes", []):
+                    cname = b.get("label", "other")
+                    if cname in _cached_stats.class_counts:
+                        _cached_stats.class_counts[cname] = max(0, _cached_stats.class_counts[cname] - 1)
+            save_dataset_index_async()
+
+    return {"success": True, "deleted_id": sample_id, "stats": get_stats()}
 
 @app.get("/api/dataset/export-zip")
 async def export_dataset_zip():

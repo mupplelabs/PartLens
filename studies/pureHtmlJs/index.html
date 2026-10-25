@@ -7277,11 +7277,25 @@
                     }
                     autolabelStatus.innerText = `🎉 Gespeichert als ${resData.sample_id} (${resData.annotations_saved} Boxen)!`;
 
-                    if (typeof loadDatasetGallery === 'function') {
-                        loadDatasetGallery();
+                    // Inkrementelle Aktualisierung der Datensatz-Galerie ohne blockierenden Full-Fetch
+                    const newSampleObj = {
+                        id: resData.sample_id,
+                        split: payload.split,
+                        image_url: `/dataset/images/${payload.split}/${resData.sample_id}.jpg`,
+                        thumb_url: `/api/dataset/thumbnails/${payload.split}/${resData.sample_id}`,
+                        boxes: boxesPayload,
+                        box_count: boxesPayload.length,
+                        classes: Array.from(new Set(boxesPayload.map(b => b.label))),
+                        created_at: Math.floor(Date.now() / 1000)
+                    };
+
+                    if (typeof cachedGallerySamples !== 'undefined' && Array.isArray(cachedGallerySamples)) {
+                        cachedGallerySamples.unshift(newSampleObj);
                     }
-                    if (typeof fetchDatasetStatus === 'function') {
-                        fetchDatasetStatus();
+
+                    // Nur wenn der Datensatz-Tab aktuell aktiv ist, Ansicht direkt rendern
+                    if (viewDataset && viewDataset.classList.contains('active') && typeof renderFilteredGallery === 'function') {
+                        renderFilteredGallery();
                     }
                 } catch (err) {
                     console.error('Fehler beim Speichern:', err);
@@ -7871,6 +7885,13 @@
             const grid = document.getElementById('dataset-gallery-grid');
             if (!grid) return;
 
+            // Sofort aus dem Arbeitsspeicher rendern falls bereits vorhanden (kein unnötiger Netzwerk-Roundtrip)
+            if (!forceRefresh && cachedGallerySamples && cachedGallerySamples.length > 0) {
+                renderGalleryClassFilters(cachedGallerySamples);
+                renderFilteredGallery();
+                return;
+            }
+
             // Sofortiges visuelles Feedback via Skeleton-Cards
             renderSkeletonPlaceholders(grid, 8);
 
@@ -8031,16 +8052,16 @@
         // STUDIO WERKZEUGE & ASYNCHRONE HINTERGRUND-INITIALISIERUNG
         // =====================================================================
         function setStudioToolsState(ready, reason = '') {
+            // Hinweis: save-dataset-btn und add-manual-box-btn werden bewusst NICHT gesperrt,
+            // damit der Nutzer sofort Samples zeichnen und abspeichern kann.
             const toolBtns = [
                 document.getElementById('run-autolabel-btn'),
                 document.getElementById('run-detect-btn'),
-                document.getElementById('add-manual-box-btn'),
                 document.getElementById('rotate-image-btn'),
                 document.getElementById('clear-boxes-btn'),
                 document.getElementById('run-ocr-btn'),
                 document.getElementById('scan-resistor-btn'),
-                document.getElementById('reclassify-btn'),
-                document.getElementById('save-dataset-btn')
+                document.getElementById('reclassify-btn')
             ];
 
             toolBtns.forEach(btn => {
@@ -8054,13 +8075,11 @@
                     btn.removeAttribute('aria-disabled');
                     if (btn.id === 'run-autolabel-btn') btn.title = 'Erkennt Bauteile automatisch mittels Gemini oder lokalem Vision-LLM';
                     else if (btn.id === 'run-detect-btn') btn.title = 'Schneller lokaler Heuristik-Detektor (<10ms)';
-                    else if (btn.id === 'add-manual-box-btn') btn.title = 'Klicke und ziehe im Bild, um ein neues Bauteil einzurahmen';
                     else if (btn.id === 'rotate-image-btn') btn.title = 'Bild um 90° drehen (hilfreich bei Smartphone-Fotos)';
                     else if (btn.id === 'clear-boxes-btn') btn.title = 'Entfernt alle Bounding Boxes im aktuellen Bild';
                     else if (btn.id === 'run-ocr-btn') btn.title = 'Liest Teilenummern und Beschriftungen per OCR';
                     else if (btn.id === 'scan-resistor-btn') btn.title = 'Scannt Farbringe des Widerstands';
                     else if (btn.id === 'reclassify-btn') btn.title = 'Klassifiziert Bauteil mit Zero-Shot CLIP';
-                    else if (btn.id === 'save-dataset-btn') btn.title = 'Sample und Bounding Boxes im YOLO-Datensatz speichern';
                 }
             });
         }

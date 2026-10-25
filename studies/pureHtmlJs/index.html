@@ -472,6 +472,14 @@
             padding: 10px;
             margin-bottom: 12px;
         }
+        .crop-canvas-box {
+            position: relative;
+            width: 110px;
+            height: 72px;
+            flex-shrink: 0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
         #stage0-crop-canvas {
             width: 110px;
             height: 72px;
@@ -480,14 +488,12 @@
             border: 1px solid var(--accent);
             object-fit: contain;
             display: block;
-            flex-shrink: 0;
         }
         .crop-ocr-overlay {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            width: 110px;
-            height: 72px;
+            inset: 0;
+            width: 100%;
+            height: 100%;
             border-radius: 6px;
             background: rgba(15, 23, 42, 0.78);
             backdrop-filter: blur(3px);
@@ -2486,13 +2492,15 @@
 
                         <!-- Freigestellter Ausschnitt -->
                         <div class="crop-hero-wrap">
-                            <canvas id="stage0-crop-canvas"></canvas>
-                            <!-- OCR Scan Aktivitäts-Overlay über dem Ausschnitt -->
-                            <div id="crop-ocr-overlay" class="crop-ocr-overlay" style="display: none;">
-                                <div class="ocr-scan-laser"></div>
-                                <div class="ocr-spinner-badge">
-                                    <span class="ocr-spinner"></span>
-                                    <span id="ocr-timer-text">0.0s</span>
+                            <div class="crop-canvas-box">
+                                <canvas id="stage0-crop-canvas"></canvas>
+                                <!-- OCR Scan Aktivitäts-Overlay über dem Ausschnitt -->
+                                <div id="crop-ocr-overlay" class="crop-ocr-overlay" style="display: none;">
+                                    <div class="ocr-scan-laser"></div>
+                                    <div class="ocr-spinner-badge">
+                                        <span class="ocr-spinner"></span>
+                                        <span id="ocr-timer-text">0.0s</span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="crop-meta-wrap">
@@ -2565,8 +2573,8 @@
                                 <label class="field-label" for="part-marking-input">Beschriftung (Part Marking):</label>
                                 <div style="display: flex; gap: 6px;">
                                     <input type="text" id="part-marking-input" placeholder="z.B. CD4094BE, 2N2222, 4K7..." />
-                                    <button id="run-ocr-btn" class="btn btn-ocr" type="button" style="padding: 6px 10px; font-size: 0.78rem; white-space: nowrap;" title="Apple Vision OCR auf diesem Ausschnitt ausführen">
-                                        🍎 OCR
+                                    <button id="run-ocr-btn" class="btn btn-ocr" type="button" style="padding: 6px 10px; font-size: 0.78rem; white-space: nowrap;" title="Texterkennung (WASM) auf diesem Ausschnitt ausführen">
+                                        🔍 OCR
                                     </button>
                                     <button id="stop-ocr-btn" class="btn btn-danger-pulse" type="button" style="display: none; padding: 6px 10px; font-size: 0.78rem; font-weight: 700; white-space: nowrap;" title="Laufende Texterkennung sofort stoppen">
                                         ⏹️ Stopp
@@ -2899,14 +2907,13 @@
 
                 <div class="inspector-card">
                     <div class="card-header-row">
-                        <span class="card-title">🍎 Texterkennung &amp; OCR-Engine</span>
+                        <span class="card-title">🔍 Texterkennung &amp; OCR-Engine</span>
                     </div>
                     <div class="form-group">
                         <label class="field-label" for="ocr-select">OCR-Engine für IC-Beschriftungen:</label>
                         <select id="ocr-select">
-                            <option value="macos" selected>🍎 Apple Vision OCR (macOS Neural Engine · ~15ms · Extrem akkurat)</option>
-                            <option value="tesseract">⚡ WASM: Tesseract.js v5 (Lokale In-Browser OCR)</option>
-                            <option value="florence2">🧠 VisionLM: onnx-community/Florence-2-base-ft</option>
+                            <option value="tesseract" selected>⚡ WASM: Tesseract.js v5 (Lokale In-Browser OCR · plattformunabhängig)</option>
+                            <option value="florence2">🧠 VisionLM: onnx-community/Florence-2-base-ft (In-Browser ONNX)</option>
                         </select>
                     </div>
 
@@ -4391,7 +4398,7 @@
             if (runOcrBtn) {
                 runOcrBtn.disabled = false;
                 runOcrBtn.classList.remove('loading');
-                runOcrBtn.innerHTML = '🍎 OCR';
+                runOcrBtn.innerHTML = '🔍 OCR';
             }
         }
 
@@ -4411,27 +4418,6 @@
             stopOcrBtn.addEventListener('click', abortOcrRecognition);
         }
 
-        async function runMacosVisionOcr(dataUrl) {
-            statusDiv.innerText = '🍎 macOS Apple Vision OCR analysiert Bauteil...';
-            const angle = Number(ocrAngleSlider ? ocrAngleSlider.value : 0);
-            const res = await fetch('/api/macos-ocr', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    image_base64: dataUrl,
-                    rotate_deg: angle
-                }),
-                signal: ocrAbortController ? ocrAbortController.signal : undefined
-            });
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.detail || `macOS OCR Serverfehler ${res.status}`);
-            }
-            const data = await res.json();
-            statusDiv.innerText = `🍎 Apple Vision OCR in ${data.latency_ms} ms abgeschlossen!`;
-            return data.text || '';
-        }
-
         async function executeOcrRecognition() {
             if (isOcrRunning) return;
             const dataUrl = prepareOcrImageDataUrl();
@@ -4441,15 +4427,13 @@
             ocrAbortController = new AbortController();
             showOcrActivity();
             if (captureWebcamBtn) captureWebcamBtn.disabled = true;
-            ocrOutput.innerText = '⏳ Lese Bauteil-Beschriftung...';
+            ocrOutput.innerText = '⏳ Lese Bauteil-Beschriftung mit Tesseract.js (WASM)...';
             partChips.innerHTML = '';
 
             try {
-                const engine = ocrSelect ? ocrSelect.value : 'macos';
+                const engine = ocrSelect ? ocrSelect.value : 'tesseract';
                 let text = '';
-                if (engine === 'macos') {
-                    text = await runMacosVisionOcr(dataUrl);
-                } else if (engine === 'florence2') {
+                if (engine === 'florence2') {
                     text = await runFlorence2Ocr(dataUrl);
                 } else {
                     text = await runTesseractOcr(dataUrl);
@@ -6760,7 +6744,7 @@
 
                     const ocrVal = document.getElementById('chip-ocr-val');
                     if (ocrVal) {
-                        ocrVal.innerText = data.has_macos_vision ? 'Apple Vision' : 'Tesseract / Florence';
+                        ocrVal.innerText = 'Tesseract (WASM)';
                     }
 
                     if (data.has_gemini_env && autolabelStatus && !geminiApiKey.value) {
@@ -7965,12 +7949,8 @@
                         datasetCounterBadge.innerText = `📁 Datensatz: ${serverData.stats.train_images} Train / ${serverData.stats.val_images} Val (${boxCount} Boxen)`;
                     }
                 }
-                if (serverData.has_macos_vision) {
-                    if (ocrVal) ocrVal.innerText = 'Apple Vision';
-                    if (ocrSelect && !ocrSelect.value) ocrSelect.value = 'macos_vision';
-                } else {
-                    if (ocrVal) ocrVal.innerText = 'Tesseract / Florence';
-                }
+                if (ocrVal) ocrVal.innerText = 'Tesseract (WASM)';
+                if (ocrSelect && !ocrSelect.value) ocrSelect.value = 'tesseract';
                 if (serverData.has_gemini_env && autolabelStatus && !geminiApiKey.value) {
                     autolabelStatus.innerText = '💡 Server nutzt GEMINI_API_KEY aus Umgebungsvariable.';
                 }

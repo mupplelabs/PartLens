@@ -232,23 +232,6 @@ class DatasetStatsResponse(BaseModel):
     class_counts: dict[str, int]
     classes: list[str]
 
-class OcrRequest(BaseModel):
-    image_base64: str
-    rotate_deg: Optional[int] = 0
-
-class OcrTextItem(BaseModel):
-    text: str
-    confidence: float
-    bbox: list[float]
-
-class OcrResponse(BaseModel):
-    success: bool
-    text: str
-    lines: list[str]
-    items: list[OcrTextItem]
-    latency_ms: int
-    engine: str = "apple_vision"
-
 # FastAPI App
 app = FastAPI(title="ComponentTracker Auto-Labeling & Inventory Backend")
 app.add_middleware(
@@ -335,13 +318,6 @@ def get_stats(force_refresh: bool = False) -> DatasetStatsResponse:
     )
     return _cached_stats
 
-# Vision Engine beim Start vorab prüfen (vermeidet 1.2s Verzögerung bei /api/status)
-try:
-    import ocrmac
-    HAS_MACOS_VISION = True
-except Exception:
-    HAS_MACOS_VISION = False
-
 @app.get("/api/status")
 async def status():
     has_gemini_env = bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"))
@@ -349,7 +325,6 @@ async def status():
     return {
         "status": "ok",
         "has_gemini_env": has_gemini_env,
-        "has_macos_vision": HAS_MACOS_VISION,
         "classes": CLASS_NAMES,
         "stats": stats
     }
@@ -621,47 +596,6 @@ async def auto_label(req: AutoLabelRequest):
         model=model_used,
         latency_ms=dt_ms
     )
-
-@app.post("/api/macos-ocr", response_model=OcrResponse)
-async def macos_ocr(req: OcrRequest):
-    """Führt Apples hardware-beschleunigte Vision-OCR auf macOS aus."""
-    t0 = time.perf_counter()
-    try:
-        raw_bytes, _, _ = parse_image_base64(req.image_base64)
-        img = Image.open(io.BytesIO(raw_bytes)).convert("RGB")
-
-        if req.rotate_deg and req.rotate_deg != 0:
-            img = img.rotate(-req.rotate_deg, expand=True, resample=Image.BICUBIC)
-
-        from ocrmac import ocrmac
-        raw_results = ocrmac.OCR(img, recognition_level='accurate').recognize()
-
-        lines = []
-        items = []
-        for text, conf, bbox in raw_results:
-            clean_text = text.strip()
-            if clean_text:
-                lines.append(clean_text)
-                items.append(OcrTextItem(
-                    text=clean_text,
-                    confidence=float(conf),
-                    bbox=[float(v) for v in bbox]
-                ))
-
-        full_text = "\n".join(lines)
-        dt_ms = int((time.perf_counter() - t0) * 1000)
-
-        return OcrResponse(
-            success=True,
-            text=full_text,
-            lines=lines,
-            items=items,
-            latency_ms=dt_ms,
-            engine="apple_vision"
-        )
-    except Exception as e:
-        dt_ms = int((time.perf_counter() - t0) * 1000)
-        raise HTTPException(status_code=500, detail=f"macOS Apple Vision OCR Fehler: {str(e)}")
 
 @app.post("/api/save-sample")
 async def save_sample(req: SaveSampleRequest):

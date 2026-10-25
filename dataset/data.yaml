@@ -1,0 +1,19 @@
+path: /Users/stephan/Documents/Antigravity/ComponentTracker/dataset
+train: images/train
+val: images/val
+
+names:
+  0: resistor
+  1: capacitor
+  2: inductor
+  3: diode
+  4: led
+  5: transistor
+  6: ic
+  7: potentiometer
+  8: switch_button
+  9: relay
+  10: connector
+  11: display
+  12: board
+  13: other

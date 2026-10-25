@@ -1,0 +1,50 @@
+# =====================================================================
+# ComponentTracker - Git Ignore
+# =====================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Python Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# macOS / OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.HEIC
+
+# Logs & Temporary Session Files
+*.log
+server.log
+:memory:.ses
+*.bak
+*.swp
+*.swo
+*~
+
+# External raw dataset downloads (>100MB, imported via script)
+external_datasets/
+
+# Large ONNX Model binaries (>100MB GitHub limit)
+# Note: config.json and preprocessor_config.json remain tracked
+models/**/*.onnx
+
+# Part-DB Runtime Cache (downloaded on demand from GitHub)
+cache/footprints/
+cache/footprints_index.json
+
+# Local Environment Variables & Secrets
+.env
+.env.local
+.env.*.local

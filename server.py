@@ -409,7 +409,7 @@ async def auto_label(req: AutoLabelRequest):
             if not api_key:
                 raise HTTPException(status_code=400, detail="Gemini API Key fehlt. Bitte im Eingabefeld eintragen oder GEMINI_API_KEY als Umgebungsvariable setzen.")
 
-            model_name = req.model_name or 'gemini-2.5-flash'
+            model_name = req.model_name or 'gemini-2.0-flash'
             model_used = f"google:{model_name}"
 
             gemini_schema = build_gemini_schema(

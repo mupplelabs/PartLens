@@ -2403,7 +2403,7 @@
                                 </div>
 
                                 <div class="loading-desc-text" id="ai-loading-desc">
-                                    Sende Bild an <strong>Google Gemini</strong> (<em>gemini-2.5-flash</em>)...
+                                    Sende Bild an <strong>Google Gemini</strong> (<em>gemini-2.0-flash</em>)...
                                 </div>
 
                                 <!-- Animierter Fortschrittsbalken mit Shimmer -->
@@ -2834,11 +2834,9 @@
                             </div>
                             <div style="display: flex; gap: 6px;">
                                 <select id="autolabel-model-select">
-                                    <option value="gemini-2.5-flash" selected>gemini-2.5-flash (Standard &amp; Schnell)</option>
-                                    <option value="gemini-2.0-flash">gemini-2.0-flash</option>
-                                    <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                                    <option value="gemini-2.5-pro">gemini-2.5-pro</option>
-                                    <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                                    <option value="gemini-2.0-flash" selected>gemini-2.0-flash (Empfohlen &amp; Schnell)</option>
+                                    <option value="gemini-1.5-flash">gemini-1.5-flash (Standard)</option>
+                                    <option value="gemini-1.5-pro">gemini-1.5-pro (Höchste Genauigkeit)</option>
                                     <option value="__custom__">✏️ Eigenes Modell eingeben...</option>
                                 </select>
                                 <button id="refresh-models-btn" class="btn" type="button" style="display: none; padding: 4px 8px;" title="Lokale Modelle neu laden">🔄</button>
@@ -6167,9 +6165,9 @@
         }
 
         function getAutolabelModelName() {
-            if (!autolabelModelSelect) return 'gemini-2.5-flash';
+            if (!autolabelModelSelect) return 'gemini-2.0-flash';
             if (autolabelModelSelect.value === '__custom__') {
-                return (autolabelModelCustom ? autolabelModelCustom.value.trim() : '') || (autolabelProvider.value === 'gemini' ? 'gemini-2.5-flash' : 'qwen2-vl-7b-instruct');
+                return (autolabelModelCustom ? autolabelModelCustom.value.trim() : '') || (autolabelProvider.value === 'gemini' ? 'gemini-2.0-flash' : 'qwen2-vl-7b-instruct');
             }
             return autolabelModelSelect.value;
         }
@@ -6353,11 +6351,9 @@
                 if (modelCountBadge) modelCountBadge.innerText = '';
                 if (autolabelModelSelect) {
                     autolabelModelSelect.innerHTML = `
-                        <option value="gemini-2.5-flash" selected>gemini-2.5-flash (Standard &amp; Schnell)</option>
-                        <option value="gemini-2.0-flash">gemini-2.0-flash</option>
-                        <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                        <option value="gemini-2.5-pro">gemini-2.5-pro</option>
-                        <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                        <option value="gemini-2.0-flash" selected>gemini-2.0-flash (Empfohlen &amp; Schnell)</option>
+                        <option value="gemini-1.5-flash">gemini-1.5-flash (Standard)</option>
+                        <option value="gemini-1.5-pro">gemini-1.5-pro (Höchste Genauigkeit)</option>
                         <option value="__custom__">✏️ Eigenes Gemini-Modell eingeben...</option>
                     `;
                 }
@@ -6428,22 +6424,28 @@
                     handleProviderChange(false);
                 }
 
-                if (savedModel && autolabelModelSelect) {
+                let targetModel = savedModel;
+                if (targetModel && targetModel.includes('2.5')) {
+                    targetModel = targetModel.replace('2.5', '2.0');
+                    localStorage.setItem(LLM_STORAGE_KEYS.MODEL, targetModel);
+                }
+
+                if (targetModel && autolabelModelSelect) {
                     if (autolabelProvider && autolabelProvider.value === 'gemini') {
-                        const exists = Array.from(autolabelModelSelect.options).some(o => o.value === savedModel);
-                        if (!exists && savedModel !== '__custom__') {
+                        const exists = Array.from(autolabelModelSelect.options).some(o => o.value === targetModel);
+                        if (!exists && targetModel !== '__custom__') {
                             const opt = document.createElement('option');
-                            opt.value = savedModel;
-                            opt.textContent = savedModel;
+                            opt.value = targetModel;
+                            opt.textContent = targetModel;
                             autolabelModelSelect.insertBefore(opt, autolabelModelSelect.firstChild);
                         }
-                        autolabelModelSelect.value = savedModel;
-                        if (savedModel === '__custom__' && autolabelModelCustom) {
+                        autolabelModelSelect.value = targetModel;
+                        if (targetModel === '__custom__' && autolabelModelCustom) {
                             autolabelModelCustom.style.display = 'block';
                         }
                         updateVisionHintForSelectedModel();
                     } else if (autolabelProvider && (autolabelProvider.value === 'lmstudio' || autolabelProvider.value === 'ollama')) {
-                        fetchLocalModels(autolabelProvider.value, savedModel);
+                        fetchLocalModels(autolabelProvider.value, targetModel);
                     }
                 }
 

@@ -203,9 +203,10 @@ def build_autolabel_prompt(
 
 class AutoLabelRequest(BaseModel):
     image_base64: str
-    provider: Literal['gemini', 'ollama', 'lmstudio'] = 'gemini'
+    provider: Literal['gemini', 'openai', 'lmstudio', 'ollama'] = 'gemini'
     model_name: Optional[str] = None
     api_key: Optional[str] = None
+    openai_url: Optional[str] = None
     ollama_url: Optional[str] = 'http://localhost:11434/v1'
     lmstudio_url: Optional[str] = 'http://localhost:1234/v1'
     custom_prompt: Optional[str] = None
@@ -334,10 +335,10 @@ async def dataset_stats():
     return get_stats()
 
 @app.get("/api/local-models")
-async def local_models(provider: Literal['lmstudio', 'ollama'] = 'lmstudio', url: Optional[str] = None):
-    """Fragt installierte Modelle von LM Studio (Port 1234) oder Ollama (Port 11434) ab."""
+async def local_models(provider: str = 'openai', url: Optional[str] = None):
+    """Fragt installierte Modelle von OpenAI-kompatiblen Servern (oMLX, LM Studio) oder Ollama ab."""
     import httpx
-    default_url = 'http://127.0.0.1:1234/v1' if provider == 'lmstudio' else 'http://127.0.0.1:11434/v1'
+    default_url = 'http://127.0.0.1:11434/v1' if provider == 'ollama' else 'http://127.0.0.1:1234/v1'
     target_url = url or default_url
     
     candidates = [target_url]
@@ -486,9 +487,14 @@ async def auto_label(req: AutoLabelRequest):
                 raw_text = parts[0].get("text", "{}") if parts else "{}"
                 result_data = AutoLabelResult.model_validate_json(raw_text)
 
-        elif req.provider in ('lmstudio', 'ollama'):
-            base_url = req.lmstudio_url if req.provider == 'lmstudio' else req.ollama_url
-            model_name = req.model_name or ('qwen2-vl' if req.provider == 'ollama' else 'Qwen2.5-VL-7B-Instruct-4bit')
+        elif req.provider in ('openai', 'lmstudio', 'ollama'):
+            if req.provider in ('openai', 'lmstudio'):
+                base_url = req.openai_url or req.lmstudio_url or 'http://localhost:1234/v1'
+                default_def_model = 'Qwen2.5-VL-7B-Instruct-4bit'
+            else:
+                base_url = req.ollama_url or 'http://localhost:11434/v1'
+                default_def_model = 'qwen2-vl'
+            model_name = req.model_name or default_def_model
             model_used = f"{req.provider}:{model_name}"
             schema_dict = AutoLabelResult.model_json_schema()
 

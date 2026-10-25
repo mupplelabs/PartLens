@@ -2831,7 +2831,7 @@
                             <label class="field-label" for="autolabel-provider">Provider:</label>
                             <select id="autolabel-provider">
                                 <option value="gemini" selected>☁️ Google Gemini (Cloud API)</option>
-                                <option value="lmstudio">💻 LM Studio (Lokal :1234)</option>
+                                <option value="openai">🌐 OpenAI-kompatibel (oMLX, LM Studio, vLLM)</option>
                                 <option value="ollama">💻 Ollama (Lokal :11434)</option>
                             </select>
                         </div>
@@ -2867,12 +2867,12 @@
                     <!-- Local Endpoint URL -->
                     <div id="local-url-row" style="margin-bottom: 12px; display: none;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                            <label class="field-label" id="local-url-label" for="local-url" style="margin: 0;">Server URL:</label>
+                            <label class="field-label" id="local-url-label" for="local-url" style="margin: 0;">OpenAI / oMLX Endpoint URL:</label>
                             <span id="local-status-badge" style="font-size: 0.72rem; color: var(--muted);"></span>
                         </div>
-                        <input type="text" id="local-url" value="http://127.0.0.1:1234/v1" />
+                        <input type="text" id="local-url" placeholder="z.B. http://192.168.178.39:8000/v1 oder http://127.0.0.1:1234/v1" />
                         <div id="local-vision-hint" style="font-size: 0.75rem; color: #f59e0b; margin-top: 6px; line-height: 1.4;">
-                            ⚠️ <strong>Vision-Modell erforderlich:</strong> Stelle sicher, dass in LM Studio / Ollama ein multimodales Vision-Modell geladen ist.
+                            ⚠️ <strong>Vision-Modell erforderlich:</strong> Stelle sicher, dass im Server ein multimodales Vision-Modell aktiv ist (z.B. Qwen2-VL, Qwen3.8-27B).
                         </div>
                     </div>
 
@@ -6049,6 +6049,8 @@
             MODEL: 'ct_llm_model',
             CUSTOM_MODEL: 'ct_llm_custom_model',
             LOCAL_URL: 'ct_local_url',
+            OPENAI_URL: 'ct_openai_url',
+            OLLAMA_URL: 'ct_ollama_url',
             GEMINI_KEY: 'gemini_api_key',
             OCR_ENGINE: 'ct_ocr_engine',
             CUSTOM_CLASSES: 'ct_custom_classes',
@@ -6135,10 +6137,19 @@
 
         function saveLlmSettingsToStorage() {
             try {
-                if (autolabelProvider) localStorage.setItem(LLM_STORAGE_KEYS.PROVIDER, autolabelProvider.value);
+                const prov = autolabelProvider ? autolabelProvider.value : 'gemini';
+                if (autolabelProvider) localStorage.setItem(LLM_STORAGE_KEYS.PROVIDER, prov);
                 if (autolabelModelSelect) localStorage.setItem(LLM_STORAGE_KEYS.MODEL, autolabelModelSelect.value);
                 if (autolabelModelCustom) localStorage.setItem(LLM_STORAGE_KEYS.CUSTOM_MODEL, autolabelModelCustom.value.trim());
-                if (localUrl) localStorage.setItem(LLM_STORAGE_KEYS.LOCAL_URL, localUrl.value.trim());
+                if (localUrl) {
+                    const urlVal = localUrl.value.trim();
+                    localStorage.setItem(LLM_STORAGE_KEYS.LOCAL_URL, urlVal);
+                    if (prov === 'openai' || prov === 'lmstudio') {
+                        localStorage.setItem(LLM_STORAGE_KEYS.OPENAI_URL, urlVal);
+                    } else if (prov === 'ollama') {
+                        localStorage.setItem(LLM_STORAGE_KEYS.OLLAMA_URL, urlVal);
+                    }
+                }
                 if (geminiApiKey) localStorage.setItem(LLM_STORAGE_KEYS.GEMINI_KEY, geminiApiKey.value.trim());
                 if (ocrSelect) localStorage.setItem(LLM_STORAGE_KEYS.OCR_ENGINE, ocrSelect.value);
                 if (customClassesInput) localStorage.setItem(LLM_STORAGE_KEYS.CUSTOM_CLASSES, customClassesInput.value.trim());
@@ -6174,7 +6185,7 @@
                 localVisionHint.innerHTML = `✅ <strong>Vision-Modell gewählt:</strong> <code>${currentModel}</code> beherrscht Bauteil-Erkennung auf Fotos.`;
             } else {
                 localVisionHint.style.color = '#f59e0b';
-                localVisionHint.innerHTML = `⚠️ <strong>Kein Vision-Modell gewählt:</strong> <code>${currentModel}</code> ist ein reines Text-Modell. Für die Erkennung von Bauteilen auf Fotos bitte in LM Studio / Ollama ein Vision-Modell laden (z.B. <em>Qwen2-VL-7B-Instruct</em>, <em>Llama-3.2-11B-Vision</em> oder <em>MiniCPM-V</em>).`;
+                localVisionHint.innerHTML = `⚠️ <strong>Kein Vision-Modell gewählt:</strong> <code>${currentModel}</code> ist ein reines Text-Modell. Für die Erkennung von Bauteilen auf Fotos bitte im Server (oMLX, LM Studio, Ollama) ein multimodales Vision-Modell laden (z.B. <em>Qwen2-VL-7B-Instruct</em>, <em>Qwen3.8-27B</em>, <em>Llama-3.2-Vision</em> oder <em>MiniCPM-V</em>).`;
             }
         }
 
@@ -6220,11 +6231,23 @@
         }
 
         if (localUrl) {
+            let localUrlDebounceTimer = null;
             localUrl.addEventListener('input', () => {
                 saveLlmSettingsToStorage();
+                clearTimeout(localUrlDebounceTimer);
+                localUrlDebounceTimer = setTimeout(() => {
+                    const prov = autolabelProvider ? autolabelProvider.value : 'gemini';
+                    if (prov === 'openai' || prov === 'lmstudio' || prov === 'ollama') {
+                        fetchLocalModels(prov);
+                    }
+                }, 600);
             });
             localUrl.addEventListener('change', () => {
                 saveLlmSettingsToStorage();
+                const prov = autolabelProvider ? autolabelProvider.value : 'gemini';
+                if (prov === 'openai' || prov === 'lmstudio' || prov === 'ollama') {
+                    fetchLocalModels(prov);
+                }
             });
         }
 
@@ -6301,6 +6324,7 @@
 
         async function fetchLocalModels(provider, preferredModel = null) {
             if (!provider || provider === 'gemini') return;
+            const queryProv = (provider === 'lmstudio' || provider === 'openai') ? 'openai' : 'ollama';
             const targetUrl = localUrl ? localUrl.value.trim() : '';
             if (localStatusBadge) localStatusBadge.innerText = '⏳ Verbindung prüfen...';
             
@@ -6309,7 +6333,7 @@
 
             // 1. Backend-Proxy versuchen
             try {
-                const res = await fetch(`/api/local-models?provider=${provider}&url=${encodeURIComponent(targetUrl)}`);
+                const res = await fetch(`/api/local-models?provider=${queryProv}&url=${encodeURIComponent(targetUrl)}`);
                 if (res.ok) {
                     const data = await res.json();
                     if (data.success && data.models && data.models.length > 0) {
@@ -6371,7 +6395,7 @@
                 saveLlmSettingsToStorage();
             } else {
                 if (autolabelModelSelect) {
-                    const defModel = provider === 'ollama' ? 'qwen2-vl' : 'qwen2-vl-7b-instruct';
+                    const defModel = queryProv === 'ollama' ? 'qwen2-vl' : 'qwen2-vl-7b-instruct';
                     autolabelModelSelect.innerHTML = `
                         <option value="${defModel}">${defModel} (Standard)</option>
                         <option value="__custom__">✏️ Eigenes Modell eingeben...</option>
@@ -6388,12 +6412,12 @@
                 if (localStatusBadge) localStatusBadge.innerText = `🔴 Offline / Nicht erreichbar`;
                 if (localVisionHint) {
                     localVisionHint.style.color = '#f59e0b';
-                    localVisionHint.innerHTML = `⚠️ <strong>Server nicht erreichbar:</strong> Stelle sicher, dass ${provider === 'lmstudio' ? 'LM Studio' : 'Ollama'} läuft und der lokale Server auf Port ${provider === 'lmstudio' ? '1234' : '11434'} gestartet ist.`;
+                    localVisionHint.innerHTML = `⚠️ <strong>Server nicht erreichbar:</strong> Stelle sicher, dass der Server auf <code>${targetUrl || 'http://127.0.0.1:8000/v1'}</code> läuft und erreichbar ist.`;
                 }
             }
         }
 
-        function handleProviderChange(resetUrlToDefault = false) {
+        function handleProviderChange(isUserSwitch = false) {
             if (!autolabelProvider) return;
             const prov = autolabelProvider.value;
             if (prov === 'gemini') {
@@ -6419,31 +6443,40 @@
                 if (geminiApiKey && geminiApiKey.value.trim().length > 10) {
                     fetchGeminiModels();
                 }
-            } else if (prov === 'lmstudio') {
+            } else if (prov === 'openai' || prov === 'lmstudio') {
                 if (geminiKeyRow) geminiKeyRow.style.display = 'none';
                 if (localUrlRow) localUrlRow.style.display = 'block';
                 if (refreshModelsBtn) {
                     refreshModelsBtn.style.display = 'inline-block';
-                    refreshModelsBtn.title = 'Lokale Modelle aus LM Studio neu laden';
+                    refreshModelsBtn.title = 'Modelle von OpenAI / oMLX / LM Studio abrufen';
                 }
-                if (localUrlLabel) localUrlLabel.innerText = 'LM Studio Endpoint URL:';
-                if (resetUrlToDefault || !localUrl.value) {
+                if (localUrlLabel) localUrlLabel.innerText = 'OpenAI / oMLX Endpoint URL:';
+                
+                // URL aus lokalem Speicher für OpenAI laden falls vorhanden oder Fallback beibehalten
+                const savedUrl = localStorage.getItem(LLM_STORAGE_KEYS.OPENAI_URL) || localStorage.getItem(LLM_STORAGE_KEYS.LOCAL_URL);
+                if (savedUrl) {
+                    localUrl.value = savedUrl;
+                } else if (!localUrl.value) {
                     localUrl.value = 'http://127.0.0.1:1234/v1';
                 }
                 if (autolabelModelSelect) {
-                    autolabelModelSelect.innerHTML = '<option value="">⏳ Lade Modelle aus LM Studio...</option>';
+                    autolabelModelSelect.innerHTML = '<option value="">⏳ Lade Modelle...</option>';
                 }
                 if (autolabelModelCustom) autolabelModelCustom.style.display = 'none';
-                fetchLocalModels('lmstudio');
+                fetchLocalModels(prov);
             } else if (prov === 'ollama') {
                 if (geminiKeyRow) geminiKeyRow.style.display = 'none';
                 if (localUrlRow) localUrlRow.style.display = 'block';
                 if (refreshModelsBtn) {
                     refreshModelsBtn.style.display = 'inline-block';
-                    refreshModelsBtn.title = 'Lokale Modelle aus Ollama neu laden';
+                    refreshModelsBtn.title = 'Lokale Modelle aus Ollama abrufen';
                 }
                 if (localUrlLabel) localUrlLabel.innerText = 'Ollama Endpoint URL:';
-                if (resetUrlToDefault || !localUrl.value) {
+                
+                const savedUrl = localStorage.getItem(LLM_STORAGE_KEYS.OLLAMA_URL);
+                if (savedUrl) {
+                    localUrl.value = savedUrl;
+                } else if (!localUrl.value || localUrl.value.includes(':8000') || localUrl.value.includes(':1234')) {
                     localUrl.value = 'http://127.0.0.1:11434/v1';
                 }
                 if (autolabelModelSelect) {
@@ -6472,8 +6505,16 @@
                 const savedCustomClasses = localStorage.getItem(LLM_STORAGE_KEYS.CUSTOM_CLASSES);
                 if (savedCustomClasses !== null && customClassesInput) customClassesInput.value = savedCustomClasses;
 
-                const savedProvider = localStorage.getItem(LLM_STORAGE_KEYS.PROVIDER);
-                const savedLocalUrl = localStorage.getItem(LLM_STORAGE_KEYS.LOCAL_URL);
+                let savedProvider = localStorage.getItem(LLM_STORAGE_KEYS.PROVIDER);
+                if (savedProvider === 'lmstudio') savedProvider = 'openai';
+
+                let savedLocalUrl = '';
+                if (savedProvider === 'ollama') {
+                    savedLocalUrl = localStorage.getItem(LLM_STORAGE_KEYS.OLLAMA_URL) || localStorage.getItem(LLM_STORAGE_KEYS.LOCAL_URL) || 'http://127.0.0.1:11434/v1';
+                } else {
+                    savedLocalUrl = localStorage.getItem(LLM_STORAGE_KEYS.OPENAI_URL) || localStorage.getItem(LLM_STORAGE_KEYS.LOCAL_URL) || 'http://127.0.0.1:1234/v1';
+                }
+
                 const savedModel = localStorage.getItem(LLM_STORAGE_KEYS.MODEL);
                 const savedCustomModel = localStorage.getItem(LLM_STORAGE_KEYS.CUSTOM_MODEL);
 
@@ -6510,7 +6551,7 @@
                             autolabelModelCustom.style.display = 'block';
                         }
                         updateVisionHintForSelectedModel();
-                    } else if (autolabelProvider && (autolabelProvider.value === 'lmstudio' || autolabelProvider.value === 'ollama')) {
+                    } else if (autolabelProvider && (autolabelProvider.value === 'openai' || autolabelProvider.value === 'lmstudio' || autolabelProvider.value === 'ollama')) {
                         fetchLocalModels(autolabelProvider.value, targetModel);
                     }
                 }
@@ -6919,6 +6960,7 @@
                         provider: provider,
                         model_name: chosenModel,
                         api_key: geminiApiKey.value.trim() || null,
+                        openai_url: localUrl ? localUrl.value.trim() : null,
                         lmstudio_url: localUrl ? localUrl.value.trim() : null,
                         ollama_url: localUrl ? localUrl.value.trim() : null,
                         detect_footprint: detectFp,

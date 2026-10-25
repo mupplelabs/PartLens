@@ -593,6 +593,13 @@ async def auto_label(req: AutoLabelRequest):
                         top_fp = fp_match["footprints"][0]
                         c.footprint = top_fp["name"]
                         c.footprint_path = top_fp["path"]
+                    else:
+                        # Fallback ohne Klassen-Einschränkung
+                        fp_all = await list_footprints(class_name="all", search=c.footprint.strip(), limit=1)
+                        if fp_all.get("footprints"):
+                            top_fp = fp_all["footprints"][0]
+                            c.footprint = top_fp["name"]
+                            c.footprint_path = top_fp["path"]
                 except Exception as fe:
                     print(f"Footprint auto-match error for '{c.footprint}': {fe}", flush=True)
 

@@ -2270,7 +2270,10 @@
                 <span class="status-chip" id="chip-backend" title="Backend-Server Status">
                     <span class="chip-dot"></span>Backend: <span class="chip-val" id="chip-backend-val">Verbinde...</span>
                 </span>
-                <span class="status-chip" id="chip-ocr" title="Aktive optische Zeichenerkennungs-Engine">
+                <span class="status-chip" id="chip-llm" title="Aktives KI-Modell für Auto-Labeling (Klick öffnet Einstellungen)" style="cursor: pointer;">
+                    <span class="chip-dot"></span>LLM: <span class="chip-val" id="chip-llm-val">Prüfe...</span>
+                </span>
+                <span class="status-chip" id="chip-ocr" title="Aktive optische Zeichenerkennungs-Engine (Klick öffnet Einstellungen)" style="cursor: pointer;">
                     <span class="chip-dot"></span>OCR: <span class="chip-val" id="chip-ocr-val">Prüfe...</span>
                 </span>
                 <span class="status-chip standby" id="chip-clip" title="Lokales CLIP-Modell (Xenova) wird bei Bedarf on-demand geladen">
@@ -6156,6 +6159,8 @@
                 if (optFootprint) localStorage.setItem(LLM_STORAGE_KEYS.DETECT_FOOTPRINT, optFootprint.checked ? '1' : '0');
                 if (optMarking) localStorage.setItem(LLM_STORAGE_KEYS.DETECT_MARKING, optMarking.checked ? '1' : '0');
                 if (optSubgroup) localStorage.setItem(LLM_STORAGE_KEYS.DETECT_SUBGROUP, optSubgroup.checked ? '1' : '0');
+                updateOcrStatusChip();
+                updateLlmStatusChip();
             } catch (e) {
                 console.warn('Fehler beim Speichern in localStorage:', e);
             }
@@ -6167,6 +6172,106 @@
                 return (autolabelModelCustom ? autolabelModelCustom.value.trim() : '') || (autolabelProvider.value === 'gemini' ? 'gemini-3.8-flash' : 'qwen2-vl-7b-instruct');
             }
             return autolabelModelSelect.value;
+        }
+
+        // --- Status Pillen Synchronisierung (OCR & LLM) ---
+        function updateOcrStatusChip() {
+            const ocrVal = document.getElementById('chip-ocr-val');
+            const ocrChip = document.getElementById('chip-ocr');
+            if (!ocrVal) return;
+            const engine = ocrSelect ? ocrSelect.value : (localStorage.getItem(LLM_STORAGE_KEYS.OCR_ENGINE) || 'tesseract');
+            if (engine === 'florence2') {
+                ocrVal.innerText = 'Florence-2 (VisionLM)';
+                if (ocrChip) {
+                    ocrChip.title = 'Aktive OCR-Engine: onnx-community/Florence-2-base-ft (In-Browser ONNX)\nKlick öffnet Einstellungen';
+                    ocrChip.classList.remove('warning', 'standby');
+                }
+            } else {
+                ocrVal.innerText = 'Tesseract (WASM)';
+                if (ocrChip) {
+                    ocrChip.title = 'Aktive OCR-Engine: Tesseract.js v5 (Lokale In-Browser OCR)\nKlick öffnet Einstellungen';
+                    ocrChip.classList.remove('warning', 'standby');
+                }
+            }
+        }
+
+        function updateLlmStatusChip() {
+            const llmVal = document.getElementById('chip-llm-val');
+            const llmChip = document.getElementById('chip-llm');
+            if (!llmVal) return;
+
+            const prov = autolabelProvider ? autolabelProvider.value : 'gemini';
+            const rawModel = getAutolabelModelName();
+
+            // Kompakte Modellbezeichnung für die Pille
+            let shortModel = rawModel;
+            if (shortModel.length > 18) {
+                const m = shortModel.match(/([a-zA-Z0-9_\-\.]+?)(?:-oQ|-Q\d|-Instruct|-fp|-it|\.gguf)/i);
+                if (m && m[1] && m[1].length >= 5) {
+                    shortModel = m[1];
+                } else {
+                    shortModel = shortModel.substring(0, 16) + '…';
+                }
+            }
+
+            if (prov === 'gemini') {
+                const key = geminiApiKey ? geminiApiKey.value.trim() : '';
+                const hasKey = key.length > 5 || (typeof serverData !== 'undefined' && serverData && serverData.has_gemini_env);
+                const displayModel = shortModel.replace(/^gemini-/, '');
+                llmVal.innerText = `Gemini (${displayModel})`;
+                if (llmChip) {
+                    llmChip.title = `LLM Provider: Google Gemini\nModell: ${rawModel}\nAPI-Key: ${hasKey ? 'Konfiguriert' : 'Fehlt!'}\n(Klick öffnet Einstellungen)`;
+                    if (hasKey) {
+                        llmChip.classList.remove('warning', 'standby');
+                    } else {
+                        llmChip.classList.add('warning');
+                    }
+                }
+            } else if (prov === 'openai' || prov === 'lmstudio') {
+                const url = localUrl ? localUrl.value.trim() : 'http://127.0.0.1:1234/v1';
+                let provPrefix = 'OpenAI';
+                if (url.includes(':8000') || url.includes('omlx')) provPrefix = 'oMLX';
+                else if (url.includes(':1234')) provPrefix = 'LM Studio';
+                else if (url.includes(':11434')) provPrefix = 'Ollama';
+
+                llmVal.innerText = `${provPrefix}: ${shortModel}`;
+                if (llmChip) {
+                    llmChip.title = `LLM Provider: OpenAI-kompatibel (${provPrefix})\nModell: ${rawModel}\nEndpunkt: ${url}\n(Klick öffnet Einstellungen)`;
+                    const isOffline = localStatusBadge && localStatusBadge.innerText.includes('Offline');
+                    if (isOffline) {
+                        llmChip.classList.add('warning');
+                    } else {
+                        llmChip.classList.remove('warning', 'standby');
+                    }
+                }
+            } else if (prov === 'ollama') {
+                const url = localUrl ? localUrl.value.trim() : 'http://127.0.0.1:11434/v1';
+                llmVal.innerText = `Ollama: ${shortModel}`;
+                if (llmChip) {
+                    llmChip.title = `LLM Provider: Ollama\nModell: ${rawModel}\nEndpunkt: ${url}\n(Klick öffnet Einstellungen)`;
+                    const isOffline = localStatusBadge && localStatusBadge.innerText.includes('Offline');
+                    if (isOffline) {
+                        llmChip.classList.add('warning');
+                    } else {
+                        llmChip.classList.remove('warning', 'standby');
+                    }
+                }
+            }
+        }
+
+        const chipLlm = document.getElementById('chip-llm');
+        if (chipLlm) {
+            chipLlm.addEventListener('click', () => {
+                const navSettings = document.getElementById('nav-settings-btn');
+                if (navSettings) navSettings.click();
+            });
+        }
+        const chipOcr = document.getElementById('chip-ocr');
+        if (chipOcr) {
+            chipOcr.addEventListener('click', () => {
+                const navSettings = document.getElementById('nav-settings-btn');
+                if (navSettings) navSettings.click();
+            });
         }
 
         function updateVisionHintForSelectedModel() {
@@ -6200,6 +6305,7 @@
                     if (autolabelModelCustom) autolabelModelCustom.style.display = 'none';
                 }
                 updateVisionHintForSelectedModel();
+                updateLlmStatusChip();
                 saveLlmSettingsToStorage();
             });
         }
@@ -6207,6 +6313,7 @@
         if (autolabelModelCustom) {
             autolabelModelCustom.addEventListener('input', () => {
                 updateVisionHintForSelectedModel();
+                updateLlmStatusChip();
                 saveLlmSettingsToStorage();
             });
         }
@@ -6215,6 +6322,7 @@
             let keyDebounceTimer = null;
             geminiApiKey.addEventListener('input', () => {
                 saveLlmSettingsToStorage();
+                updateLlmStatusChip();
                 clearTimeout(keyDebounceTimer);
                 keyDebounceTimer = setTimeout(() => {
                     if (autolabelProvider && autolabelProvider.value === 'gemini' && geminiApiKey.value.trim().length > 10) {
@@ -6224,6 +6332,7 @@
             });
             geminiApiKey.addEventListener('change', () => {
                 saveLlmSettingsToStorage();
+                updateLlmStatusChip();
                 if (autolabelProvider && autolabelProvider.value === 'gemini' && geminiApiKey.value.trim().length > 10) {
                     fetchGeminiModels();
                 }
@@ -6234,6 +6343,7 @@
             let localUrlDebounceTimer = null;
             localUrl.addEventListener('input', () => {
                 saveLlmSettingsToStorage();
+                updateLlmStatusChip();
                 clearTimeout(localUrlDebounceTimer);
                 localUrlDebounceTimer = setTimeout(() => {
                     const prov = autolabelProvider ? autolabelProvider.value : 'gemini';
@@ -6244,6 +6354,7 @@
             });
             localUrl.addEventListener('change', () => {
                 saveLlmSettingsToStorage();
+                updateLlmStatusChip();
                 const prov = autolabelProvider ? autolabelProvider.value : 'gemini';
                 if (prov === 'openai' || prov === 'lmstudio' || prov === 'ollama') {
                     fetchLocalModels(prov);
@@ -6253,6 +6364,7 @@
 
         if (ocrSelect) {
             ocrSelect.addEventListener('change', () => {
+                updateOcrStatusChip();
                 saveLlmSettingsToStorage();
             });
         }
@@ -6567,6 +6679,8 @@
                 const mkVal = savedMk !== null ? savedMk === '1' : true;
                 const sgVal = savedSg !== null ? savedSg === '1' : true;
                 setAutolabelFeatures(fpVal, mkVal, sgVal, false);
+                updateOcrStatusChip();
+                updateLlmStatusChip();
             } catch (e) {
                 console.warn('Fehler beim Laden aus localStorage:', e);
             }
@@ -6698,6 +6812,49 @@
                     }
                 }
             });
+
+            // Automatische Übernahme der Katalog-Schreibweise bei Verlassen / Enter / Change
+            const canonicalizeBoxFootprintInput = async () => {
+                if (selectedBoxIndex < 0 || selectedBoxIndex >= detectedBoxes.length) return;
+                const b = detectedBoxes[selectedBoxIndex];
+                const rawVal = boxFootprintInput.value.trim();
+                if (!rawVal) return;
+
+                const normClass = (typeof getNormalizedClass === 'function')
+                    ? getNormalizedClass(b.label || (boxClassSelect ? boxClassSelect.value : 'ic'))
+                    : 'ic';
+
+                let fp = (typeof footprintIndexByName !== 'undefined')
+                    ? (footprintIndexByName.get(`${normClass}:${rawVal.toLowerCase()}`) || footprintIndexByName.get(rawVal.toLowerCase()))
+                    : null;
+
+                if (!fp && typeof fetchFootprintsCatalog === 'function') {
+                    const results = await fetchFootprintsCatalog(normClass, rawVal);
+                    if (results && results.length > 0) {
+                        fp = results.find(f => f.name.toLowerCase() === rawVal.toLowerCase() || (f.aliases && f.aliases.includes(rawVal.toLowerCase().replace(/[^a-z0-9]/g, ''))))
+                             || results[0];
+                    }
+                }
+
+                if (fp && fp.name) {
+                    boxFootprintInput.value = fp.name;
+                    b.footprint = fp.name;
+                    b.footprintPath = fp.path || b.footprintPath;
+                    if (typeof updateBoxFootprintPreview === 'function') {
+                        updateBoxFootprintPreview(fp.name, fp.path);
+                    }
+                }
+            };
+
+            boxFootprintInput.addEventListener('change', canonicalizeBoxFootprintInput);
+            boxFootprintInput.addEventListener('blur', canonicalizeBoxFootprintInput);
+            boxFootprintInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    canonicalizeBoxFootprintInput();
+                    boxFootprintInput.blur();
+                }
+            });
         }
 
         const clearFpBtn = document.getElementById('clear-footprint-btn');
@@ -6783,10 +6940,8 @@
                     if (backendVal) backendVal.innerText = 'Online';
                     if (backendChip) backendChip.classList.remove('warning');
 
-                    const ocrVal = document.getElementById('chip-ocr-val');
-                    if (ocrVal) {
-                        ocrVal.innerText = 'Tesseract (WASM)';
-                    }
+                    updateOcrStatusChip();
+                    updateLlmStatusChip();
 
                     if (data.has_gemini_env && autolabelStatus && !geminiApiKey.value) {
                         autolabelStatus.innerText = '💡 Server nutzt GEMINI_API_KEY aus Umgebungsvariable.';
@@ -7991,8 +8146,8 @@
                         datasetCounterBadge.innerText = `📁 Datensatz: ${serverData.stats.train_images} Train / ${serverData.stats.val_images} Val (${boxCount} Boxen)`;
                     }
                 }
-                if (ocrVal) ocrVal.innerText = 'Tesseract (WASM)';
-                if (ocrSelect && !ocrSelect.value) ocrSelect.value = 'tesseract';
+                updateOcrStatusChip();
+                updateLlmStatusChip();
                 if (serverData.has_gemini_env && autolabelStatus && !geminiApiKey.value) {
                     autolabelStatus.innerText = '💡 Server nutzt GEMINI_API_KEY aus Umgebungsvariable.';
                 }
@@ -8002,7 +8157,8 @@
             } else {
                 if (backendVal) backendVal.innerText = 'Offline';
                 if (backendChip) backendChip.classList.add('warning');
-                if (ocrVal) ocrVal.innerText = 'Lokal (Browser)';
+                updateOcrStatusChip();
+                updateLlmStatusChip();
                 if (statusDiv) {
                     statusDiv.innerText = '📁 Schritt 2/3: Lokaler Offline-Modus aktiv...';
                 }
@@ -8514,6 +8670,8 @@
                     if (b) {
                         b.footprint = cleanName;
                         b.footprintPath = fpPath;
+                        const fpInp = document.getElementById('box-footprint-input');
+                        if (fpInp) fpInp.value = cleanName;
                     }
                     img.src = `/api/footprints/image?path=${encodeURIComponent(fpPath)}`;
                     img.alt = cleanName;
@@ -8529,10 +8687,14 @@
                 // 2. Gespeicherter Pfad aus Bounding-Box Objekt
                 if (b && b.footprintPath && b.footprint && b.footprint.toLowerCase() === cleanName.toLowerCase()) {
                     img.src = `/api/footprints/image?path=${encodeURIComponent(b.footprintPath)}`;
-                    img.alt = cleanName;
-                    nameEl.innerText = cleanName;
+                    img.alt = b.footprint;
+                    nameEl.innerText = b.footprint;
                     subEl.innerText = 'Footprint';
                     card.style.display = 'flex';
+                    const fpInp = document.getElementById('box-footprint-input');
+                    if (fpInp && fpInp.value && fpInp.value.trim().toLowerCase() === b.footprint.toLowerCase()) {
+                        fpInp.value = b.footprint;
+                    }
                     return;
                 }
 
@@ -8562,6 +8724,13 @@
                 if (fp && fp.path) {
                     if (b) {
                         b.footprintPath = fp.path;
+                        if (fp.name) {
+                            b.footprint = fp.name;
+                            const fpInp = document.getElementById('box-footprint-input');
+                            if (fpInp && fpInp.value && fpInp.value.trim().toLowerCase() === fp.name.toLowerCase()) {
+                                fpInp.value = fp.name;
+                            }
+                        }
                     }
                     img.src = `/api/footprints/image?path=${encodeURIComponent(fp.path)}`;
                     img.alt = fp.name;

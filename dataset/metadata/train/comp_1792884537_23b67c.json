@@ -1,0 +1,63 @@
+{
+  "id": "comp_1792884537_23b67c",
+  "split": "train",
+  "image_url": "/dataset/images/train/comp_1792884537_23b67c.jpg",
+  "thumb_url": "/api/dataset/thumbnails/train/comp_1792884537_23b67c",
+  "boxes": [
+    {
+      "class_id": 6,
+      "label": "ic",
+      "xmin": 0.1184,
+      "ymin": 0.1964,
+      "xmax": 0.3512,
+      "ymax": 0.3718
+    },
+    {
+      "class_id": 6,
+      "label": "ic",
+      "xmin": 0.3661,
+      "ymin": 0.1813,
+      "xmax": 0.6005,
+      "ymax": 0.3611
+    },
+    {
+      "class_id": 6,
+      "label": "ic",
+      "xmin": 0.1263,
+      "ymin": 0.4638,
+      "xmax": 0.3965,
+      "ymax": 0.6386
+    },
+    {
+      "class_id": 6,
+      "label": "ic",
+      "xmin": 0.6392,
+      "ymin": 0.3557,
+      "xmax": 0.912,
+      "ymax": 0.5429
+    },
+    {
+      "class_id": 6,
+      "label": "ic",
+      "xmin": 0.2242,
+      "ymin": 0.6997,
+      "xmax": 0.4739,
+      "ymax": 0.8628
+    },
+    {
+      "class_id": 6,
+      "label": "ic",
+      "xmin": 0.621,
+      "ymin": 0.5794,
+      "xmax": 0.9279,
+      "ymax": 0.7924
+    }
+  ],
+  "box_count": 6,
+  "classes": [
+    "ic"
+  ],
+  "created_at": 1792884537,
+  "size_bytes": 3097859,
+  "tags": []
+}

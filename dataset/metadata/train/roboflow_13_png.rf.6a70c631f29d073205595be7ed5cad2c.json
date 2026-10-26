@@ -1,0 +1,23 @@
+{
+  "id": "roboflow_13_png.rf.6a70c631f29d073205595be7ed5cad2c",
+  "split": "train",
+  "image_url": "/dataset/images/train/roboflow_13_png.rf.6a70c631f29d073205595be7ed5cad2c.jpg",
+  "thumb_url": "/api/dataset/thumbnails/train/roboflow_13_png.rf.6a70c631f29d073205595be7ed5cad2c",
+  "boxes": [
+    {
+      "class_id": 3,
+      "label": "diode",
+      "xmin": 0.4165,
+      "ymin": 0.5337,
+      "xmax": 0.4429,
+      "ymax": 0.6362
+    }
+  ],
+  "box_count": 1,
+  "classes": [
+    "diode"
+  ],
+  "created_at": 1792927164,
+  "size_bytes": 10386,
+  "tags": []
+}

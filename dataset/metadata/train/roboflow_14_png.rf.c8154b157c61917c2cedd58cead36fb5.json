@@ -1,0 +1,41 @@
+{
+  "id": "roboflow_14_png.rf.c8154b157c61917c2cedd58cead36fb5",
+  "split": "train",
+  "image_url": "/dataset/images/train/roboflow_14_png.rf.c8154b157c61917c2cedd58cead36fb5.jpg",
+  "thumb_url": "/api/dataset/thumbnails/train/roboflow_14_png.rf.c8154b157c61917c2cedd58cead36fb5",
+  "boxes": [
+    {
+      "class_id": 5,
+      "label": "transistor",
+      "xmin": 0.2603,
+      "ymin": 0.6899,
+      "xmax": 0.3374,
+      "ymax": 0.8276
+    },
+    {
+      "class_id": 1,
+      "label": "capacitor",
+      "xmin": 0.3257,
+      "ymin": 0.4194,
+      "xmax": 0.4868,
+      "ymax": 0.6274
+    },
+    {
+      "class_id": 0,
+      "label": "resistor",
+      "xmin": 0.5825,
+      "ymin": 0.5273,
+      "xmax": 0.6714,
+      "ymax": 0.8242
+    }
+  ],
+  "box_count": 3,
+  "classes": [
+    "capacitor",
+    "resistor",
+    "transistor"
+  ],
+  "created_at": 1792927166,
+  "size_bytes": 16779,
+  "tags": []
+}

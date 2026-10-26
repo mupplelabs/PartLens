@@ -1,0 +1,31 @@
+{
+  "id": "comp_1792970695_3d919c",
+  "split": "train",
+  "image_url": "/dataset/images/train/comp_1792970695_3d919c.jpg",
+  "thumb_url": "/api/dataset/thumbnails/train/comp_1792970695_3d919c",
+  "boxes": [
+    {
+      "class_id": 6,
+      "label": "ic",
+      "xmin": 0.2801,
+      "ymin": 0.41,
+      "xmax": 0.42,
+      "ymax": 0.63
+    },
+    {
+      "class_id": 6,
+      "label": "ic",
+      "xmin": 0.5099,
+      "ymin": 0.41,
+      "xmax": 0.6501,
+      "ymax": 0.6399
+    }
+  ],
+  "box_count": 2,
+  "classes": [
+    "ic"
+  ],
+  "created_at": 1792970695,
+  "size_bytes": 3862300,
+  "tags": []
+}

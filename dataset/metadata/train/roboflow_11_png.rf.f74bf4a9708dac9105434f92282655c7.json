@@ -1,0 +1,23 @@
+{
+  "id": "roboflow_11_png.rf.f74bf4a9708dac9105434f92282655c7",
+  "split": "train",
+  "image_url": "/dataset/images/train/roboflow_11_png.rf.f74bf4a9708dac9105434f92282655c7.jpg",
+  "thumb_url": "/api/dataset/thumbnails/train/roboflow_11_png.rf.f74bf4a9708dac9105434f92282655c7",
+  "boxes": [
+    {
+      "class_id": 0,
+      "label": "resistor",
+      "xmin": 0.4824,
+      "ymin": 0.6279,
+      "xmax": 0.6582,
+      "ymax": 0.7588
+    }
+  ],
+  "box_count": 1,
+  "classes": [
+    "resistor"
+  ],
+  "created_at": 1792927162,
+  "size_bytes": 13160,
+  "tags": []
+}

@@ -10,6 +10,8 @@ __pycache__/
 
 # Python Virtual Environments
 .venv/
+.venv*
+.venv.nosync/
 venv/
 ENV/
 env/

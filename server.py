@@ -225,6 +225,7 @@ class SaveSampleRequest(BaseModel):
     boxes: list[DetectedComponent]
     split: Literal['train', 'val'] = 'train'
     dataset_name: Optional[str] = 'workshop_dataset'
+    tags: Optional[list[str]] = None
 
 class DatasetStatsResponse(BaseModel):
     train_images: int
@@ -244,10 +245,12 @@ app.add_middleware(
 )
 
 def init_dataset_structure():
-    """Erstellt die YOLO-Verzeichnisstruktur und data.yaml falls nicht vorhanden."""
+    """Erstellt die YOLO-Verzeichnisstruktur, Metadaten-Ordner und data.yaml falls nicht vorhanden."""
     for split in ['train', 'val']:
         (DATASET_DIR / "images" / split).mkdir(parents=True, exist_ok=True)
         (DATASET_DIR / "labels" / split).mkdir(parents=True, exist_ok=True)
+        (DATASET_DIR / "metadata" / split).mkdir(parents=True, exist_ok=True)
+        (DATASET_DIR / "thumbnails" / split).mkdir(parents=True, exist_ok=True)
     
     yaml_path = DATASET_DIR / "data.yaml"
     if not yaml_path.exists():
@@ -285,7 +288,7 @@ _cached_samples_data: Optional[list[dict]] = None
 _index_lock = threading.Lock()
 
 def scan_full_dataset() -> tuple[list[dict], DatasetStatsResponse]:
-    """Scans all dataset folders and builds samples and stats from scratch."""
+    """Scans all dataset folders and builds samples and stats from scratch (reads rich metadata if available)."""
     splits = ['train', 'val']
     samples = []
     counts = {name: 0 for name in CLASS_NAMES}
@@ -296,6 +299,7 @@ def scan_full_dataset() -> tuple[list[dict], DatasetStatsResponse]:
     for s in splits:
         img_dir = DATASET_DIR / "images" / s
         lbl_dir = DATASET_DIR / "labels" / s
+        meta_dir = DATASET_DIR / "metadata" / s
         if not img_dir.exists():
             continue
 
@@ -306,10 +310,32 @@ def scan_full_dataset() -> tuple[list[dict], DatasetStatsResponse]:
                 val_count += 1
             sample_id = img_file.stem
             lbl_file = lbl_dir / f"{sample_id}.txt"
+            meta_file = meta_dir / f"{sample_id}.json"
             boxes = []
             classes_in_sample = set()
+            tags_in_sample = set()
 
-            if lbl_file.exists():
+            if meta_file.exists():
+                try:
+                    meta_raw = json.loads(meta_file.read_text(encoding="utf-8"))
+                    boxes = meta_raw.get("boxes", [])
+                    classes_in_sample = set(meta_raw.get("classes", []))
+                    tags_in_sample = set(meta_raw.get("tags", []))
+                    for b in boxes:
+                        cname = b.get("label", "other")
+                        classes_in_sample.add(cname)
+                        counts[cname] = counts.get(cname, 0) + 1
+                        total_boxes += 1
+                        if b.get("footprint"):
+                            tags_in_sample.add(b["footprint"])
+                        if b.get("part_marking"):
+                            tags_in_sample.add(b["part_marking"])
+                        if b.get("ic_subgroup"):
+                            tags_in_sample.add(b["ic_subgroup"])
+                except Exception as me:
+                    print(f"Warning: error reading metadata for {sample_id}: {me}", flush=True)
+
+            if not boxes and lbl_file.exists():
                 try:
                     for line in lbl_file.read_text(encoding="utf-8").strip().splitlines():
                         parts = line.strip().split()
@@ -331,7 +357,11 @@ def scan_full_dataset() -> tuple[list[dict], DatasetStatsResponse]:
                                 "xmin": round(xmin, 4),
                                 "ymin": round(ymin, 4),
                                 "xmax": round(xmax, 4),
-                                "ymax": round(ymax, 4)
+                                "ymax": round(ymax, 4),
+                                "confidence": 1.0,
+                                "part_marking": None,
+                                "footprint": None,
+                                "ic_subgroup": None
                             })
                 except Exception:
                     pass
@@ -352,6 +382,7 @@ def scan_full_dataset() -> tuple[list[dict], DatasetStatsResponse]:
                 "boxes": boxes,
                 "box_count": len(boxes),
                 "classes": sorted(list(classes_in_sample)),
+                "tags": sorted(list(tags_in_sample)),
                 "created_at": mtime,
                 "size_bytes": size_bytes
             })
@@ -754,6 +785,12 @@ async def save_sample(req: SaveSampleRequest):
         yolo_lines = []
         sample_boxes = []
         classes_in_sample = set()
+        tags_in_sample = set()
+        if req.tags:
+            for t in req.tags:
+                if t and str(t).strip():
+                    tags_in_sample.add(str(t).strip())
+
         for box in req.boxes:
             clean_label = normalize_label_to_yolo(box.label)
             cid = CLASS_TO_ID.get(clean_label, CLASS_TO_ID["other"])
@@ -785,16 +822,49 @@ async def save_sample(req: SaveSampleRequest):
             yolo_lines.append(f"{cid} {xc:.6f} {yc:.6f} {bw:.6f} {bh:.6f}")
             cname = CLASS_NAMES[cid] if 0 <= cid < len(CLASS_NAMES) else "other"
             classes_in_sample.add(cname)
+
+            clean_part_marking = str(box.part_marking).strip() if box.part_marking else None
+            clean_footprint = str(box.footprint).strip() if box.footprint else None
+            clean_ic_subgroup = str(box.ic_subgroup).strip() if box.ic_subgroup else None
+
+            if clean_footprint:
+                tags_in_sample.add(clean_footprint)
+            if clean_part_marking:
+                tags_in_sample.add(clean_part_marking)
+            if clean_ic_subgroup:
+                tags_in_sample.add(clean_ic_subgroup)
+
             sample_boxes.append({
                 "class_id": cid,
                 "label": cname,
                 "xmin": round(xmin, 4),
                 "ymin": round(ymin, 4),
                 "xmax": round(xmax, 4),
-                "ymax": round(ymax, 4)
+                "ymax": round(ymax, 4),
+                "confidence": round(float(box.confidence), 4) if box.confidence is not None else 1.0,
+                "part_marking": clean_part_marking,
+                "footprint": clean_footprint,
+                "ic_subgroup": clean_ic_subgroup
             })
 
         lbl_path.write_text("\n".join(yolo_lines) + "\n", encoding="utf-8")
+
+        all_tags = sorted(list(tags_in_sample))
+
+        # Sidecar JSON Metadaten speichern
+        meta_dir = DATASET_DIR / "metadata" / split
+        meta_dir.mkdir(parents=True, exist_ok=True)
+        meta_path = meta_dir / f"{sample_id}.json"
+        sample_meta = {
+            "id": sample_id,
+            "split": split,
+            "created_at": int(time.time()),
+            "box_count": len(sample_boxes),
+            "classes": sorted(list(classes_in_sample)),
+            "tags": all_tags,
+            "boxes": sample_boxes
+        }
+        meta_path.write_text(json.dumps(sample_meta, indent=2, ensure_ascii=False), encoding="utf-8")
 
         # Inkrementelles Update des In-Memory Caches & asynchrones Persistieren
         global _cached_samples_data, _cached_stats
@@ -806,6 +876,7 @@ async def save_sample(req: SaveSampleRequest):
             "boxes": sample_boxes,
             "box_count": len(sample_boxes),
             "classes": sorted(list(classes_in_sample)),
+            "tags": all_tags,
             "created_at": int(time.time()),
             "size_bytes": len(raw_bytes)
         }
@@ -890,11 +961,21 @@ async def list_dataset_samples(split: Optional[str] = None, force_refresh: bool 
 async def get_dataset_sample(split: Literal['train', 'val'], sample_id: str):
     img_path = DATASET_DIR / "images" / split / f"{sample_id}.jpg"
     lbl_path = DATASET_DIR / "labels" / split / f"{sample_id}.txt"
+    meta_path = DATASET_DIR / "metadata" / split / f"{sample_id}.json"
     if not img_path.exists():
         raise HTTPException(status_code=404, detail=f"Sample '{sample_id}' in split '{split}' nicht gefunden.")
         
     boxes = []
-    if lbl_path.exists():
+    tags = []
+    if meta_path.exists():
+        try:
+            meta_raw = json.loads(meta_path.read_text(encoding="utf-8"))
+            boxes = meta_raw.get("boxes", [])
+            tags = meta_raw.get("tags", [])
+        except Exception:
+            pass
+
+    if not boxes and lbl_path.exists():
         for line in lbl_path.read_text(encoding="utf-8").strip().splitlines():
             parts = line.strip().split()
             if len(parts) >= 5:
@@ -910,24 +991,32 @@ async def get_dataset_sample(split: Literal['train', 'val'], sample_id: str):
                     "xmin": round(xmin, 4),
                     "ymin": round(ymin, 4),
                     "xmax": round(xmax, 4),
-                    "ymax": round(ymax, 4)
+                    "ymax": round(ymax, 4),
+                    "confidence": 1.0,
+                    "part_marking": None,
+                    "footprint": None,
+                    "ic_subgroup": None
                 })
                 
     return {
         "id": sample_id,
         "split": split,
         "image_url": f"/dataset/images/{split}/{sample_id}.jpg",
-        "boxes": boxes
+        "boxes": boxes,
+        "tags": tags
     }
 
 @app.delete("/api/dataset/samples/{split}/{sample_id}")
 async def delete_dataset_sample(split: Literal['train', 'val'], sample_id: str):
     img_path = DATASET_DIR / "images" / split / f"{sample_id}.jpg"
     lbl_path = DATASET_DIR / "labels" / split / f"{sample_id}.txt"
+    meta_path = DATASET_DIR / "metadata" / split / f"{sample_id}.json"
     
     thumb_path = THUMBNAILS_DIR / split / f"{sample_id}.webp"
     if thumb_path.exists():
         thumb_path.unlink()
+    if meta_path.exists():
+        meta_path.unlink()
     deleted = False
     if img_path.exists():
         img_path.unlink()

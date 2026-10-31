@@ -29,9 +29,10 @@
             const res = await fetch('/api/footprints/status');
             if (!res.ok) return;
             const data = await res.json();
-            cacheStatusEl.innerText = `${data.cached_count} gecacht (${data.cached_size_kb} KB) / ${data.indexed_count} im Katalog`;
+            const formatStr = window.t ? window.t('footprints.cache_status', { cached: data.cached_count, size: data.cached_size_kb, total: data.indexed_count }) : null;
+            cacheStatusEl.innerText = formatStr || `${data.cached_count} gecacht (${data.cached_size_kb} KB) / ${data.indexed_count} im Katalog`;
         } catch (e) {
-            cacheStatusEl.innerText = 'Offline: lokal bereit';
+            cacheStatusEl.innerText = window.t ? window.t('footprints.cache_offline_fallback') : 'Offline: lokal bereit';
         }
     }
 
@@ -188,6 +189,10 @@
     }
 
     function getDisplayClassName(norm) {
+        if (window.t) {
+            const loc = window.t('classes.' + norm);
+            if (loc && loc !== norm && !loc.startsWith('classes.')) return loc;
+        }
         const map = {
             ic: 'ICs',
             resistor: 'Widerstände',
@@ -219,7 +224,8 @@
             // Chip "Passend zur Klasse" beschriften
             const contextChip = document.querySelector('#fp-filter-chips [data-class="context"]');
             if (contextChip) {
-                contextChip.textContent = `Passend zu ${getDisplayClassName(normClass)}`;
+                const clsDisplay = getDisplayClassName(normClass);
+                contextChip.textContent = window.t ? window.t('footprints.filter_context_dynamic', { cls: clsDisplay }) : `Passend zu ${clsDisplay}`;
             }
 
             // Aktiven Chip zurücksetzen
@@ -238,22 +244,22 @@
         syncBtn.addEventListener('click', async () => {
             syncBtn.disabled = true;
             const origText = syncBtn.textContent;
-            syncBtn.textContent = 'Syncing...';
-            if (cacheStatusEl) cacheStatusEl.innerText = 'Lade KiCad-Katalog & Bilder herunter...';
+            syncBtn.textContent = window.t ? window.t('footprints.sync_running') : 'Syncing...';
+            if (cacheStatusEl) cacheStatusEl.innerText = window.t ? window.t('footprints.sync_loading_hint') : 'Lade KiCad-Katalog & Bilder herunter...';
             try {
                 const res = await fetch('/api/footprints/sync', { method: 'POST' });
                 if (res.ok) {
                     const data = await res.json();
                     if (cacheStatusEl) {
-                        cacheStatusEl.innerText = `${data.preloaded} Core-Footprints offline (${data.indexed} gesamt)`;
+                        cacheStatusEl.innerText = window.t ? window.t('footprints.sync_success', { preloaded: data.preloaded, total: data.indexed }) : `${data.preloaded} Core-Footprints offline (${data.indexed} gesamt)`;
                     }
                     await loadAndRenderFootprints();
                 } else {
-                    if (cacheStatusEl) cacheStatusEl.innerText = 'Sync fehlgeschlagen';
+                    if (cacheStatusEl) cacheStatusEl.innerText = window.t ? window.t('footprints.sync_failed') : 'Sync fehlgeschlagen';
                 }
             } catch (err) {
                 console.error('Fehler beim Footprint-Sync:', err);
-                if (cacheStatusEl) cacheStatusEl.innerText = 'Netzwerkfehler';
+                if (cacheStatusEl) cacheStatusEl.innerText = window.t ? window.t('footprints.sync_network_error') : 'Netzwerkfehler';
             } finally {
                 syncBtn.disabled = false;
                 syncBtn.textContent = origText;
@@ -314,12 +320,13 @@
     // Footprints laden und Grid befüllen
     async function loadAndRenderFootprints() {
         if (!fpGrid) return;
+        const loadingText = window.t ? window.t('footprints.loading') : 'Lade Footprints aus Part-DB / KiCad...';
         fpGrid.innerHTML = `
             <div style="grid-column: 1 / -1; padding: 36px 16px; text-align: center; color: var(--muted); font-size: 0.85rem;">
                 <div style="margin-bottom: 8px;">
                     <svg class="spin-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/></svg>
                 </div>
-                Lade Footprints aus Part-DB / KiCad...
+                ${loadingText}
             </div>
         `;
 
@@ -335,13 +342,14 @@
         const footprints = await fetchFootprintsCatalog(queryClass, searchVal);
 
         if (fpCounter) {
-            fpCounter.innerText = `${footprints.length} Footprints gefunden`;
+            fpCounter.innerText = window.t ? window.t('footprints.found_counter', { count: footprints.length }) : `${footprints.length} Footprints gefunden`;
         }
 
         if (footprints.length === 0) {
+            const noResText = window.t ? window.t('footprints.no_results') : 'Keine passenden Footprints für diese Auswahl gefunden.';
             fpGrid.innerHTML = `
                 <div style="grid-column: 1 / -1; padding: 36px 16px; text-align: center; color: var(--muted); font-size: 0.85rem;">
-                    Keine passenden Footprints für diese Auswahl gefunden.
+                    ${noResText}
                 </div>
             `;
             return;
@@ -389,5 +397,21 @@
             });
         });
     }
+
+    // Language change observer
+    window.addEventListener('languageChanged', () => {
+        updateFootprintStatus();
+        const modal = document.getElementById('footprint-picker-modal');
+        if (modal && !modal.classList.contains('hidden')) {
+            const b = (selectedBoxIndex >= 0 && selectedBoxIndex < detectedBoxes.length) ? detectedBoxes[selectedBoxIndex] : null;
+            const normClass = getNormalizedClass(b ? b.label : 'ic');
+            const contextChip = document.querySelector('#fp-filter-chips [data-class="context"]');
+            if (contextChip) {
+                const clsDisplay = getDisplayClassName(normClass);
+                contextChip.textContent = window.t ? window.t('footprints.filter_context_dynamic', { cls: clsDisplay }) : `Passend zu ${clsDisplay}`;
+            }
+            loadAndRenderFootprints();
+        }
+    });
 })();
 

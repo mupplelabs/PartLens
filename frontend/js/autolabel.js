@@ -816,15 +816,32 @@ if (refreshModelsBtn) {
 
 function populateClassDropdown(classes) {
     if (!boxClassSelect) return;
+    const currentVal = boxClassSelect.value;
     boxClassSelect.innerHTML = '';
     classes.forEach(c => {
         const opt = document.createElement('option');
         opt.value = c;
-        opt.textContent = c;
+        if (window.t) {
+            const loc = window.t('classes.' + c);
+            if (loc && loc !== c && !loc.startsWith('classes.')) {
+                opt.textContent = `${loc} (${c})`;
+            } else {
+                opt.textContent = c;
+            }
+        } else {
+            opt.textContent = c;
+        }
         boxClassSelect.appendChild(opt);
     });
+    if (currentVal) {
+        boxClassSelect.value = currentVal;
+    }
 }
 populateClassDropdown(knownDatasetClasses);
+
+window.addEventListener('languageChanged', () => {
+    populateClassDropdown(knownDatasetClasses);
+});
 
 const boxIcTypeSelect = document.getElementById('box-ic-type-select');
 const boxFootprintInput = document.getElementById('box-footprint-input');

@@ -43,6 +43,14 @@ function getSlotType(index) {
 }
 
 function getSlotLabel(index) {
+    if (window.t) {
+        if (resistorBandMode === 5) {
+            const keys = ['studio.resistor.band_digit_1', 'studio.resistor.band_digit_2', 'studio.resistor.band_digit_3', 'studio.resistor.band_multiplier', 'studio.resistor.band_tolerance'];
+            return window.t(keys[index]) || '';
+        }
+        const keys = ['studio.resistor.band_digit_1', 'studio.resistor.band_digit_2', 'studio.resistor.band_multiplier', 'studio.resistor.band_tolerance'];
+        return window.t(keys[index]) || '';
+    }
     if (resistorBandMode === 5) {
         return ['1. Ziffer', '2. Ziffer', '3. Ziffer', 'Multiplikator', 'Toleranz'][index] || '';
     }
@@ -72,9 +80,19 @@ function setResistorBodyType(type) {
         resistorBodyGraphic.className = `resistor-body resistor-body-${type}`;
     }
     if (resistorBodyTypeBtn) {
-        resistorBodyTypeBtn.innerText = type === 'metal' ? 'Metall (Blau)' : 'Kohle (Beige)';
+        if (window.t) {
+            resistorBodyTypeBtn.innerText = type === 'metal' ? window.t('studio.resistor.body_metal') : window.t('studio.resistor.body_carbon');
+        } else {
+            resistorBodyTypeBtn.innerText = type === 'metal' ? 'Metall (Blau)' : 'Kohle (Beige)';
+        }
     }
 }
+
+window.addEventListener('languageChanged', () => {
+    setResistorBodyType(resistorBodyType);
+    renderBandCards();
+    renderSwatchGrid();
+});
 
 function setActiveBandIndex(index) {
     activeBandIndex = Math.max(0, Math.min(resistorBandMode - 1, index));

@@ -86,21 +86,32 @@ function renderObjectsList() {
         if (metaParts.length === 0 && bw > 0) metaParts.push(`${bw}×${bh}px`);
         const metaStr = metaParts.join(' · ');
 
+        const rawLabel = b.label || 'other';
+        let displayLabel = rawLabel;
+        if (window.t) {
+            const loc = window.t('classes.' + rawLabel);
+            if (loc && loc !== rawLabel && !loc.startsWith('classes.')) {
+                displayLabel = loc;
+            }
+        }
+        const noMarkingText = window.t ? window.t('studio.no_marking') : 'Keine Markierung';
+        const detailsText = window.t ? window.t('studio.tab_details') : 'Details';
+
         const confStr = b.confidence !== undefined ? `${Math.round(b.confidence * 100)}%` : '';
 
         row.innerHTML = `
             <div class="object-item-left">
                 <span class="object-item-badge" style="background: ${color};">#${idx + 1}</span>
                 <div class="object-item-info">
-                    <span class="object-item-label">${b.label || 'other'}</span>
-                    <span class="object-item-meta">${metaStr || 'Keine Markierung'}</span>
+                    <span class="object-item-label">${displayLabel}</span>
+                    <span class="object-item-meta">${metaStr || noMarkingText}</span>
                 </div>
             </div>
             <div class="object-item-actions">
                 ${confStr ? `<span style="font-size: 0.68rem; color: var(--muted); margin-right: 2px;">${confStr}</span>` : ''}
                 <button type="button" class="object-item-btn btn-inspect-jump" title="Details &amp; OCR aufrufen" style="display: inline-flex; align-items: center; gap: 3px;">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <span>Details</span>
+                    <span>${detailsText}</span>
                 </button>
                 <button type="button" class="object-item-btn btn-delete-item" title="Bauteil löschen">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -185,7 +196,9 @@ const popoverClassSelect = document.getElementById('popover-class-select');
 const popoverDelBtn = document.getElementById('popover-del-btn');
 const popoverClassBtns = document.querySelectorAll('.popover-class-btn');
 
-if (popoverClassSelect) {
+function populatePopoverClassSelect() {
+    if (!popoverClassSelect) return;
+    const currentVal = popoverClassSelect.value;
     popoverClassSelect.innerHTML = '';
     const classList = (typeof knownDatasetClasses !== 'undefined' && Array.isArray(knownDatasetClasses)) ? knownDatasetClasses : [
         'resistor', 'capacitor', 'inductor', 'diode', 'led',
@@ -195,9 +208,23 @@ if (popoverClassSelect) {
     classList.forEach(c => {
         const opt = document.createElement('option');
         opt.value = c;
-        opt.textContent = c;
+        if (window.t) {
+            const loc = window.t('classes.' + c);
+            if (loc && loc !== c && !loc.startsWith('classes.')) {
+                opt.textContent = `${loc} (${c})`;
+            } else {
+                opt.textContent = c;
+            }
+        } else {
+            opt.textContent = c;
+        }
         popoverClassSelect.appendChild(opt);
     });
+    if (currentVal) popoverClassSelect.value = currentVal;
+}
+
+if (popoverClassSelect) {
+    populatePopoverClassSelect();
     popoverClassSelect.addEventListener('change', () => {
         if (selectedBoxIndex >= 0 && selectedBoxIndex < detectedBoxes.length) {
             applyClassToBox(selectedBoxIndex, popoverClassSelect.value);
@@ -205,6 +232,13 @@ if (popoverClassSelect) {
         }
     });
 }
+
+window.addEventListener('languageChanged', () => {
+    populatePopoverClassSelect();
+    if (typeof renderObjectsList === 'function') {
+        renderObjectsList();
+    }
+});
 
 function openQuickTagPopoverAt(clientX, clientY, boxIdx) {
     if (!quickTagPopover) return;

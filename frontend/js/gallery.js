@@ -39,7 +39,9 @@ function toggleSelectMode(force) {
         toggleBtn.classList.toggle('active', isSelectModeActive);
     }
     if (toggleText) {
-        toggleText.textContent = isSelectModeActive ? 'Fertig' : 'Auswählen';
+        toggleText.textContent = isSelectModeActive
+            ? (window.t ? window.t('gallery.batch_cancel') : 'Done')
+            : (window.t ? window.t('gallery.select_mode') : 'Select');
     }
     if (!isSelectModeActive) {
         clearSampleSelection();

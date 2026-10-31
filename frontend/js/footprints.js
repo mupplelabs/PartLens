@@ -358,8 +358,9 @@
             return `
                 <div class="footprint-card ${isSelected ? 'selected' : ''}" data-name="${f.name}" data-path="${f.path}" data-sub="${f.subcategory || f.category || ''}">
                     <div class="footprint-card-thumb">
-                        <img src="${imgUrl}" alt="${f.name}" loading="lazy" />
+                        <img src="${imgUrl}" alt="${f.name}" loading="lazy" onerror="this.style.opacity='0.25'; this.title='Vorschau nicht verfügbar';" />
                     </div>
+
                     <div class="footprint-card-name" title="${f.name}">${f.name}</div>
                     <div class="footprint-card-sub" title="${f.subcategory || f.category}">${f.subcategory || f.category}</div>
                 </div>

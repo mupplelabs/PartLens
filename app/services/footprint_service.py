@@ -115,6 +115,9 @@ def search_footprints(class_name: Optional[str] = None, search: Optional[str] = 
 
     if raw_s:
         filtered.sort(key=lambda x: x.get("_score", 0), reverse=True)
+    else:
+        filtered.sort(key=lambda x: x.get("priority", 99))
+
 
     return {
         "total": len(filtered),

@@ -183,31 +183,92 @@ CORE_FOOTPRINTS_TARGETS = [
 ]
 
 
+KICAD_IMAGES_TREE_URL = "https://api.github.com/repos/Part-DB/kicad-footprint-images/git/trees/master?recursive=1"
+KICAD_MANIFEST_FILE = CACHE_DIR / "kicad_images_manifest.json"
+
+# Category priorities (lower = shown earlier in default view)
+# DIP and SOIC/TSSOP and QFP are top for ICs; BGA is pushed to bottom.
+CATEGORY_PRIORITY = {
+    # ICs
+    "Package_DIP": 1,
+    "Package_SO": 2,
+    "Package_QFP": 3,
+    "Package_DFN_QFN": 4,
+    "Package_SIP": 5,
+    "Package_SON": 6,
+    "Package_LCC": 7,
+    "Package_LGA": 8,
+    "Package_CSP": 9,
+    "Package_BGA": 35,  # BGA at bottom
+    # Passives & Discretes
+    "Resistor_SMD": 1,
+    "Resistor_THT": 2,
+    "Capacitor_SMD": 1,
+    "Capacitor_Tantalum_SMD": 2,
+    "Capacitor_THT": 3,
+    "Diode_SMD": 1,
+    "Diode_THT": 2,
+    "LED_SMD": 1,
+    "LED_THT": 2,
+    "Package_TO_SOT_THT": 1,
+    "Package_TO_SOT_SMD": 2,
+    "Connector_PinHeader_2.54mm": 1,
+    "Connector_PinHeader_1.27mm": 2,
+    "Connector_PinSocket_2.54mm": 3,
+    "Connector_USB": 4,
+    "Connector_JST": 5,
+    "Button_Switch_THT": 1,
+    "Button_Switch_SMD": 2,
+    "Relay_THT": 1,
+    "Relay_SMD": 2,
+    "Potentiometer_THT": 1,
+    "Potentiometer_SMD": 2,
+    "Display": 1,
+    "Display_7Segment": 2,
+    "Module": 1,
+}
+
+VENDOR_PREFIXES = [
+    "Alliance_", "Analog_", "Texas_", "JEITA_", "Maxim_", "Microchip_",
+    "Nexperia_", "Infineon_", "Diodes_", "Linear_", "ST_", "OnSemi_", "Rohm_"
+]
+
+
+def natural_sort_key(text: str):
+    """Sort strings with embedded numbers naturally (e.g. DIP-8 before DIP-14)."""
+    return [int(c) if c.isdigit() else c.lower() for c in re.split(r"(\d+)", text)]
+
+
 def clean_footprint_name(raw_name: str) -> str:
-    """Generates a clean, short display name for a footprint (e.g. 'SOIC-8', 'TQFP-32', 'R_0805', 'SOD-123')."""
-    if raw_name.startswith("D_"):
-        sub = raw_name[2:]
-        parts = sub.split("_")
+    """Generates a clean, human-friendly display name (e.g. 'DIP-8', 'SOIC-8', 'TQFP-32', 'SOD-123')."""
+    cleaned = raw_name
+    for vp in VENDOR_PREFIXES:
+        if cleaned.startswith(vp):
+            cleaned = cleaned[len(vp):]
+            break
+
+    if cleaned.startswith("D_"):
+        parts = cleaned[2:].split("_")
         return parts[0]
-    if raw_name.startswith("CP_"):
-        sub = raw_name[3:]
-        parts = sub.split("_")
+    if cleaned.startswith("CP_"):
+        parts = cleaned[3:].split("_")
         if parts[0] == "Radial" and len(parts) > 1:
             return f"Radial_{parts[1]}"
         return parts[0]
-    if raw_name.startswith("PinHeader_"):
-        parts = raw_name.split("_")
+    if cleaned.startswith("PinHeader_"):
+        parts = cleaned.split("_")
         return f"{parts[0]}_{parts[1]}"
 
-    parts = raw_name.split("_")
+    parts = cleaned.split("_")
     prefix = parts[0]
+    if prefix in ["R", "C", "L", "LED"] and len(parts) > 1:
+        return f"{prefix}_{parts[1]}"
     if len(parts) > 1 and any(k in parts[1] for k in ["x", "mm", "W", "Tab", "Metric", "Vertical", "Horizontal", "Inline", "DIN"]):
-        if prefix in ["R", "C", "L", "LED"]:
-            return f"{prefix}_{parts[1]}"
         return prefix
     if len(parts) > 1 and re.match(r"^\d+", parts[1]):
         return f"{prefix}_{parts[1]}"
-    return prefix or raw_name
+    return prefix or cleaned
+
 
 
 def generate_aliases(cat: str, raw_name: str, clean_name: str) -> List[str]:
@@ -260,60 +321,105 @@ def generate_aliases(cat: str, raw_name: str, clean_name: str) -> List[str]:
     return sorted(list(aliases))
 
 
-
-async def fetch_kicad_footprints_list() -> List[str]:
-    """Fetches the official KiCad footprint list from Part-DB/kicad-library-lists."""
-    cached_list_file = CACHE_DIR / "kicad_footprints_raw.txt"
-    if cached_list_file.exists():
-        return [l.strip() for l in cached_list_file.read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")]
+async def fetch_kicad_images_list() -> List[str]:
+    """Fetches the list of all PNG files that actually exist in Part-DB/kicad-footprint-images."""
+    if KICAD_MANIFEST_FILE.exists():
+        try:
+            return json.loads(KICAD_MANIFEST_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            pass
 
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(KICAD_LISTS_URL, headers={"User-Agent": "PartLens/2.0"})
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.get(KICAD_IMAGES_TREE_URL, headers={"User-Agent": "PartLens/2.0"})
             if resp.status_code == 200:
-                text = resp.text
-                cached_list_file.write_text(text, encoding="utf-8")
-                return [l.strip() for l in text.splitlines() if l.strip() and not l.startswith("#")]
+                data = resp.json()
+                tree = data.get("tree", [])
+                previews = [
+                    x["path"].replace("previews_optimized/", "")
+                    for x in tree
+                    if x.get("path", "").startswith("previews_optimized/") and x.get("path", "").endswith(".png")
+                ]
+                if previews:
+                    KICAD_MANIFEST_FILE.parent.mkdir(parents=True, exist_ok=True)
+                    KICAD_MANIFEST_FILE.write_text(json.dumps(previews), encoding="utf-8")
+                    return previews
     except Exception as e:
-        print(f"Warning: Could not fetch KiCad footprint list: {e}", flush=True)
+        print(f"Warning: Could not fetch KiCad images tree from GitHub API: {e}", flush=True)
 
-    return []
+    # Fallback to local files if any already exist in cache
+    local_files = [
+        f.relative_to(FOOTPRINTS_CACHE_DIR).as_posix()
+        for f in FOOTPRINTS_CACHE_DIR.glob("**/*.png")
+    ]
+    return local_files
 
 
-def build_kicad_index(raw_lines: List[str]) -> List[Dict]:
-    """Builds a structured index array for PartLens from KiCad footprint lines."""
+def build_kicad_index(image_paths: List[str]) -> List[Dict]:
+    """Builds a structured index array for PartLens only from verified existing PNGs."""
     entries = []
     seen_ids = set()
 
-    for line in raw_lines:
-        cat, _, name = line.partition(":")
-        if not cat or not name:
+    core_target_set = set(CORE_FOOTPRINTS_TARGETS)
+    core_names_set = set(t.partition(":")[2] for t in CORE_FOOTPRINTS_TARGETS)
+
+    for rel_path in image_paths:
+        cat, _, fname = rel_path.partition("/")
+        if not cat or not fname or not fname.endswith(".png"):
             continue
         if cat not in CATEGORY_TO_CLASS:
             continue
 
+        raw_name = fname[:-4]
         comp_class = CATEGORY_TO_CLASS[cat]
-        clean_name = clean_footprint_name(name)
-        rel_path = f"{cat}/{name}.png"
+        clean_name = clean_footprint_name(raw_name)
 
         if rel_path in seen_ids:
             continue
         seen_ids.add(rel_path)
 
-        aliases = generate_aliases(cat, name, clean_name)
+        target_key = f"{cat}:{raw_name}"
+        is_core = target_key in core_target_set or raw_name in core_names_set
+        cat_prio = CATEGORY_PRIORITY.get(cat, 15)
+
+        # Fine-tune priority so Core DIP is 0, Core SO is 1, Core QFP is 2, Core QFN is 3
+        if is_core:
+            if "DIP" in cat:
+                priority = 0
+            elif "SO" in cat:
+                priority = 1
+            elif "QFP" in cat:
+                priority = 2
+            elif "DFN" in cat or "QFN" in cat:
+                priority = 3
+            elif "TO_SOT" in cat:
+                priority = 0 if "THT" in cat else 1
+            elif "SMD" in cat:
+                priority = 0
+            else:
+                priority = 4
+        else:
+            priority = 10 + cat_prio
+
+        subcat = cat.replace("Package_", "").replace("Connector_", "").replace("Button_Switch_", "")
+        aliases = generate_aliases(cat, raw_name, clean_name)
+
 
         entries.append({
             "id": rel_path,
             "name": clean_name,
-            "full_name": name,
-            "filename": f"{name}.png",
+            "full_name": raw_name,
+            "filename": fname,
             "category": cat,
-            "subcategory": cat.replace("Package_", "").replace("Connector_", ""),
+            "subcategory": subcat,
             "path": rel_path,
             "matched_classes": [comp_class],
             "aliases": aliases,
+            "priority": priority,
         })
 
+    # Sort so that core packages (0) and high priority categories (DIP, SO, QFP) are at the top
+    entries.sort(key=lambda x: (x.get("priority", 99), natural_sort_key(x.get("name", ""))))
     return entries
 
 
@@ -344,7 +450,6 @@ async def preload_core_footprints(progress_callback=None) -> int:
     """Pre-downloads the top ~120 core footprints into the local cache."""
     FOOTPRINTS_CACHE_DIR.mkdir(parents=True, exist_ok=True)
     success_count = 0
-
     semaphore = asyncio.Semaphore(10)
 
     async def _download_one(client, target):
@@ -366,14 +471,15 @@ async def preload_core_footprints(progress_callback=None) -> int:
 
 
 async def generate_and_save_index() -> int:
-    """Generates the full KiCad footprint index and saves it to FOOTPRINTS_INDEX_FILE."""
-    lines = await fetch_kicad_footprints_list()
-    if not lines:
-        print("No KiCad footprint lines available.", flush=True)
+    """Generates the verified KiCad footprint index and saves it to FOOTPRINTS_INDEX_FILE."""
+    image_paths = await fetch_kicad_images_list()
+    if not image_paths:
+        print("No KiCad image paths available.", flush=True)
         return 0
 
-    entries = build_kicad_index(lines)
+    entries = build_kicad_index(image_paths)
     FOOTPRINTS_INDEX_FILE.parent.mkdir(parents=True, exist_ok=True)
     FOOTPRINTS_INDEX_FILE.write_text(json.dumps(entries, indent=2), encoding="utf-8")
-    print(f"[PartLens] Successfully built KiCad footprint index with {len(entries)} items at {FOOTPRINTS_INDEX_FILE}", flush=True)
+    print(f"[PartLens] Successfully built verified KiCad footprint index with {len(entries)} items at {FOOTPRINTS_INDEX_FILE}", flush=True)
     return len(entries)
+

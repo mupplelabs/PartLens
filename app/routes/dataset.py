@@ -111,6 +111,7 @@ async def get_single_sample_metadata(split: str, sample_id: str):
     return meta
 
 @router.post("/sample")
+@router.post("/save-sample")
 async def save_new_sample(req: SaveSampleRequest):
     try:
         return save_sample(req)

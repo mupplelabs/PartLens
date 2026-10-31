@@ -58,6 +58,14 @@ const res = await fetch('/api/dataset/samples/bulk-delete', {
 return res.json();
 },
 
+async saveDatasetSample(payload) {
+    return fetch('/api/dataset/sample', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+},
+
 async getFootprints(query = '', category = '') {
 const q = new URLSearchParams();
 if (query) q.set('q', query);

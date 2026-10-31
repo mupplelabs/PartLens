@@ -1509,7 +1509,7 @@ if (saveDatasetBtn) {
                 split: datasetSplit ? datasetSplit.value : 'train'
             };
 
-            const response = await fetch('/api/save-sample', {
+            const response = await fetch('/api/dataset/sample', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)

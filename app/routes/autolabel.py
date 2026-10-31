@@ -1,11 +1,12 @@
 from typing import Optional
 from fastapi import APIRouter, HTTPException
-from app.config import AutoLabelRequest, AutoLabelResponse
+from app.config import AutoLabelRequest, AutoLabelResponse, SaveSampleRequest
 from app.services.llm_service import (
     run_autolabel_inference,
     query_local_models,
     query_gemini_models
 )
+from app.services.dataset_service import save_sample
 
 router = APIRouter(prefix="/api", tags=["autolabel"])
 
@@ -14,6 +15,13 @@ router = APIRouter(prefix="/api", tags=["autolabel"])
 async def autolabel_endpoint(req: AutoLabelRequest):
     try:
         return await run_autolabel_inference(req)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/save-sample")
+async def save_sample_legacy_endpoint(req: SaveSampleRequest):
+    try:
+        return save_sample(req)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

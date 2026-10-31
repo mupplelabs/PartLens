@@ -57,7 +57,11 @@
     "components_detected_focused": "{count} Bauteile erkannt ({ms} ms) – Bauteil #{idx} fokussiert",
     "error_localizing": "Fehler bei Lokalisierung: {error}",
     "autolabel_result": "Auto-Label: {count} Bauteile erkannt ({ms} ms)",
-    "autolabel_status_success": "{count} Bauteile erkannt ({ms} ms). Bitte kontrollieren und speichern!"
+    "autolabel_status_success": "{count} Bauteile erkannt ({ms} ms). Bitte kontrollieren und speichern!",
+    "webcam_live_no_component": "Live: Kein Bauteil erkannt ({ms} ms) – halte ein Bauteil vor die Kamera",
+    "webcam_live_detected": "Live: {count} Bauteile ({ms} ms) – {focus}",
+    "focus_component": "Bauteil #{idx} fokussiert",
+    "full_image_active": "Gesamtbild aktiv"
   },
   "hud": {
     "opacity_title": "Box-Flächenfüllung Transparenz (Taste: O)",

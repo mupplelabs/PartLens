@@ -26,7 +26,9 @@ async function classifyWebcamLoop() {
                 if (selectedBoxIndex !== -2) {
                     selectedBoxIndex = -1;
                 }
-                stage0Summary.innerText = `Live: Kein Bauteil erkannt (${dtMs} ms) – halte ein Bauteil vor die Kamera`;
+                stage0Summary.innerText = window.t
+                    ? window.t('canvas.webcam_live_no_component', { ms: dtMs })
+                    : `Live: Kein Bauteil erkannt (${dtMs} ms) – halte ein Bauteil vor die Kamera`;
                 drawBboxOverlay();
                 renderStage0Chips();
                 updateStage0CropPreview();
@@ -47,9 +49,11 @@ async function classifyWebcamLoop() {
                 }
 
                 const focusLabel = selectedBoxIndex >= 0
-                    ? `Bauteil #${selectedBoxIndex + 1} fokussiert`
-                    : 'Gesamtbild aktiv';
-                stage0Summary.innerText = `Live: ${detectedBoxes.length} Bauteil${detectedBoxes.length === 1 ? '' : 'e'} (${dtMs} ms) – ${focusLabel}`;
+                    ? (window.t ? window.t('canvas.focus_component', { idx: selectedBoxIndex + 1 }) : `Bauteil #${selectedBoxIndex + 1} fokussiert`)
+                    : (window.t ? window.t('canvas.full_image_active') : 'Gesamtbild aktiv');
+                stage0Summary.innerText = window.t
+                    ? window.t('canvas.webcam_live_detected', { count: detectedBoxes.length, ms: dtMs, focus: focusLabel })
+                    : `Live: ${detectedBoxes.length} Bauteil${detectedBoxes.length === 1 ? '' : 'e'} (${dtMs} ms) – ${focusLabel}`;
 
                 drawBboxOverlay();
                 renderStage0Chips();

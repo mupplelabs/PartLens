@@ -199,11 +199,12 @@ async function classifyCurrentImage() {
     const { el: sourceEl, w: srcW, h: srcH } = getActiveMediaSource();
     if (!srcW || !srcH) return;
 
-    // Wenn Stufe 0 erkannt hat, dass sich KEIN Bauteil im Bild befindet (und der Nutzer nicht explizit "Trotzdem Gesamtbild prüfen" gewählt hat):
     if (detectedBoxes.length === 0 && selectedBoxIndex !== -2) {
         lastRawStage1Results = null;
-        outputDiv.innerText = 'Kein Bauteil erkannt';
-        barsContainer.innerHTML = '<div style="font-size: 0.82rem; color: var(--muted); padding: 4px 0;">Stufe 0 hat kein elektronisches Bauteil im Bild lokalisiert – Klassifizierung pausiert.</div>';
+        if (outputDiv) outputDiv.innerText = window.t ? window.t('studio.no_component_detected') : 'Kein Bauteil erkannt';
+        if (barsContainer) {
+            barsContainer.innerHTML = `<div style="font-size: 0.82rem; color: var(--muted); padding: 4px 0;">${window.t ? window.t('studio.stage0_no_component_hint') : 'Stufe 0 hat kein elektronisches Bauteil im Bild lokalisiert – Klassifizierung pausiert.'}</div>`;
+        }
         return;
     }
 
@@ -2011,6 +2012,8 @@ function selectComponentBox(idx, triggerDownstream = true) {
     }
 }
 
+let lastStage0Result = null;
+
 async function runStage0Detection() {
     const { el: sourceEl, w: srcW, h: srcH, ready } = getActiveMediaSource();
     if (!ready) return;
@@ -2023,6 +2026,7 @@ async function runStage0Detection() {
         detectedBoxes = boxes;
 
         if (detectedBoxes.length === 0) {
+            lastStage0Result = { count: 0, ms: dtMs, bestIdx: -1 };
             stage0Summary.innerText = window.t
                 ? window.t('canvas.no_component_detected_ms', { ms: dtMs })
                 : `Kein Bauteil im Bild erkannt (${dtMs} ms)`;
@@ -2040,6 +2044,7 @@ async function runStage0Detection() {
             }
         });
 
+        lastStage0Result = { count: detectedBoxes.length, ms: dtMs, bestIdx };
         stage0Summary.innerText = window.t
             ? window.t('canvas.components_detected_focused', { count: detectedBoxes.length, ms: dtMs, idx: bestIdx + 1 })
             : `${detectedBoxes.length} Bauteil${detectedBoxes.length === 1 ? '' : 'e'} erkannt (${dtMs} ms) – Bauteil #${bestIdx + 1} fokussiert`;
@@ -2053,4 +2058,29 @@ async function runStage0Detection() {
         runDetectBtn.disabled = false;
     }
 }
+
+window.addEventListener('languageChanged', () => {
+    renderStage0Chips();
+    updateStage0CropPreview();
+    const selectedBoxTag = document.getElementById('selected-box-tag');
+    if (selectedBoxTag) {
+        if (selectedBoxIndex >= 0 && selectedBoxIndex < detectedBoxes.length) {
+            const prefix = window.t ? window.t('studio.box_prefix') : 'Box';
+            selectedBoxTag.innerText = `${prefix} #${selectedBoxIndex + 1}: ${detectedBoxes[selectedBoxIndex].label}`;
+        } else {
+            selectedBoxTag.innerText = window.t ? window.t('studio.full_image') : 'Gesamtbild';
+        }
+    }
+    if (stage0Summary && lastStage0Result) {
+        if (lastStage0Result.count === 0) {
+            stage0Summary.innerText = window.t
+                ? window.t('canvas.no_component_detected_ms', { ms: lastStage0Result.ms })
+                : `No component detected in image (${lastStage0Result.ms} ms)`;
+        } else {
+            stage0Summary.innerText = window.t
+                ? window.t('canvas.components_detected_focused', { count: lastStage0Result.count, ms: lastStage0Result.ms, idx: lastStage0Result.bestIdx + 1 })
+                : `${lastStage0Result.count} components detected (${lastStage0Result.ms} ms) – Component #${lastStage0Result.bestIdx + 1} focused`;
+        }
+    }
+});
 

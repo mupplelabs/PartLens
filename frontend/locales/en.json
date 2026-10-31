@@ -57,7 +57,11 @@
     "components_detected_focused": "{count} components detected ({ms} ms) – Component #{idx} focused",
     "error_localizing": "Localization error: {error}",
     "autolabel_result": "Auto-Label: {count} component(s) detected ({ms} ms)",
-    "autolabel_status_success": "{count} component(s) detected ({ms} ms). Please inspect and save!"
+    "autolabel_status_success": "{count} component(s) detected ({ms} ms). Please inspect and save!",
+    "webcam_live_no_component": "Live: No component detected ({ms} ms) – hold a component to the camera",
+    "webcam_live_detected": "Live: {count} component(s) ({ms} ms) – {focus}",
+    "focus_component": "Component #{idx} focused",
+    "full_image_active": "Full image active"
   },
   "hud": {
     "opacity_title": "Box fill opacity (Key: O)",

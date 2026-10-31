@@ -712,7 +712,7 @@ function prepareOcrImageDataUrl(overrideAngleDeg = null, forceNatural = false) {
 
     ocrPreviewCanvas.width = targetW;
     ocrPreviewCanvas.height = targetH;
-    const octx = ocrPreviewCanvas.getContext('2d');
+    const octx = ocrPreviewCanvas.getContext('2d', { willReadFrequently: true });
 
     const userAngleDeg = overrideAngleDeg !== null ? overrideAngleDeg : Number(ocrAngleSlider.value || 0);
     const totalAngleDeg = (isVerticalHousing ? -90 : 0) + userAngleDeg;

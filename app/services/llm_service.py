@@ -128,6 +128,44 @@ def build_autolabel_prompt(
 
     return " ".join(instructions)
 
+def extract_json_data(text: str) -> dict:
+    if not text or not str(text).strip():
+        return {}
+    clean = str(text).strip()
+    if "```" in clean:
+        m = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", clean)
+        if m:
+            clean = m.group(1).strip()
+    try:
+        return json.loads(clean)
+    except Exception:
+        pass
+    b = clean.find("{")
+    k = clean.find("[")
+    idx = -1
+    if b != -1 and k != -1:
+        idx = min(b, k)
+    elif b != -1:
+        idx = b
+    elif k != -1:
+        idx = k
+    if idx != -1:
+        try:
+            obj, _ = json.JSONDecoder().raw_decode(clean[idx:])
+            return obj if isinstance(obj, (dict, list)) else {}
+        except Exception:
+            pass
+    m = re.search(r"(\{[\s\S]*\})", clean)
+    if m:
+        cand = m.group(1)
+        for end in range(len(cand), 1, -1):
+            if cand[end - 1] == '}':
+                try:
+                    return json.loads(cand[:end])
+                except Exception:
+                    continue
+    return {}
+
 async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
     t0 = time.time()
     cfg = load_llm_config()
@@ -186,7 +224,7 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
                     raise RuntimeError(f"Gemini API Fehler ({resp.status_code}): {resp.text}")
                 result_json = resp.json()
                 candidate = result_json["candidates"][0]["content"]["parts"][0]["text"]
-                data = json.loads(candidate)
+                data = extract_json_data(candidate)
                 return data.get("components", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
 
         async def _call_interactions_api(m_name: str) -> list:
@@ -215,11 +253,7 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
                                 raw_text += part["text"]
                 if not raw_text:
                     raise RuntimeError("Keine Textausgabe in der Interactions API Antwort erhalten.")
-                try:
-                    data = json.loads(raw_text)
-                except Exception:
-                    json_match = re.search(r'\{.*\}', raw_text, re.DOTALL)
-                    data = json.loads(json_match.group(0)) if json_match else {}
+                data = extract_json_data(raw_text)
                 return data.get("components", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
 
         is_interactions_model = any(k in model_name.lower() for k in ["3.", "4", "argon", "deep-research"])
@@ -309,14 +343,7 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
 
             result_json = resp.json()
             raw_text = result_json["choices"][0]["message"]["content"]
-            try:
-                data = json.loads(raw_text)
-            except Exception:
-                json_match = re.search(r'\{.*\}', raw_text, re.DOTALL)
-                if json_match:
-                    data = json.loads(json_match.group(0))
-                else:
-                    data = {"components": []}
+            data = extract_json_data(raw_text)
 
             comps = data.get("components", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
             for c in comps:

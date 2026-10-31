@@ -260,7 +260,8 @@ function updateLlmStatusChip() {
 
     if (prov === 'gemini') {
         const key = geminiApiKey ? geminiApiKey.value.trim() : '';
-        const hasKey = key.length > 5 || (typeof serverData !== 'undefined' && serverData && serverData.has_gemini_env);
+        const statusSpan = document.getElementById('gemini-key-status');
+        const hasKey = key.length > 5 || (statusSpan && statusSpan.innerText.includes('Server')) || (typeof serverData !== 'undefined' && serverData && serverData.has_gemini_env);
         const displayModel = shortModel.replace(/^gemini-/, '');
         llmVal.innerText = `Gemini (${displayModel})`;
         if (llmChip) {
@@ -468,7 +469,6 @@ if (toggleOpenaiKeyVisBtn && openaiApiKey) {
 
 let _activeGeminiModelsController = null;
 async function fetchGeminiModels(preferredModel = null) {
-    const key = geminiApiKey ? geminiApiKey.value.trim() : '';
     if (modelCountBadge) modelCountBadge.innerText = 'Lade...';
     if (refreshModelsBtn) refreshModelsBtn.disabled = true;
 
@@ -479,17 +479,19 @@ async function fetchGeminiModels(preferredModel = null) {
     const signal = _activeGeminiModelsController.signal;
 
     try {
-        const res = await fetch(`/api/gemini-models?api_key=${encodeURIComponent(key)}`, { signal });
+        const res = await fetch('/api/gemini-models', { signal });
         if (res.ok) {
             const data = await res.json();
-            if (data.success && data.details && data.details.length > 0) {
+            const modelsList = data.details || data.models || [];
+            if (data.success && modelsList.length > 0) {
                 if (autolabelModelSelect) {
                     autolabelModelSelect.innerHTML = '';
-                    data.details.forEach(m => {
+                    modelsList.forEach(m => {
                         const opt = document.createElement('option');
-                        opt.value = m.id;
-                        const isFlash = m.id.includes('flash');
-                        opt.textContent = isFlash ? `${m.id} (${m.display_name}) [Flash]` : `${m.id} (${m.display_name})`;
+                        opt.value = m.id || m;
+                        const dName = m.display_name || m.id || m;
+                        const isFlash = (m.id || m).includes('flash');
+                        opt.textContent = isFlash ? `${m.id || m} (${dName}) [Flash]` : `${m.id || m} (${dName})`;
                         autolabelModelSelect.appendChild(opt);
                     });
                     const customOpt = document.createElement('option');
@@ -499,18 +501,18 @@ async function fetchGeminiModels(preferredModel = null) {
 
                     // Bevorzugtes Modell auswählen
                     const target = preferredModel || localStorage.getItem(LLM_STORAGE_KEYS.MODEL);
-                    const match = data.details.find(m => m.id === target);
+                    const match = modelsList.find(m => (m.id || m) === target);
                     if (match) {
-                        autolabelModelSelect.value = match.id;
+                        autolabelModelSelect.value = match.id || match;
                     } else {
-                        // Bevorzuge das erste Flash-Modell (z.B. gemini-3.8-flash)
-                        const topFlash = data.details.find(m => m.id.includes('flash')) || data.details[0];
-                        autolabelModelSelect.value = topFlash.id;
+                        // Bevorzuge das erste Flash-Modell
+                        const topFlash = modelsList.find(m => (m.id || m).includes('flash')) || modelsList[0];
+                        autolabelModelSelect.value = topFlash.id || topFlash;
                     }
                     saveLlmSettingsToStorage();
                     updateVisionHintForSelectedModel();
                 }
-                if (modelCountBadge) modelCountBadge.innerText = `(${data.details.length} verfügbar)`;
+                if (modelCountBadge) modelCountBadge.innerText = `(${modelsList.length} verfügbar)`;
                 return;
             } else if (data.error) {
                 console.warn('Gemini models info:', data.error);
@@ -547,11 +549,7 @@ async function fetchLocalModels(provider, preferredModel = null) {
 
     // 1. Backend-Proxy versuchen
     try {
-        const oaiKey = (openaiApiKey ? openaiApiKey.value.trim() : '');
-        let proxyUrl = `/api/local-models?provider=${queryProv}&url=${encodeURIComponent(targetUrl)}`;
-        if (oaiKey && !oaiKey.includes('***') && !oaiKey.includes('Server')) {
-            proxyUrl += `&api_key=${encodeURIComponent(oaiKey)}`;
-        }
+        const proxyUrl = `/api/local-models?provider=${queryProv}&url=${encodeURIComponent(targetUrl)}`;
         const res = await fetch(proxyUrl, { signal });
         if (res.ok) {
             const data = await res.json();
@@ -668,7 +666,7 @@ function handleProviderChange(isUserSwitch = false) {
         }
         if (autolabelModelCustom) autolabelModelCustom.style.display = 'none';
         updateVisionHintForSelectedModel();
-        if (isUserSwitch && geminiApiKey && geminiApiKey.value.trim().length > 10) {
+        if (isUserSwitch) {
             fetchGeminiModels();
         }
     } else if (prov === 'openai' || prov === 'lmstudio') {
@@ -730,8 +728,11 @@ if (autolabelProvider) {
 
 function loadLlmSettingsFromStorage() {
     try {
-        const savedKey = localStorage.getItem(LLM_STORAGE_KEYS.GEMINI_KEY);
-        if (savedKey !== null && geminiApiKey) geminiApiKey.value = savedKey;
+        // API-Keys gehoeren sicher auf den Server: veraltete Client-Keys im localStorage bereinigen
+        localStorage.removeItem(LLM_STORAGE_KEYS.GEMINI_KEY);
+        localStorage.removeItem('gemini_api_key');
+        localStorage.removeItem('openai_api_key');
+        if (geminiApiKey) geminiApiKey.value = '';
 
         const savedOcr = localStorage.getItem(LLM_STORAGE_KEYS.OCR_ENGINE);
         if (savedOcr && ocrSelect) ocrSelect.value = savedOcr;
@@ -791,9 +792,7 @@ function loadLlmSettingsFromStorage() {
         // Einziger kontrollierter Start-Abruf der Modelle basierend auf dem geladenen Provider
         const activeProv = autolabelProvider ? autolabelProvider.value : 'gemini';
         if (activeProv === 'gemini') {
-            if (geminiApiKey && geminiApiKey.value.trim().length > 10) {
-                fetchGeminiModels(targetModel);
-            }
+            fetchGeminiModels(targetModel);
         } else if (activeProv === 'openai' || activeProv === 'lmstudio' || activeProv === 'ollama') {
             fetchLocalModels(activeProv, targetModel);
         }
@@ -1557,7 +1556,8 @@ async function syncLlmSettingsWithServer() {
             }
             const hasGemini = s.has_gemini_key || s.gemini_api_key_set;
             if (hasGemini && geminiApiKey) {
-                geminiApiKey.placeholder = 'AIzaSy... (Aktiv auf Server konfiguriert)';
+                geminiApiKey.value = '';
+                geminiApiKey.placeholder = '•••••••••••••••• (Aktiv auf Server konfiguriert)';
                 const statusSpan = document.getElementById('gemini-key-status');
                 if (statusSpan) {
                     statusSpan.innerText = 'Aktiv (Server)';
@@ -1566,7 +1566,8 @@ async function syncLlmSettingsWithServer() {
             }
             const hasOpenai = s.has_openai_key || s.openai_api_key_set;
             if (hasOpenai && openaiApiKey) {
-                openaiApiKey.placeholder = 'sk-... (Aktiv auf Server konfiguriert)';
+                openaiApiKey.value = '';
+                openaiApiKey.placeholder = '•••••••••••••••• (Aktiv auf Server konfiguriert)';
                 const openaiStatusSpan = document.getElementById('openai-key-status');
                 if (openaiStatusSpan) {
                     openaiStatusSpan.innerText = 'Aktiv (Server)';

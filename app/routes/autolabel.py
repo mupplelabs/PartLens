@@ -9,6 +9,7 @@ from app.services.llm_service import (
 
 router = APIRouter(prefix="/api", tags=["autolabel"])
 
+@router.post("/auto-label", response_model=AutoLabelResponse)
 @router.post("/autolabel", response_model=AutoLabelResponse)
 async def autolabel_endpoint(req: AutoLabelRequest):
     try:

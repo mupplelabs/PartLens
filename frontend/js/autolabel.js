@@ -1231,10 +1231,12 @@ function showAutoLabelLoading(modelName, provider) {
     const pillTimer = document.getElementById('autolabel-pill-timer');
     const pillBar = document.getElementById('autolabel-pill-progress-bar');
     const pillModel = document.getElementById('autolabel-pill-model');
+    const pillLabel = document.getElementById('autolabel-pill-label');
     if (pill) pill.style.display = 'flex';
     if (pillTimer) pillTimer.innerText = '00:00.0';
     if (pillBar) pillBar.style.width = '12%';
     if (pillModel) pillModel.innerText = modelName;
+    if (pillLabel) pillLabel.innerText = window.t ? window.t('canvas.ai_analyzing_short') : 'AI analyzing';
 
     autoLabelStartTime = performance.now();
     clearInterval(autoLabelTimerInterval);

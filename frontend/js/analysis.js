@@ -1885,11 +1885,14 @@ function updateStage0CropPreview() {
         if (detectedBoxes.length === 0 && selectedBoxIndex !== -2) {
             cctx.fillStyle = 'rgba(15, 23, 42, 0.62)';
             cctx.fillRect(0, 0, stage0CropCanvas.width, stage0CropCanvas.height);
-            stage0CropTitle.innerText = 'Kein Bauteil erkannt';
+            stage0CropTitle.innerText = window.t ? window.t('studio.no_component_detected') : 'Kein Bauteil erkannt';
             stage0CropInfo.innerHTML = `<span class="meta-pill">${srcW} × ${srcH} px</span>`;
         } else {
-            stage0CropTitle.innerText = detectedBoxes.length > 0 ? `Gesamtbild (${detectedBoxes.length} Boxen)` : `Gesamtbild`;
-            stage0CropInfo.innerHTML = `<span class="meta-pill">${srcW} × ${srcH} px</span>` + (detectedBoxes.length > 0 ? ` <span class="meta-pill accent">${detectedBoxes.length} Bauteile</span>` : '');
+            stage0CropTitle.innerText = detectedBoxes.length > 0
+                ? (window.t ? window.t('studio.full_image_boxes', { count: detectedBoxes.length }) : `Gesamtbild (${detectedBoxes.length} Boxen)`)
+                : (window.t ? window.t('studio.full_image') : 'Gesamtbild');
+            const compCountText = window.t ? window.t('studio.components_count', { count: detectedBoxes.length }) : `${detectedBoxes.length} Bauteile`;
+            stage0CropInfo.innerHTML = `<span class="meta-pill">${srcW} × ${srcH} px</span>` + (detectedBoxes.length > 0 ? ` <span class="meta-pill accent">${compCountText}</span>` : '');
         }
         return;
     }
@@ -1929,13 +1932,13 @@ function renderStage0Chips() {
         emptyBadge.className = 'bbox-chip';
         emptyBadge.style.cursor = 'default';
         emptyBadge.style.opacity = '0.75';
-        emptyBadge.innerText = 'Keine Bauteil-Boxen im Bild';
+        emptyBadge.innerText = window.t ? window.t('studio.no_boxes_in_image') : 'Keine Bauteil-Boxen im Bild';
         bboxChips.appendChild(emptyBadge);
 
         const forceFullBtn = document.createElement('button');
         forceFullBtn.type = 'button';
         forceFullBtn.className = `bbox-chip ${selectedBoxIndex === -2 ? 'active' : ''}`;
-        forceFullBtn.innerText = 'Trotzdem Gesamtbild prüfen';
+        forceFullBtn.innerText = window.t ? window.t('studio.force_full_image') : 'Trotzdem Gesamtbild prüfen';
         forceFullBtn.addEventListener('click', () => selectComponentBox(selectedBoxIndex === -2 ? -1 : -2, true));
         bboxChips.appendChild(forceFullBtn);
         return;
@@ -1955,7 +1958,7 @@ function renderStage0Chips() {
         const allBtn = document.createElement('button');
         allBtn.type = 'button';
         allBtn.className = `bbox-chip ${selectedBoxIndex === -1 ? 'active' : ''}`;
-        allBtn.innerText = `Gesamtbild (${detectedBoxes.length})`;
+        allBtn.innerText = window.t ? window.t('studio.full_image_count', { count: detectedBoxes.length }) : `Gesamtbild (${detectedBoxes.length})`;
         allBtn.addEventListener('click', () => selectComponentBox(-1));
         bboxChips.appendChild(allBtn);
     }
@@ -1973,9 +1976,10 @@ function selectComponentBox(idx, triggerDownstream = true) {
     const selectedBoxTag = document.getElementById('selected-box-tag');
     if (selectedBoxTag) {
         if (idx >= 0 && idx < detectedBoxes.length) {
-            selectedBoxTag.innerText = `Box #${idx + 1}: ${detectedBoxes[idx].label}`;
+            const prefix = window.t ? window.t('studio.box_prefix') : 'Box';
+            selectedBoxTag.innerText = `${prefix} #${idx + 1}: ${detectedBoxes[idx].label}`;
         } else {
-            selectedBoxTag.innerText = 'Gesamtbild';
+            selectedBoxTag.innerText = window.t ? window.t('studio.full_image') : 'Gesamtbild';
         }
     }
     if (typeof renderObjectsList === 'function') {
@@ -2019,7 +2023,9 @@ async function runStage0Detection() {
         detectedBoxes = boxes;
 
         if (detectedBoxes.length === 0) {
-            stage0Summary.innerText = `Kein Bauteil im Bild erkannt (${dtMs} ms)`;
+            stage0Summary.innerText = window.t
+                ? window.t('canvas.no_component_detected_ms', { ms: dtMs })
+                : `Kein Bauteil im Bild erkannt (${dtMs} ms)`;
             selectComponentBox(-1, true);
             return;
         }
@@ -2034,11 +2040,15 @@ async function runStage0Detection() {
             }
         });
 
-        stage0Summary.innerText = `${detectedBoxes.length} Bauteil${detectedBoxes.length === 1 ? '' : 'e'} erkannt (${dtMs} ms) – Bauteil #${bestIdx + 1} fokussiert`;
+        stage0Summary.innerText = window.t
+            ? window.t('canvas.components_detected_focused', { count: detectedBoxes.length, ms: dtMs, idx: bestIdx + 1 })
+            : `${detectedBoxes.length} Bauteil${detectedBoxes.length === 1 ? '' : 'e'} erkannt (${dtMs} ms) – Bauteil #${bestIdx + 1} fokussiert`;
         selectComponentBox(bestIdx, true);
     } catch (err) {
         console.error('Stufe-0 Detektionsfehler:', err);
-        stage0Summary.innerText = `Fehler bei Lokalisierung: ${err.message || err}`;
+        stage0Summary.innerText = window.t
+            ? window.t('canvas.error_localizing', { error: err.message || err })
+            : `Fehler bei Lokalisierung: ${err.message || err}`;
     } finally {
         runDetectBtn.disabled = false;
     }

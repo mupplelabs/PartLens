@@ -1316,7 +1316,9 @@ function renderFilteredGallery() {
     if (totalBadge) totalBadge.innerText = filtered.length;
     if (boxesBadge) {
         const totalBoxes = filtered.reduce((acc, s) => acc + (s.box_count || 0), 0);
-        boxesBadge.innerText = `${totalBoxes} Boxen`;
+        boxesBadge.innerText = window.t
+            ? window.t('gallery.badge_boxes', { count: totalBoxes })
+            : `${totalBoxes} Boxes`;
     }
 
     const paginationBar = document.getElementById('gallery-pagination-bar');

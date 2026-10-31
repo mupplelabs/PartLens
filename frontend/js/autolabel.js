@@ -14,6 +14,10 @@ const refreshModelsBtn = document.getElementById('refresh-models-btn');
 const geminiKeyRow = document.getElementById('gemini-key-row');
 const geminiApiKey = document.getElementById('gemini-api-key');
 const toggleKeyVisBtn = document.getElementById('toggle-key-vis-btn');
+const openaiKeyRow = document.getElementById('openai-key-row');
+const openaiApiKey = document.getElementById('openai-api-key');
+const toggleOpenaiKeyVisBtn = document.getElementById('toggle-openai-key-vis-btn');
+const openaiKeyStatus = document.getElementById('openai-key-status');
 const localUrlRow = document.getElementById('local-url-row');
 const localUrlLabel = document.getElementById('local-url-label');
 const localUrl = document.getElementById('local-url');
@@ -172,12 +176,22 @@ if (autolabelOptionsBtn && autolabelOptionsMenu) {
             payload.gemini_api_key = enteredKey;
         }
 
+        const enteredOpenaiKey = openaiApiKey ? openaiApiKey.value.trim() : '';
+        if (enteredOpenaiKey && !enteredOpenaiKey.includes('***') && !enteredOpenaiKey.includes('Server')) {
+            payload.openai_api_key = enteredOpenaiKey;
+        }
+
         try {
             await CTApi.saveLlmSettings(payload);
             const statusSpan = document.getElementById('gemini-key-status');
-            if (statusSpan) {
+            if (statusSpan && payload.gemini_api_key) {
                 statusSpan.innerText = '(Auf Server gespeichert)';
                 statusSpan.style.color = '#10b981';
+            }
+            const openaiStatusSpan = document.getElementById('openai-key-status');
+            if (openaiStatusSpan && payload.openai_api_key) {
+                openaiStatusSpan.innerText = '(Auf Server gespeichert)';
+                openaiStatusSpan.style.color = '#10b981';
             }
         } catch (netErr) {
             console.warn('Konnte Einstellungen nicht auf Server speichern:', netErr);
@@ -266,7 +280,9 @@ function updateLlmStatusChip() {
 
         llmVal.innerText = `${provPrefix}: ${shortModel}`;
         if (llmChip) {
-            llmChip.title = `LLM Provider: OpenAI-kompatibel (${provPrefix})\nModell: ${rawModel}\nEndpunkt: ${url}\n(Klick öffnet Einstellungen)`;
+            const hasKey = (openaiApiKey && openaiApiKey.value.trim().length > 3) || (openaiKeyStatus && openaiKeyStatus.innerText.includes('Server'));
+            const keyInfo = hasKey ? '\nAPI-Key: Konfiguriert' : '\nAPI-Key: Optional (keiner gesetzt)';
+            llmChip.title = `LLM Provider: OpenAI-kompatibel (${provPrefix})\nModell: ${rawModel}\nEndpunkt: ${url}${keyInfo}\n(Klick öffnet Einstellungen)`;
             const isOffline = localStatusBadge && localStatusBadge.innerText.includes('Offline');
             if (isOffline) {
                 llmChip.classList.add('warning');
@@ -392,6 +408,29 @@ if (localUrl) {
     });
 }
 
+if (openaiApiKey) {
+    let openaiKeyDebounceTimer = null;
+    openaiApiKey.addEventListener('input', () => {
+        saveLlmSettingsToStorage();
+        updateLlmStatusChip();
+        clearTimeout(openaiKeyDebounceTimer);
+        openaiKeyDebounceTimer = setTimeout(() => {
+            const prov = autolabelProvider ? autolabelProvider.value : 'gemini';
+            if (prov === 'openai' || prov === 'lmstudio') {
+                fetchLocalModels(prov);
+            }
+        }, 600);
+    });
+    openaiApiKey.addEventListener('change', () => {
+        saveLlmSettingsToStorage();
+        updateLlmStatusChip();
+        const prov = autolabelProvider ? autolabelProvider.value : 'gemini';
+        if (prov === 'openai' || prov === 'lmstudio') {
+            fetchLocalModels(prov);
+        }
+    });
+}
+
 if (ocrSelect) {
     ocrSelect.addEventListener('change', () => {
         updateOcrStatusChip();
@@ -418,6 +457,12 @@ if (customClassesInput) {
 if (toggleKeyVisBtn && geminiApiKey) {
     toggleKeyVisBtn.addEventListener('click', () => {
         geminiApiKey.type = geminiApiKey.type === 'password' ? 'text' : 'password';
+    });
+}
+
+if (toggleOpenaiKeyVisBtn && openaiApiKey) {
+    toggleOpenaiKeyVisBtn.addEventListener('click', () => {
+        openaiApiKey.type = openaiApiKey.type === 'password' ? 'text' : 'password';
     });
 }
 
@@ -502,7 +547,12 @@ async function fetchLocalModels(provider, preferredModel = null) {
 
     // 1. Backend-Proxy versuchen
     try {
-        const res = await fetch(`/api/local-models?provider=${queryProv}&url=${encodeURIComponent(targetUrl)}`, { signal });
+        const oaiKey = (openaiApiKey ? openaiApiKey.value.trim() : '');
+        let proxyUrl = `/api/local-models?provider=${queryProv}&url=${encodeURIComponent(targetUrl)}`;
+        if (oaiKey && !oaiKey.includes('***') && !oaiKey.includes('Server')) {
+            proxyUrl += `&api_key=${encodeURIComponent(oaiKey)}`;
+        }
+        const res = await fetch(proxyUrl, { signal });
         if (res.ok) {
             const data = await res.json();
             if (data.success && data.models && data.models.length > 0) {
@@ -519,7 +569,12 @@ async function fetchLocalModels(provider, preferredModel = null) {
     // 2. Direkter Fallback aus dem Browser falls Backend-Proxy blockiert war
     if (models.length === 0 && targetUrl && !signal.aborted) {
         try {
-            const directRes = await fetch(`${targetUrl.replace(/\/+$/, '')}/models`, { signal: AbortSignal.timeout(2500) });
+            const fetchOpts = { signal: AbortSignal.timeout(2500) };
+            const oaiKey = (openaiApiKey ? openaiApiKey.value.trim() : '');
+            if (oaiKey && !oaiKey.includes('***') && !oaiKey.includes('Server')) {
+                fetchOpts.headers = { 'Authorization': `Bearer ${oaiKey}` };
+            }
+            const directRes = await fetch(`${targetUrl.replace(/\/+$/, '')}/models`, fetchOpts);
             if (directRes.ok) {
                 const directData = await directRes.json();
                 models = (directData.data || []).map(m => m.id).filter(Boolean);
@@ -595,6 +650,7 @@ function handleProviderChange(isUserSwitch = false) {
     if (prov === 'gemini') {
         if (geminiKeyRow) geminiKeyRow.style.display = 'block';
         if (localUrlRow) localUrlRow.style.display = 'none';
+        if (openaiKeyRow) openaiKeyRow.style.display = 'none';
         if (refreshModelsBtn) {
             refreshModelsBtn.style.display = 'inline-block';
             refreshModelsBtn.title = 'Aktuelle Gemini-Modelle von Google abrufen';
@@ -618,6 +674,7 @@ function handleProviderChange(isUserSwitch = false) {
     } else if (prov === 'openai' || prov === 'lmstudio') {
         if (geminiKeyRow) geminiKeyRow.style.display = 'none';
         if (localUrlRow) localUrlRow.style.display = 'block';
+        if (openaiKeyRow) openaiKeyRow.style.display = 'block';
         if (refreshModelsBtn) {
             refreshModelsBtn.style.display = 'inline-block';
             refreshModelsBtn.title = 'Modelle von OpenAI / oMLX / LM Studio abrufen';
@@ -641,6 +698,7 @@ function handleProviderChange(isUserSwitch = false) {
     } else if (prov === 'ollama') {
         if (geminiKeyRow) geminiKeyRow.style.display = 'none';
         if (localUrlRow) localUrlRow.style.display = 'block';
+        if (openaiKeyRow) openaiKeyRow.style.display = 'none';
         if (refreshModelsBtn) {
             refreshModelsBtn.style.display = 'inline-block';
             refreshModelsBtn.title = 'Lokale Modelle aus Ollama abrufen';
@@ -1479,24 +1537,40 @@ initResistorSelectors();
 
 async function syncLlmSettingsWithServer() {
     try {
-        const s = await CTApi.getLlmSettings();
+        const res = await CTApi.getLlmSettings();
+        const s = res?.settings || res;
         if (s) {
-            if (s.provider && autolabelProvider) {
-                autolabelProvider.value = s.provider;
+            const prov = s.default_provider || s.provider;
+            if (prov && autolabelProvider) {
+                autolabelProvider.value = prov;
                 handleProviderChange(false);
             }
-            if (s.custom_url && localUrl) {
+            if (s.openai_url && localUrl && (prov === 'openai' || prov === 'lmstudio')) {
+                localUrl.value = s.openai_url;
+            } else if (s.ollama_url && localUrl && prov === 'ollama') {
+                localUrl.value = s.ollama_url;
+            } else if (s.custom_url && localUrl) {
                 localUrl.value = s.custom_url;
             }
             if (s.custom_model && autolabelModelCustom) {
                 autolabelModelCustom.value = s.custom_model;
             }
-            if (s.gemini_api_key_set && geminiApiKey) {
+            const hasGemini = s.has_gemini_key || s.gemini_api_key_set;
+            if (hasGemini && geminiApiKey) {
                 geminiApiKey.placeholder = 'AIzaSy... (Aktiv auf Server konfiguriert)';
                 const statusSpan = document.getElementById('gemini-key-status');
                 if (statusSpan) {
                     statusSpan.innerText = 'Aktiv (Server)';
                     statusSpan.style.color = '#10b981';
+                }
+            }
+            const hasOpenai = s.has_openai_key || s.openai_api_key_set;
+            if (hasOpenai && openaiApiKey) {
+                openaiApiKey.placeholder = 'sk-... (Aktiv auf Server konfiguriert)';
+                const openaiStatusSpan = document.getElementById('openai-key-status');
+                if (openaiStatusSpan) {
+                    openaiStatusSpan.innerText = 'Aktiv (Server)';
+                    openaiStatusSpan.style.color = '#10b981';
                 }
             }
             if (s.options) {

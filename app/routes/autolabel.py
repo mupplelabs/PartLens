@@ -17,8 +17,8 @@ async def autolabel_endpoint(req: AutoLabelRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/local-models")
-async def local_models_endpoint(provider: str = 'openai', url: Optional[str] = None):
-    return await query_local_models(provider=provider, url=url)
+async def local_models_endpoint(provider: str = 'openai', url: Optional[str] = None, api_key: Optional[str] = None):
+    return await query_local_models(provider=provider, url=url, api_key=api_key)
 
 @router.get("/gemini-models")
 async def gemini_models_endpoint(api_key: Optional[str] = None):

@@ -50,3 +50,5 @@ cache/footprints_index.json
 .env
 .env.local
 .env.*.local
+config/llm_config.json
+config/*.json

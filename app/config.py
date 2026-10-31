@@ -92,11 +92,15 @@ class DatasetStatsResponse(BaseModel):
 class LLMSettingsUpdate(BaseModel):
     gemini_api_key: Optional[str] = None
     openai_api_key: Optional[str] = None
+    provider: Optional[str] = None
     default_provider: Optional[str] = None
+    model: Optional[str] = None
     default_model: Optional[str] = None
+    custom_url: Optional[str] = None
     openai_url: Optional[str] = None
     ollama_url: Optional[str] = None
     lmstudio_url: Optional[str] = None
+    options: Optional[dict] = None
 
 # Server-side LLM Configuration Storage
 def load_llm_config() -> dict:

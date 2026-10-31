@@ -1000,6 +1000,22 @@
                         </div>
                     </div>
 
+                    <!-- OpenAI API Key (optional) -->
+                    <div id="openai-key-row" style="margin-bottom: 12px; display: none;">
+                        <label class="field-label" for="openai-api-key">
+                            OpenAI API Key (optional für externe oder geschützte Endpunkte): <span id="openai-key-status" style="font-size: 0.72rem; color: #38bdf8; font-weight: normal;"></span>
+                        </label>
+                        <div style="display: flex; gap: 6px;">
+                            <input type="password" id="openai-api-key" placeholder="sk-... (optional für lokale Server frei lassen)" />
+                            <button id="toggle-openai-key-vis-btn" type="button" class="btn" style="padding: 6px 10px;" title="Key anzeigen/verbergen">
+                                <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                        <div style="font-size: 0.72rem; color: var(--muted); margin-top: 4px;">
+                            Wird sicher auf dem Server gespeichert. Für lokale Server (LM Studio, Ollama, oMLX) nicht erforderlich.
+                        </div>
+                    </div>
+
                     <!-- Modulare Feature-Toggles für LLM Auto-Labeling -->
                     <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px;">
                         <label class="field-label" style="margin-bottom: 8px; color: var(--accent); font-weight: 600;">

@@ -171,13 +171,13 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
 
         url = f"{base_url.rstrip('/')}/chat/completions"
         model_name = req.model_name or ("default" if provider == 'lmstudio' else "qwen2-vl-7b-instruct")
-        model_used = f"{provider}:{model_name}"
-
-        api_key = req.api_key or get_api_key_for_provider(provider) or "local"
+        api_key = req.api_key or get_api_key_for_provider(provider)
         headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}"
+            "Content-Type": "application/json"
         }
+        # Optionaler API-Key: Nur mitsenden, wenn konfiguriert
+        if api_key and api_key.strip():
+            headers["Authorization"] = f"Bearer {api_key.strip()}"
 
         sys_msg = (
             "You are a computer vision model specialized in electronic components. "
@@ -245,10 +245,15 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
         latency_ms=latency_ms
     )
 
-async def query_local_models(provider: str = 'openai', url: Optional[str] = None) -> dict:
+async def query_local_models(provider: str = 'openai', url: Optional[str] = None, api_key: Optional[str] = None) -> dict:
     cfg = load_llm_config()
     default_url = cfg.get("ollama_url") if provider == 'ollama' else cfg.get("openai_url")
     target_url = url or default_url or ('http://host.docker.internal:11434/v1' if provider == 'ollama' else 'http://host.docker.internal:1234/v1')
+
+    key = api_key or (get_api_key_for_provider("openai") if provider in ("openai", "lmstudio") else None)
+    headers = {}
+    if key and key.strip():
+        headers["Authorization"] = f"Bearer {key.strip()}"
 
     candidates = [target_url]
     if "127.0.0.1" in target_url:
@@ -263,7 +268,7 @@ async def query_local_models(provider: str = 'openai', url: Optional[str] = None
         endpoint = f"{u.rstrip('/')}/models"
         try:
             async with httpx.AsyncClient(timeout=3.0, verify=False) as client:
-                resp = await client.get(endpoint)
+                resp = await client.get(endpoint, headers=headers)
                 if resp.status_code == 200:
                     data = resp.json()
                     models = [m.get("id") for m in data.get("data", []) if m.get("id")]

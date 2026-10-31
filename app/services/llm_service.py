@@ -116,14 +116,13 @@ def build_autolabel_prompt(
     ]
 
     if detect_part_marking:
-        instructions.append("Carefully read and transcribe any printed text, laser engraving, or code on the component as 'part_marking'. Omit if unreadable.")
+        instructions.append("Carefully read and transcribe any printed text, laser engraving, or code on the component as 'part_marking' (e.g. 'LT1013CP', 'NE555P', '2N2222', '104'). Omit or leave empty if unreadable.")
     if detect_footprint:
-        instructions.append("Identify the physical package/footprint ('footprint') by counting pins and recognizing standard package shapes (e.g. DIP-8, TO-92, SOIC-8, 0805).")
+        instructions.append("Identify the physical package/footprint ('footprint') by counting pins/leads and recognizing standard package shapes (e.g. 'DIP-8', 'DIP-14', 'DIP-16', 'SOIC-8', 'TO-92', 'TO-220', 'SOT-23', '0805', 'DO-35', 'DO-41', 'Radial-Elko').")
     if detect_ic_subgroup:
-        instructions.append("If a component is an IC, classify its functional subgroup into 'analog', 'logic', 'mcu', or 'special'.")
+        instructions.append("If a component is an IC ('ic'), classify its functional subgroup ('ic_subgroup') into: 'analog' (Op-Amps, linear ICs, voltage regulators like LT1013, LM358, LM317), 'logic' (74xx, 40xx logic gates, shift registers), 'mcu' (microcontrollers like ATmega, PIC, ESP), or 'special' (drivers, RTC, interface chips).")
 
-    instructions.append("Be thorough: find every component even if rotated or partially in shadow.")
-    instructions.append("Output strictly valid, raw JSON with a single root object containing the 'components' array. Do not include markdown codeblocks, conversational text, explanations, or any characters outside the JSON object.")
+    instructions.append("Be thorough: find every component even if rotated, partially in shadow, or sitting on dark ESD foam.")
     if custom_prompt:
         instructions.append(f"Additional instruction: {custom_prompt}")
 
@@ -188,11 +187,11 @@ def parse_detected_component(c: dict, default_confidence: float = 0.95) -> Optio
             ymin, xmin, ymax, xmax = 0.0, 0.0, 1.0, 1.0
     else:
         try:
-            ymin = float(c.get("ymin", 0.0))
-            xmin = float(c.get("xmin", 0.0))
-            ymax = float(c.get("ymax", 1.0))
-            xmax = float(c.get("xmax", 1.0))
-            if ymax > 1.0 or xmax > 1.0:
+            ymin = float(c.get("ymin") if c.get("ymin") is not None else (c.get("top") if c.get("top") is not None else c.get("y1", 0.0)))
+            xmin = float(c.get("xmin") if c.get("xmin") is not None else (c.get("left") if c.get("left") is not None else c.get("x1", 0.0)))
+            ymax = float(c.get("ymax") if c.get("ymax") is not None else (c.get("bottom") if c.get("bottom") is not None else c.get("y2", 1.0)))
+            xmax = float(c.get("xmax") if c.get("xmax") is not None else (c.get("right") if c.get("right") is not None else c.get("x2", 1.0)))
+            if ymax > 1.0 or xmax > 1.0 or ymin > 1.0 or xmin > 1.0:
                 ymin, xmin, ymax, xmax = ymin / 1000.0, xmin / 1000.0, ymax / 1000.0, xmax / 1000.0
         except Exception:
             ymin, xmin, ymax, xmax = 0.0, 0.0, 1.0, 1.0
@@ -252,13 +251,15 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
             detect_ic_subgroup=bool(req.detect_ic_subgroup)
         )
 
+        gemini_prompt = prompt + " Output strictly valid, raw JSON with a single root object containing the 'components' array. Do not include markdown codeblocks, conversational text, explanations, or any characters outside the JSON object."
+
         async def _call_generate_content(m_name: str) -> list:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{m_name}:generateContent?key={api_key}"
             payload = {
                 "contents": [
                     {
                         "parts": [
-                            {"text": prompt},
+                            {"text": gemini_prompt},
                             {
                                 "inline_data": {
                                     "mime_type": media_type,
@@ -274,6 +275,12 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
                     "temperature": 0.1
                 }
             }
+            print(f"\n========== [DEBUG GEMINI REQUEST] ==========", flush=True)
+            print(f"Modell: {m_name} | API: generateContent", flush=True)
+            print(f"Endpoint: {url.split('?')[0]}", flush=True)
+            print(f"Prompt ({len(gemini_prompt)} Zeichen):\n{gemini_prompt}", flush=True)
+            print(f"============================================\n", flush=True)
+
             async with httpx.AsyncClient(timeout=45.0) as client:
                 resp = await client.post(url, json=payload)
                 if resp.status_code != 200:
@@ -307,7 +314,7 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
             interact_payload = {
                 "model": m_name,
                 "input": [
-                    {"type": "text", "text": prompt},
+                    {"type": "text", "text": gemini_prompt},
                     {
                         "type": "image",
                         "mime_type": media_type,
@@ -315,6 +322,12 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
                     }
                 ]
             }
+            print(f"\n========== [DEBUG GEMINI REQUEST] ==========", flush=True)
+            print(f"Modell: {m_name} | API: Interactions API", flush=True)
+            print(f"Endpoint: {interact_url.split('?')[0]}", flush=True)
+            print(f"Prompt ({len(gemini_prompt)} Zeichen):\n{gemini_prompt}", flush=True)
+            print(f"============================================\n", flush=True)
+
             async with httpx.AsyncClient(timeout=60.0) as client:
                 resp = await client.post(interact_url, json=interact_payload)
                 if resp.status_code != 200:
@@ -370,62 +383,178 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
             if parsed_comp:
                 detected_components.append(parsed_comp)
 
+        print(f"[DEBUG GEMINI] Final geparste Komponenten ({len(detected_components)}):\n{[c.model_dump() for c in detected_components]}", flush=True)
+        print(f"==========================================================\n", flush=True)
+
     elif provider in ('openai', 'lmstudio', 'ollama'):
         if provider in ('openai', 'lmstudio'):
-            base_url = req.openai_url or req.lmstudio_url or cfg.get("openai_url") or 'http://host.docker.internal:1234/v1'
+            default_port = 1234
+            default_def_model = 'Qwen2.5-VL-7B-Instruct-4bit'
+            configured_url = req.openai_url or req.lmstudio_url or cfg.get("openai_url") or cfg.get("lmstudio_url") or 'http://localhost:1234/v1'
         else:
-            base_url = req.ollama_url or cfg.get("ollama_url") or 'http://host.docker.internal:11434/v1'
+            default_port = 11434
+            default_def_model = 'qwen2-vl'
+            configured_url = req.ollama_url or cfg.get("ollama_url") or 'http://localhost:11434/v1'
 
-        url = f"{base_url.rstrip('/')}/chat/completions"
-        model_name = req.model_name or ("default" if provider == 'lmstudio' else "qwen2-vl-7b-instruct")
+        model_name = req.model_name or default_def_model
+        model_used = f"{provider}:{model_name}"
         api_key = req.api_key or get_api_key_for_provider(provider)
         headers = {
             "Content-Type": "application/json"
         }
-        # Optionaler API-Key: Nur mitsenden, wenn konfiguriert
         if api_key and api_key.strip():
             headers["Authorization"] = f"Bearer {api_key.strip()}"
 
-        sys_msg = (
-            "You are a computer vision model specialized in electronic components. "
-            f"Allowed classes: {CLASS_NAMES}. "
-            "Output strictly valid JSON with key 'components' containing array of objects: "
-            "[{\"label\": str, \"ymin\": float, \"xmin\": float, \"ymax\": float, \"xmax\": float, "
-            "\"confidence\": float, \"part_marking\": str or null, \"footprint\": str or null, \"ic_subgroup\": str or null}]"
-        )
+        schema_dict = {
+            "type": "object",
+            "properties": {
+                "components": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "label": {"type": "string", "enum": CLASS_NAMES, "description": "Component category"},
+                            "ymin": {"type": "number", "description": "Normalized top edge [0.0 - 1.0]"},
+                            "xmin": {"type": "number", "description": "Normalized left edge [0.0 - 1.0]"},
+                            "ymax": {"type": "number", "description": "Normalized bottom edge [0.0 - 1.0]"},
+                            "xmax": {"type": "number", "description": "Normalized right edge [0.0 - 1.0]"},
+                            "confidence": {"type": "number", "description": "Confidence score [0.0 - 1.0]"},
+                            "part_marking": {"type": ["string", "null"], "description": "Printed marking or laser text on component"},
+                            "footprint": {"type": ["string", "null"], "description": "Physical package/footprint (e.g. DIP-8, SOIC-8)"},
+                            "ic_subgroup": {"type": ["string", "null"], "description": "IC functional subgroup: analog, logic, mcu, special"}
+                        },
+                        "required": ["label", "ymin", "xmin", "ymax", "xmax"]
+                    }
+                }
+            },
+            "required": ["components"]
+        }
 
-        user_content = [
-            {"type": "text", "text": prompt},
+        example_comp = {
+            "label": "ic",
+            "ymin": 0.12,
+            "xmin": 0.34,
+            "ymax": 0.28,
+            "xmax": 0.52,
+            "confidence": 0.98
+        }
+        if req.detect_part_marking:
+            example_comp["part_marking"] = "LT1013CP"
+        if req.detect_footprint:
+            example_comp["footprint"] = "DIP-8"
+        if req.detect_ic_subgroup:
+            example_comp["ic_subgroup"] = "analog"
+        example_str = json.dumps({"components": [example_comp]})
+
+        messages = [
             {
-                "type": "image_url",
-                "image_url": {"url": f"data:{media_type};base64,{b64_str}"}
+                "role": "system",
+                "content": "You are an expert electronics annotator. Always output pure valid JSON matching the requested schema."
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": prompt + f"\nOutput strictly JSON matching this format: {example_str}"
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:{media_type};base64,{b64_str}"}
+                    }
+                ]
             }
         ]
 
-        payload = {
+        target_url = configured_url
+        candidates = [target_url]
+        if "host.docker.internal" in target_url:
+            candidates.append(target_url.replace("host.docker.internal", "127.0.0.1"))
+            candidates.append(target_url.replace("host.docker.internal", "localhost"))
+        elif "127.0.0.1" in target_url:
+            candidates.append(target_url.replace("127.0.0.1", "host.docker.internal"))
+            candidates.append(target_url.replace("127.0.0.1", "localhost"))
+        elif "localhost" in target_url:
+            candidates.append(target_url.replace("localhost", "127.0.0.1"))
+            candidates.append(target_url.replace("localhost", "host.docker.internal"))
+
+        body = {
             "model": model_name,
-            "messages": [
-                {"role": "system", "content": sys_msg},
-                {"role": "user", "content": user_content}
-            ],
-            "temperature": 0.1,
-            "response_format": {"type": "json_object"}
+            "messages": messages,
+            "response_format": {
+                "type": "json_schema",
+                "json_schema": {"name": "AutoLabelResult", "schema": schema_dict}
+            },
+            "temperature": 0.2
         }
 
-        async with httpx.AsyncClient(timeout=90.0) as client:
-            resp = await client.post(url, json=payload, headers=headers)
-            if resp.status_code != 200:
-                raise RuntimeError(f"{provider.upper()} API Fehler ({resp.status_code}): {resp.text}")
+        print(f"\n========== [DEBUG {provider.upper()} REQUEST] ==========", flush=True)
+        print(f"Provider: {provider} | Modell: {model_name}", flush=True)
+        print(f"Target URL: {target_url} (Kandidaten: {candidates})", flush=True)
+        print(f"System Message: {messages[0]['content']}", flush=True)
+        print(f"User Prompt ({len(prompt)} Zeichen):\n{prompt}", flush=True)
+        print(f"Format Example: {example_str}", flush=True)
+        print(f"========================================================\n", flush=True)
+
+        resp = None
+        result_json = None
+        used_endpoint = None
+        last_resp_err = ""
+
+        async with httpx.AsyncClient(timeout=120.0, verify=False) as client:
+            for cand_base in candidates:
+                endpoint = f"{cand_base.rstrip('/')}/chat/completions"
+                used_endpoint = endpoint
+                try:
+                    resp = await client.post(endpoint, json=body, headers=headers)
+                    if resp.status_code == 200:
+                        break
+
+                    # Fallback falls Server/Modell kein json_schema unterstützt (oft HTTP 400)
+                    resp_text = resp.text
+                    if resp.status_code == 400:
+                        print(f"[DEBUG {provider.upper()}] json_schema nicht unterstützt ({resp.status_code}): {resp_text[:120]}. Versuche Fallback...", flush=True)
+                        body_fb = dict(body)
+                        body_fb["response_format"] = {"type": "json_object"}
+                        resp = await client.post(endpoint, json=body_fb, headers=headers)
+                        if resp.status_code == 200:
+                            break
+                        body_fb.pop("response_format", None)
+                        resp = await client.post(endpoint, json=body_fb, headers=headers)
+                        if resp.status_code == 200:
+                            break
+
+                    last_resp_err = f"HTTP {resp.status_code}: {resp.text}"
+                except Exception as cand_err:
+                    last_resp_err = str(cand_err)
+                    continue
+
+            if not resp or resp.status_code != 200:
+                print(f"\n[DEBUG {provider.upper()} ERROR]\nEndpoint: {used_endpoint}\nError: {last_resp_err}\n", flush=True)
+                raise RuntimeError(f"{provider.upper()} API Fehler an {used_endpoint}: {last_resp_err}")
 
             result_json = resp.json()
-            raw_text = result_json["choices"][0]["message"]["content"]
-            data = extract_json_data(raw_text)
+            raw_text = ""
+            choices = result_json.get("choices", [])
+            if choices:
+                raw_text = choices[0].get("message", {}).get("content", "") or ""
 
+            print(f"\n========== [DEBUG {provider.upper()} RESPONSE] ==========", flush=True)
+            print(f"Provider: {provider} | Modell: {model_name} (Status: {resp.status_code})", flush=True)
+            print(f"Raw Response JSON:\n{json.dumps(result_json, indent=2, ensure_ascii=False) if isinstance(result_json, dict) else result_json}", flush=True)
+            print(f"Content Text ({len(raw_text)} Zeichen):\n{raw_text}", flush=True)
+
+            data = extract_json_data(raw_text)
             comps = data.get("components", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
+            print(f"[DEBUG {provider.upper()}] Extrahierte Komponenten ({len(comps)}):\n{comps}", flush=True)
+
             for c in comps:
                 parsed_comp = parse_detected_component(c, default_confidence=0.85)
                 if parsed_comp:
                     detected_components.append(parsed_comp)
+
+            print(f"[DEBUG {provider.upper()}] Final geparste Komponenten ({len(detected_components)}):\n{[c.model_dump() for c in detected_components]}", flush=True)
+            print(f"========================================================\n", flush=True)
     else:
         raise ValueError(f"Unbekannter Provider: {provider}")
 

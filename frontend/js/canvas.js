@@ -142,10 +142,12 @@ function bindOverlayCanvasInteractions(canvasEl) {
 
         // Modus 4: Andere Box anklicken/auswählen
         let clickedIdx = -1;
-        for (let i = detectedBoxes.length - 1; i >= 0; i--) {
-            if (isPointInsideBox(detectedBoxes[i], imgX, imgY)) {
-                clickedIdx = i;
-                break;
+        if (!isolateSelectedBox) {
+            for (let i = detectedBoxes.length - 1; i >= 0; i--) {
+                if (isPointInsideBox(detectedBoxes[i], imgX, imgY)) {
+                    clickedIdx = i;
+                    break;
+                }
             }
         }
 
@@ -302,10 +304,12 @@ function bindOverlayCanvasInteractions(canvasEl) {
         }
 
         let hoveredIdx = -1;
-        for (let i = detectedBoxes.length - 1; i >= 0; i--) {
-            if (isPointInsideBox(detectedBoxes[i], imgX, imgY)) {
-                hoveredIdx = i;
-                break;
+        if (!isolateSelectedBox) {
+            for (let i = detectedBoxes.length - 1; i >= 0; i--) {
+                if (isPointInsideBox(detectedBoxes[i], imgX, imgY)) {
+                    hoveredIdx = i;
+                    break;
+                }
             }
         }
 
@@ -538,6 +542,12 @@ window.addEventListener('keydown', (e) => {
     if (e.code === 'KeyH' && !e.repeat) {
         if (typeof toggleHudCollapse === 'function') {
             toggleHudCollapse();
+            e.preventDefault();
+        }
+    }
+    if (e.code === 'KeyF' && !e.repeat) {
+        if (typeof toggleIsolateSelectedBox === 'function') {
+            toggleIsolateSelectedBox();
             e.preventDefault();
         }
     }

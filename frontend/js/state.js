@@ -167,6 +167,7 @@ let tesseractWorker = null;
 let detectedBoxes = [];
 let selectedBoxIndex = 0; // -1 = Gesamtbild, 0..N-1 = ausgewähltes Bauteil
 let hoveredBoxIndex = -1;
+let isolateSelectedBox = false; // true = nur ausgewähltes Bauteil anzeigen; ist keines gewählt, alle ausblenden
 let lastRawStage1Results = null;
 let lastRecognizedPartCodes = [];
 

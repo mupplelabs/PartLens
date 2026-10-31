@@ -1743,6 +1743,11 @@ function drawBboxOverlay() {
 
     if (detectedBoxes && detectedBoxes.length > 0) {
         detectedBoxes.forEach((box, idx) => {
+        if (typeof isolateSelectedBox !== 'undefined' && isolateSelectedBox) {
+            if (selectedBoxIndex < 0 || idx !== selectedBoxIndex) {
+                return;
+            }
+        }
         const isSelected = idx === selectedBoxIndex;
         const isHovered = idx === hoveredBoxIndex;
         const bw = box.x2 - box.x1;

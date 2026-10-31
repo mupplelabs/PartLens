@@ -171,6 +171,9 @@
                                 </div>
                             </div>
                             <div class="filter-divider" style="height: 18px; margin: 0 2px;"></div>
+                            <button id="toggle-isolate-box-btn" class="btn-tool" type="button" title="Fokus: Nicht ausgewählte Boxen ausblenden (Taste: F)">
+                                <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
+                            </button>
                             <button id="rotate-image-btn" class="btn-tool" type="button" title="Bild um 90° drehen">
                                 <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><polyline points="21 3 21 8 16 8"/></svg>
                             </button>
@@ -278,6 +281,11 @@
                                     <span id="box-opacity-val" class="stage-opacity-label">12%</span>
                                 </div>
                                 <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.18); margin: 0 4px;"></div>
+                                <!-- Isolate / Focus Tool -->
+                                <button id="stage-isolate-box-btn" class="stage-zoom-btn" type="button" title="Fokus: Nicht ausgewählte Boxen ausblenden (Taste: F)">
+                                    <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
+                                </button>
+                                <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.18); margin: 0 2px;"></div>
                                 <!-- Pan Tool -->
                                 <button id="stage-pan-tool-btn" class="stage-zoom-btn" type="button" title="Pan / Verschieben (Leertaste gedrückt halten + Ziehen)">
                                     <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
@@ -428,6 +436,10 @@
                                     <button type="button" class="btn btn-tool" id="btn-select-all-objects" style="padding: 2px 7px; font-size: 0.7rem;" title="Gesamtansicht wählen">
                                         <svg class="tool-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
                                         <span>Gesamt</span>
+                                    </button>
+                                    <button type="button" class="btn btn-tool" id="btn-toggle-isolate-objects" style="padding: 2px 7px; font-size: 0.7rem;" title="Fokus: Nicht ausgewählte Boxen ausblenden (Taste: F)">
+                                        <svg class="tool-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
+                                        <span id="isolate-btn-label">Fokus</span>
                                     </button>
                                 </div>
                             </div>
@@ -1325,18 +1337,18 @@
 
 
     <!-- PartLens Modular Scripts -->
-    <script src="/frontend/js/state.js?v=2.0.3"></script>
-    <script src="/frontend/js/api.js?v=2.0.3"></script>
-    <script src="/frontend/js/analysis.js?v=2.0.3"></script>
-    <script src="/frontend/js/resistor.js?v=2.0.3"></script>
-    <script src="/frontend/js/canvas.js?v=2.0.3"></script>
-    <script src="/frontend/js/boxes.js?v=2.0.3"></script>
-    <script src="/frontend/js/footprints.js?v=2.0.3"></script>
-    <script src="/frontend/js/autolabel.js?v=2.0.3"></script>
-    <script src="/frontend/js/gallery.js?v=2.0.3"></script>
-    <script src="/frontend/js/import_modal.js?v=2.0.3"></script>
-    <script src="/frontend/js/export.js?v=2.0.3"></script>
-    <script src="/frontend/js/webcam.js?v=2.0.3"></script>
-    <script src="/frontend/js/app.js?v=2.0.3"></script>
+    <script src="/frontend/js/state.js?v=2.0.4"></script>
+    <script src="/frontend/js/api.js?v=2.0.4"></script>
+    <script src="/frontend/js/analysis.js?v=2.0.4"></script>
+    <script src="/frontend/js/resistor.js?v=2.0.4"></script>
+    <script src="/frontend/js/canvas.js?v=2.0.4"></script>
+    <script src="/frontend/js/boxes.js?v=2.0.4"></script>
+    <script src="/frontend/js/footprints.js?v=2.0.4"></script>
+    <script src="/frontend/js/autolabel.js?v=2.0.4"></script>
+    <script src="/frontend/js/gallery.js?v=2.0.4"></script>
+    <script src="/frontend/js/import_modal.js?v=2.0.4"></script>
+    <script src="/frontend/js/export.js?v=2.0.4"></script>
+    <script src="/frontend/js/webcam.js?v=2.0.4"></script>
+    <script src="/frontend/js/app.js?v=2.0.4"></script>
 </body>
 </html>

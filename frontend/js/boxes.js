@@ -450,3 +450,52 @@ if (nextBoxBtn) {
     });
 }
 
+// =====================================================================
+// FOKUS / ISOLIEREN MODUS (Nicht ausgewählte Boxen ausblenden)
+// =====================================================================
+function toggleIsolateSelectedBox() {
+    isolateSelectedBox = !isolateSelectedBox;
+    updateIsolateButtonUI();
+    drawBboxOverlay();
+}
+window.toggleIsolateSelectedBox = toggleIsolateSelectedBox;
+
+function updateIsolateButtonUI() {
+    const btnTool = document.getElementById('toggle-isolate-box-btn');
+    const btnObj = document.getElementById('btn-toggle-isolate-objects');
+    const btnHud = document.getElementById('stage-isolate-box-btn');
+    const labelObj = document.getElementById('isolate-btn-label');
+
+    const titleText = isolateSelectedBox
+        ? 'Fokus aktiv: Nicht ausgewählte Boxen sind ausgeblendet (Taste: F)'
+        : 'Fokus: Nicht ausgewählte Boxen ausblenden (Taste: F)';
+
+    [btnTool, btnObj, btnHud].forEach(btn => {
+        if (btn) {
+            btn.classList.toggle('active', isolateSelectedBox);
+            btn.setAttribute('aria-pressed', isolateSelectedBox ? 'true' : 'false');
+            btn.title = titleText;
+        }
+    });
+
+    if (labelObj) {
+        labelObj.textContent = isolateSelectedBox ? 'Fokus an' : 'Fokus';
+    }
+}
+window.updateIsolateButtonUI = updateIsolateButtonUI;
+
+const btnToggleIsolateTool = document.getElementById('toggle-isolate-box-btn');
+if (btnToggleIsolateTool) {
+    btnToggleIsolateTool.addEventListener('click', toggleIsolateSelectedBox);
+}
+
+const btnToggleIsolateObj = document.getElementById('btn-toggle-isolate-objects');
+if (btnToggleIsolateObj) {
+    btnToggleIsolateObj.addEventListener('click', toggleIsolateSelectedBox);
+}
+
+const btnToggleIsolateHud = document.getElementById('stage-isolate-box-btn');
+if (btnToggleIsolateHud) {
+    btnToggleIsolateHud.addEventListener('click', toggleIsolateSelectedBox);
+}
+

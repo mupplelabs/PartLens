@@ -76,13 +76,14 @@ if FRONTEND_DIR.exists():
 @app.get("/")
 @app.get("/v2")
 async def serve_index():
+    no_cache_headers = {"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"}
     index_file = FRONTEND_DIR / "index.html"
     if index_file.exists():
-        return FileResponse(index_file)
+        return FileResponse(index_file, headers=no_cache_headers)
     # Fallback falls index.html noch aufgeteilt wird
     backup_file = FRONTEND_DIR / "backups" / "index_v2.html.original"
     if backup_file.exists():
-        return FileResponse(backup_file)
+        return FileResponse(backup_file, headers=no_cache_headers)
     return {"message": "ComponentTracker Backend running. Frontend initializing..."}
 
 @app.get("/favicon.ico")

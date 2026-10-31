@@ -35,4 +35,4 @@ from app.routes.import_data import get_import_sources
 if __name__ == "__main__":
     host = os.environ.get("HOST", "0.0.0.0")
     port = int(os.environ.get("PORT", "8000"))
-    uvicorn.run("server:app", host=host, port=port, reload=True)
+    uvicorn.run("app.main:app", host=host, port=port, reload=True, reload_dirs=["app", "frontend"])

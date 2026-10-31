@@ -22,6 +22,17 @@
         .btn-primary:hover:not(:disabled) {
             background: var(--primary-hover);
         }
+        .btn-secondary {
+            background: var(--surface-elevated);
+            border-color: var(--border);
+            color: var(--text);
+        }
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--surface-hover);
+            border-color: var(--border-hover);
+            color: var(--text-bright);
+        }
+
         .btn-ocr {
             background: var(--purple);
             border-color: var(--purple);

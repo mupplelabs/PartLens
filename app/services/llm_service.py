@@ -365,10 +365,10 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
                 else:
                     raise e_gen
 
-            for c in comps:
-                parsed_comp = parse_detected_component(c, default_confidence=0.95)
-                if parsed_comp:
-                    detected_components.append(parsed_comp)
+        for c in comps:
+            parsed_comp = parse_detected_component(c, default_confidence=0.95)
+            if parsed_comp:
+                detected_components.append(parsed_comp)
 
     elif provider in ('openai', 'lmstudio', 'ollama'):
         if provider in ('openai', 'lmstudio'):

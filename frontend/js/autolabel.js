@@ -1346,7 +1346,13 @@ if (runAutolabelBtn) {
             }
 
             const data = await response.json();
-            const { w: srcW, h: srcH } = getActiveMediaSource();
+            let { w: srcW, h: srcH } = getActiveMediaSource();
+            if (!srcW || !srcH) {
+                if (previewImage && (previewImage.naturalWidth || previewImage.width)) {
+                    srcW = previewImage.naturalWidth || previewImage.width;
+                    srcH = previewImage.naturalHeight || previewImage.height;
+                }
+            }
 
             if (!data.components || data.components.length === 0) {
                 hideAutoLabelLoading(true);
@@ -1378,6 +1384,12 @@ if (runAutolabelBtn) {
             drawBboxOverlay();
             renderStage0Chips();
             updateStage0CropPreview();
+            if (typeof renderObjectsList === 'function') {
+                renderObjectsList();
+            }
+            if (typeof updateBoxEditBar === 'function') {
+                updateBoxEditBar();
+            }
 
             stage0Summary.innerText = `Auto-Label: ${detectedBoxes.length} Bauteile erkannt (${data.latency_ms} ms)`;
             autolabelStatus.innerText = (window.innerWidth <= 768)

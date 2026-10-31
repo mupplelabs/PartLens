@@ -1,0 +1,612 @@
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn:hover:not(:disabled) {
+            background: var(--surface-hover);
+            border-color: var(--border-hover);
+            color: var(--text-bright);
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-hover);
+        }
+        .btn-ocr {
+            background: var(--purple);
+            border-color: var(--purple);
+            color: #fff;
+        }
+        .btn-danger {
+            background: rgba(244, 63, 94, 0.15);
+            border-color: var(--rose);
+            color: #fca5a5;
+        }
+        .btn-danger:hover:not(:disabled) {
+            background: rgba(244, 63, 94, 0.25);
+        }
+
+        /* Chips & Tags */
+        .bbox-chips, .part-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .bbox-chip {
+            padding: 4px 9px;
+            border-radius: var(--radius-full);
+            font-size: 0.74rem;
+            font-weight: 700;
+            background: var(--surface-elevated);
+            border: 1px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .bbox-chip.active {
+            border-color: currentColor;
+            box-shadow: 0 0 8px currentColor;
+        }
+        .part-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            color: #6ee7b7;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        /* VSCode / Industrial IDE Style Bottom Status Bar */
+        .studio-status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 25px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            font-size: 0.72rem;
+            gap: 12px;
+            z-index: 95;
+            box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.2);
+            user-select: none;
+            transition: background 0.15s ease;
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        #status {
+            font-size: 0.74rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-align: left;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .status-radar-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            display: inline-block;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .status-radar-dot.initializing,
+        .status-radar-dot.busy {
+            background: #38bdf8;
+            box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7);
+            animation: statusPulse 1.4s infinite cubic-bezier(0.4, 0, 0.6, 1);
+        }
+
+        .status-radar-dot.ready {
+            background: #22c55e;
+            box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+            animation: none;
+        }
+
+        .status-radar-dot.warning {
+            background: #f59e0b;
+            box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+            animation: none;
+        }
+
+        @keyframes statusPulse {
+            0% {
+                transform: scale(0.9);
+                box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.75);
+            }
+            70% {
+                transform: scale(1.15);
+                box-shadow: 0 0 0 8px rgba(56, 189, 248, 0);
+            }
+            100% {
+                transform: scale(0.9);
+                box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
+            }
+        }
+
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--surface-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1px 6px;
+            font-size: 0.68rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .status-chip .chip-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #22c55e;
+            display: inline-block;
+        }
+
+        .status-chip.standby .chip-dot {
+            background: #94a3b8;
+        }
+
+        .status-chip.warning .chip-dot {
+            background: #f59e0b;
+        }
+
+        .status-chip .chip-val {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .tool-disabled {
+            opacity: 0.45 !important;
+            cursor: not-allowed !important;
+            pointer-events: none !important;
+            filter: grayscale(0.6);
+            transition: opacity 0.2s ease, filter 0.2s ease;
+        }
+
+        @media (max-width: 768px) {
+            .studio-status-bar {
+                display: none; /* Hide desktop status bar on mobile where thumb dock is active */
+            }
+        }
+
+        /* Dropzone */
+        .dropzone {
+            width: 100%;
+            padding: 8px 14px;
+            text-align: center;
+            border: 1px dashed var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            background: var(--surface-elevated);
+            color: var(--text-secondary);
+        }
+        .dropzone:hover {
+            border-color: var(--primary);
+            color: var(--text);
+            background: var(--surface-hover);
+        }
+        .dropzone.dragover {
+            border-color: var(--primary);
+            background: rgba(0, 122, 204, 0.12);
+        }
+
+        /* Virtueller Widerstand & Smart-Card im Inspector */
+        .resistor-smart-card {
+            background: var(--surface-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 8px 10px;
+            margin: 8px 0;
+            display: none;
+        }
+        .resistor-smart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+        .resistor-smart-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--amber);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .resistor-mode-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            margin: 4px 0 6px 0;
+        }
+        .resistor-mode-segmented {
+            display: inline-flex;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-full);
+            padding: 2px;
+            gap: 2px;
+        }
+        .resistor-mode-btn {
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .resistor-mode-btn.active {
+            background: var(--accent);
+            color: #ffffff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+        }
+        .resistor-body-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .resistor-value-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 5px 9px;
+            margin-bottom: 6px;
+        }
+        .ohm-result-banner, .ohm-value-badge {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--amber);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            letter-spacing: -0.01em;
+        }
+        .resistor-visual-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 6px 0;
+            padding: 8px 6px;
+            background: var(--surface);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+        .resistor-lead {
+            height: 3px;
+            width: 24px;
+            background: linear-gradient(180deg, #cbd5e1, #64748b);
+        }
+        .resistor-body {
+            display: flex;
+            align-items: stretch;
+            justify-content: space-evenly;
+            width: 146px;
+            height: 28px;
+            border-radius: 9px;
+            padding: 0 8px;
+            position: relative;
+            transition: background 0.25s ease, border-color 0.25s ease;
+        }
+        .resistor-body-carbon {
+            background: linear-gradient(180deg, #ecd6b2 0%, #dab987 50%, #b8955e 100%);
+            border: 1.5px solid #8e6c38;
+        }
+        .resistor-body-metal {
+            background: linear-gradient(180deg, #a5e7ef 0%, #5ec3d3 50%, #2f8897 100%);
+            border: 1.5px solid #1f6b78;
+        }
+        .resistor-band {
+            width: 10px;
+            height: 100%;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, outline-color 0.15s ease;
+            box-shadow: inset 0 0 2px rgba(0,0,0,0.5);
+            position: relative;
+            border-radius: 1px;
+        }
+        .resistor-band:hover {
+            filter: brightness(1.22);
+            transform: scaleY(1.08);
+        }
+        .resistor-band.active {
+            outline: 2px solid #3b82f6;
+            outline-offset: 1px;
+            z-index: 2;
+            box-shadow: 0 0 6px rgba(59, 130, 246, 0.8), inset 0 0 2px rgba(0,0,0,0.4);
+        }
+        .resistor-band.tol {
+            margin-left: 8px;
+        }
+        .resistor-band-cards {
+            display: grid;
+            gap: 4px;
+            margin: 6px 0;
+            grid-template-columns: repeat(4, 1fr);
+        }
+        .resistor-band-cards.mode-5 {
+            grid-template-columns: repeat(5, 1fr);
+        }
+        .resistor-band-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 4px 2px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+        .resistor-band-card:hover {
+            border-color: var(--accent);
+            background: var(--surface-hover);
+        }
+        .resistor-band-card.active {
+            border-color: var(--accent);
+            background: rgba(59, 130, 246, 0.08);
+            box-shadow: 0 0 0 1px var(--accent);
+        }
+        .band-card-label {
+            font-size: 0.6rem;
+            color: var(--muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+        }
+        .band-card-dot {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            margin: 3px auto;
+            border: 1px solid rgba(0,0,0,0.25);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            transition: background 0.15s ease;
+        }
+        .band-card-val {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--text);
+            white-space: nowrap;
+            display: block;
+        }
+        .resistor-palette-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 6px 8px;
+            margin: 6px 0;
+        }
+        .resistor-palette-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            gap: 4px;
+        }
+        .palette-active-title {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--accent);
+            white-space: nowrap;
+        }
+        .palette-hint {
+            font-size: 0.62rem;
+            color: var(--muted);
+        }
+        .resistor-swatch-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 3px;
+        }
+        .swatch-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3px 1px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            background: var(--surface-elevated);
+            cursor: pointer;
+            transition: all 0.12s ease;
+            user-select: none;
+        }
+        .swatch-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            border-color: var(--accent);
+            background: var(--surface-hover);
+        }
+        .swatch-btn:active:not(:disabled) {
+            transform: scale(0.96);
+        }
+        .swatch-btn:disabled {
+            opacity: 0.22;
+            cursor: not-allowed;
+            filter: grayscale(0.7);
+        }
+        .swatch-color-pill {
+            width: 82%;
+            height: 10px;
+            border-radius: 2px;
+            border: 1px solid rgba(0,0,0,0.25);
+            margin-bottom: 2px;
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.3);
+        }
+        .swatch-name {
+            font-size: 0.61rem;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.1;
+        }
+        .swatch-val {
+            font-size: 0.58rem;
+            color: var(--muted);
+            line-height: 1;
+        }
+        .band-selectors {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            margin-top: 6px;
+        }
+        @media (max-width: 520px) {
+            .band-selectors {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        .band-select-col label {
+            display: block;
+            font-size: 0.65rem;
+            color: var(--muted);
+            margin-bottom: 2px;
+        }
+        .band-select-col select {
+            padding: 4px 5px;
+            font-size: 0.72rem;
+        }
+
+        /* Auto-Label Processing State: Soft Blur on Canvas & Image */
+        .image-stage-wrap #preview-image,
+        .image-stage-wrap #bbox-overlay-canvas {
+            transition: filter 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.32s ease;
+        }
+        .image-stage-wrap.is-inferring #preview-image,
+        .image-stage-wrap.is-inferring #bbox-overlay-canvas {
+            filter: blur(4px) brightness(0.85);
+            opacity: 0.92;
+            cursor: wait;
+        }
+
+        /* Floating Dynamic Island Status Pill (Theme Adaptive) */
+        .autolabel-status-pill {
+            position: absolute;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+            pointer-events: none;
+            background: var(--surface-glass);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
+            border-radius: 9999px;
+            padding: 6px 14px 7px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            animation: pillSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            max-width: calc(100% - 28px);
+        }
+        @keyframes pillSlideDown {
+            from { opacity: 0; transform: translate(-50%, -8px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+        .autolabel-pill-inner {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .ai-pill-spinner {
+            animation: pillSpin 1s linear infinite;
+            color: #38bdf8;
+            flex-shrink: 0;
+        }
+        @keyframes pillSpin {
+            100% { transform: rotate(360deg); }
+        }
+        .autolabel-pill-text {
+            font-size: 0.76rem;
+            font-weight: 600;
+            color: var(--text-bright);
+            letter-spacing: -0.01em;
+        }
+        .autolabel-pill-timer {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: 9999px;
+            padding: 1px 7px;
+        }
+        .autolabel-pill-progress-track {
+            width: 100%;
+            height: 2.5px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+        .autolabel-pill-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #38bdf8;
+            border-radius: 9999px;
+            transition: width 0.15s ease-out;
+        }
+
+        /* Button loading spinner pulse */
+        .btn-tool.loading, .dock-btn.loading {
+            position: relative;
+            pointer-events: none;
+            opacity: 0.85;
+            animation: btnPulse 1.2s ease-in-out infinite alternate;
+        }
+        @keyframes btnPulse {
+            0% { filter: brightness(0.9); }
+            100% { filter: brightness(1.25); }
+        }
+

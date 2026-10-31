@@ -1,0 +1,125 @@
+        :root {
+            /* VSCode & Antigravity Modern Dark Palette (Default) */
+            --bg: #0e0e11;
+            --bg-editor: #151518;
+            --surface: #1a1a20;
+            --surface-elevated: #22222a;
+            --surface-hover: #2b2b36;
+            --surface-glass: rgba(22, 22, 26, 0.88);
+            --canvas-bg: #09090b;
+            --border: #272730;
+            --border-subtle: #1e1e26;
+            --border-hover: #3e3e4c;
+            --border-focus: #007acc;
+            --text: #d4d4d8;
+            --text-bright: #fafafa;
+            --text-secondary: #a1a1aa;
+            --muted: #71717a;
+            
+            --primary: #007acc; /* VSCode Blue */
+            --primary-hover: #0098ff;
+            --primary-muted: rgba(0, 122, 204, 0.18);
+            --accent: #10b981;
+            --accent-glow: rgba(16, 185, 129, 0.2);
+            --purple: #8b5cf6;
+            --amber: #f59e0b;
+            --rose: #f43f5e;
+            --cyan: #06b6d4;
+
+            /* YOLO Klassen-Farben (Semantic Palette) */
+            --c-ic-dip: #38bdf8;
+            --c-ic-smd: #06b6d4;
+            --c-to92: #10b981;
+            --c-to220: #14b8a6;
+            --c-resistor: #f59e0b;
+            --c-capacitor: #a855f7;
+            --c-diode: #f43f5e;
+            --c-board: #6366f1;
+            --c-other: #94a3b8;
+
+            --radius-sm: 4px;
+            --radius-md: 7px;
+            --radius-lg: 10px;
+            --radius-full: 9999px;
+            --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            --shadow-popover: 0 8px 30px rgba(0, 0, 0, 0.55);
+            --sidebar-width: 380px;
+        }
+
+        /* VSCode & Antigravity Modern Light Palette */
+        [data-theme="light"] {
+            --bg: #f4f5f8;
+            --bg-editor: #f8fafc;
+            --surface: #ffffff;
+            --surface-elevated: #f1f5f9;
+            --surface-hover: #e2e8f0;
+            --surface-glass: rgba(255, 255, 255, 0.94);
+            --canvas-bg: #e2e8f0;
+            --border: #e2e8f0;
+            --border-subtle: #cbd5e1;
+            --border-hover: #94a3b8;
+            --border-focus: #007acc;
+            --text: #1e293b;
+            --text-bright: #0f172a;
+            --text-secondary: #475569;
+            --muted: #64748b;
+
+            --primary: #007acc;
+            --primary-hover: #0062a3;
+            --primary-muted: rgba(0, 122, 204, 0.12);
+            --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.08);
+            --shadow-popover: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Theme Toggle Button Styles */
+        .theme-toggle-btn {
+            background: var(--surface-elevated);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: var(--radius-sm);
+            padding: 5px 9px;
+            font-size: 0.82rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: all 0.15s ease;
+        }
+        .theme-toggle-btn:hover {
+            background: var(--surface-hover);
+            border-color: var(--border-hover);
+            color: var(--text-bright);
+        }
+        [data-theme="dark"] .theme-icon-dark { display: inline-block; }
+        [data-theme="dark"] .theme-icon-light { display: none; }
+        [data-theme="light"] .theme-icon-dark { display: none; }
+        [data-theme="light"] .theme-icon-light { display: inline-block; }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        /* Safe-Area Insets für iPhone 16 Pro (Dynamic Island & Home Indicator) */
+        .safe-top {
+            padding-top: max(12px, env(safe-area-inset-top));
+        }
+        .safe-bottom {
+            padding-bottom: max(16px, env(safe-area-inset-bottom));
+        }
+

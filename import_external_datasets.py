@@ -188,6 +188,22 @@ def polygon_to_bbox(coords: list[float]) -> tuple[float, float, float, float]:
     yc = ymin + h / 2.0
     return xc, yc, w, h
 
+def coco_bbox_to_yolo(bbox: list[float], img_w: int, img_h: int) -> tuple[float, float, float, float]:
+    """Wandelt COCO BBox [xmin, ymin, width, height] in Pixeln in normalisierte YOLO BBox [xc, yc, w, h] (0..1) um."""
+    if img_w <= 0 or img_h <= 0 or len(bbox) < 4:
+        return 0.5, 0.5, 0.1, 0.1
+    xmin, ymin, bw, bh = [float(v) for v in bbox[:4]]
+    xmin = max(0.0, min(float(img_w), xmin))
+    ymin = max(0.0, min(float(img_h), ymin))
+    bw = max(1.0, min(float(img_w - xmin), bw))
+    bh = max(1.0, min(float(img_h - ymin), bh))
+
+    xc = (xmin + bw / 2.0) / float(img_w)
+    yc = (ymin + bh / 2.0) / float(img_h)
+    nw = bw / float(img_w)
+    nh = bh / float(img_h)
+    return round(xc, 6), round(yc, 6), round(nw, 6), round(nh, 6)
+
 def run_import(
     dry_run: bool = True,
     skip_other: bool = False,
@@ -195,7 +211,7 @@ def run_import(
     generate_thumbnails: bool = True
 ):
     print("=" * 70)
-    mode_str = "🔍 DRY-RUN (Keine Änderungen)" if dry_run else "🚀 LIVE-IMPORT"
+    mode_str = "DRY-RUN (Keine Aenderungen)" if dry_run else "LIVE-IMPORT"
     print(f"ComponentTracker Datensatz-Import: {mode_str}")
     print(f"Ziel-Klassen ({len(TARGET_CLASSES)}): {TARGET_CLASSES}")
     print(f"Optionen: skip_other={skip_other}, max_samples={max_samples or 'Alle'}")
@@ -229,11 +245,11 @@ def run_import(
         mapping = ds["mapping"]
 
         if not root.exists():
-            print(f"⚠️ Verzeichnis für {ds_name} nicht gefunden: {root}")
+            print(f"[WARN] Verzeichnis fuer {ds_name} nicht gefunden: {root}")
             continue
 
         raw_classes = parse_yaml_names(root / "data.yaml")
-        print(f"\n📂 Analysiere {ds_name} ({len(raw_classes)} Quell-Klassen)...")
+        print(f"\n[INFO] Analysiere {ds_name} ({len(raw_classes)} Quell-Klassen)...")
 
         # Splits verarbeiten (train -> train, valid/val/test -> val)
         splits = ["train", "valid", "val", "test"]
@@ -344,26 +360,26 @@ def run_import(
                     dest_lbl.write_text("\n".join(target_lines) + "\n", encoding="utf-8")
 
     print("\n" + "=" * 70)
-    print("📊 ZUSAMMENFASSUNG DES IMPORTS")
+    print("ZUSAMMENFASSUNG DES IMPORTS")
     print("=" * 70)
     print(f"Gescannte Bilder:       {total_images_processed}")
     print(f"Zu importierende Bilder: {total_images_imported}")
     print(f"Importierte Boxen:      {total_boxes_imported}")
     if skip_other:
-        print(f"Übersprungene Boxen:    {total_boxes_skipped}")
+        print(f"Uebersprungene Boxen:    {total_boxes_skipped}")
 
     print("\nVerteilung auf die 14 Ziel-Klassen:")
     for c in TARGET_CLASSES:
         cnt = class_stats[c]
         pct = (cnt / total_boxes_imported * 100) if total_boxes_imported > 0 else 0
-        bar = "█" * int(pct / 2.5)
+        bar = "#" * int(pct / 2.5)
         print(f"  {c:<15} {cnt:>6} Boxen ({pct:>5.1f}%) {bar}")
 
     if dry_run:
-        print("\n💡 Dies war ein DRY-RUN. Führe das Skript ohne '--dry-run' aus, um den Import durchzuführen:")
+        print("\n[NOTE] Dies war ein DRY-RUN. Fuehre das Skript ohne '--dry-run' aus, um den Import durchzufuehren:")
         print("   python import_external_datasets.py --live")
     else:
-        print("\n🎉 Import erfolgreich abgeschlossen! Datensatz und Thumbnails wurden aktualisiert.")
+        print("\n[INFO] Import erfolgreich abgeschlossen! Datensatz und Thumbnails wurden aktualisiert.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Import external YOLO datasets")

@@ -1,0 +1,27 @@
+services:
+  component-tracker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: component-tracker
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    volumes:
+      # Persistent training/validation dataset & sidecars
+      - ./dataset:/app/dataset
+      # External read-only datasets for importing (Mendeley, Roboflow, COCO)
+      - ./external_datasets:/app/external_datasets:ro
+      # Server-side configuration (LLM settings, API keys)
+      - ./config:/app/config
+      # Cache directory for thumbnails and index
+      - ./cache:/app/cache
+      # Test images
+      - ./studies:/app/studies:ro
+    extra_hosts:
+      # Allows container to reach local LLM engines (Ollama, LM Studio) running on the host
+      - "host.docker.internal:host-gateway"

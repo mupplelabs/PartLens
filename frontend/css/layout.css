@@ -1,0 +1,576 @@
+        /* =====================================================================
+           STUDIO NAVIGATION HEADER (Dataloop / ClearML Style)
+           ===================================================================== */
+        header.studio-navbar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: var(--surface-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: max(10px, env(safe-area-inset-top)) 16px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .brand-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text);
+            user-select: none;
+        }
+        .brand-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #38bdf8;
+            flex-shrink: 0;
+        }
+        .brand-title {
+            font-size: 1.02rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .brand-badge {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 2px 6px;
+            border-radius: var(--radius-full);
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            letter-spacing: 0.04em;
+        }
+
+        /* Segmented Navigation Control */
+        .nav-tabs {
+            display: flex;
+            align-items: center;
+            background: var(--surface-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 3px;
+            gap: 2px;
+        }
+        .nav-tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .nav-tab-btn:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .nav-tab-btn.active {
+            background: var(--surface);
+            color: var(--text-bright);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+            border: 1px solid var(--border);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            background: var(--surface-elevated);
+            border: 1px solid var(--border);
+            padding: 5px 10px;
+            border-radius: var(--radius-full);
+            white-space: nowrap;
+        }
+        .live-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 8px #10b981;
+            animation: pulse-dot 2s infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.85); }
+        }
+
+        /* =====================================================================
+           VIEW CONTAINERS
+           ===================================================================== */
+        main.app-main {
+            flex: 1;
+            width: 100%;
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 12px 16px 38px;
+            display: flex;
+            flex-direction: column;
+        }
+        @media (max-width: 768px) {
+            main.app-main {
+                padding-bottom: 84px;
+            }
+        }
+
+        .app-view {
+            display: none;
+            width: 100%;
+            animation: fadeIn 0.2s ease-out;
+        }
+        .app-view.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+
+        /* =====================================================================
+           IPHONE 16 PRO STICKY BOTTOM DOCK (Thumb Ergonomics)
+           ===================================================================== */
+        .mobile-dock {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: var(--surface-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+            padding: 8px 12px max(14px, env(safe-area-inset-bottom));
+        }
+
+        .mobile-dock-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            gap: 8px;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .dock-btn {
+            flex: 1;
+            min-height: 48px; /* Touch target >= 44px */
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--surface-elevated);
+            color: var(--text);
+            font-size: 0.78rem;
+            font-weight: 700;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            cursor: pointer;
+            transition: transform 0.1s ease, background 0.15s ease;
+        }
+        .dock-btn:active {
+            transform: scale(0.96);
+        }
+        .dock-btn.primary {
+            background: var(--surface-elevated);
+            border-color: rgba(56, 189, 248, 0.25);
+            color: var(--text);
+        }
+        .dock-btn.primary svg {
+            color: #38bdf8;
+        }
+        .dock-btn.primary:hover,
+        .dock-btn.primary:active {
+            border-color: #38bdf8;
+            background: rgba(56, 189, 248, 0.08);
+        }
+        .dock-btn.save {
+            background: var(--surface-elevated);
+            border-color: rgba(16, 185, 129, 0.25);
+            color: var(--text);
+        }
+        .dock-btn.save svg {
+            color: #34d399;
+        }
+        .dock-btn.save:hover,
+        .dock-btn.save:active {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.08);
+        }
+        .dock-btn.dock-btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+            border-color: #f87171 !important;
+            color: #fff !important;
+            animation: redDockPulse 1.2s ease-in-out infinite;
+        }
+        .dock-btn.active {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+            border-color: #38bdf8 !important;
+            color: #fff !important;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.45);
+        }
+        @keyframes redDockPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+            50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+        }
+
+        @media (max-width: 768px) {
+            body.view-studio-active .mobile-dock {
+                display: block !important;
+            }
+            body:not(.view-studio-active) .mobile-dock {
+                display: none !important;
+            }
+            body.view-studio-active main.app-main {
+                padding: 8px 8px calc(80px + env(safe-area-inset-bottom)) !important;
+            }
+            body:not(.view-studio-active) main.app-main {
+                padding: 8px 8px max(16px, env(safe-area-inset-bottom)) !important;
+            }
+            header.studio-navbar {
+                padding: max(8px, env(safe-area-inset-top)) 10px 8px;
+                gap: 8px;
+                justify-content: space-between;
+                flex-wrap: nowrap;
+                overflow: hidden;
+            }
+            .brand-wrap {
+                gap: 8px;
+                flex-shrink: 0;
+            }
+            .brand-title {
+                font-size: 0.96rem;
+            }
+            .nav-tabs {
+                padding: 2px;
+                gap: 1px;
+                flex-shrink: 0;
+            }
+            .nav-tab-btn {
+                padding: 5px 8px;
+                font-size: 0.9rem;
+            }
+            .nav-tab-btn span {
+                display: none;
+            }
+            .header-actions {
+                gap: 6px;
+                flex-shrink: 0;
+            }
+            /* Ausladenden Text-Badge auf Mobile ausblenden, damit Export- und Theme-Button sichtbar bleiben */
+            #dataset-counter-badge {
+                display: none !important;
+            }
+            #export-yolo-btn-top,
+            .theme-toggle-btn {
+                padding: 5px 7px;
+                height: 30px;
+                min-width: 30px;
+            }
+
+            /* Option 1: Redundante Buttons in der Top-Bar auf Mobile ausblenden (leben im Thumb-Dock) */
+            #mode-select-btn,
+            #add-manual-box-btn,
+            #run-autolabel-btn,
+            .autolabel-btn-combo,
+            .autolabel-options-dropdown-wrap,
+            #autolabel-options-btn,
+            #autolabel-options-menu,
+            #tab-upload,
+            #tab-webcam,
+            .mode-tabs {
+                display: none !important;
+            }
+            .tool-btn-group .filter-divider:first-of-type {
+                display: none !important;
+            }
+
+            .canvas-top-bar {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding: 6px 8px;
+                gap: 6px;
+            }
+            .canvas-top-bar::-webkit-scrollbar {
+                display: none;
+            }
+            .canvas-top-bar .tool-btn-group {
+                flex-wrap: nowrap;
+                flex-shrink: 0;
+                gap: 5px;
+            }
+            .canvas-top-bar > div:last-child {
+                flex-shrink: 0;
+            }
+
+            /* Option 1: Desktop-Dropzone ("Bild hierher ziehen") auf Mobile ausblenden */
+            .canvas-bottom-bar #dropzone {
+                display: none !important;
+            }
+            .canvas-bottom-bar {
+                padding: 5px 8px;
+                flex-wrap: nowrap;
+                gap: 8px;
+                justify-content: space-between;
+            }
+            #quick-sample-select {
+                flex: 1;
+                max-width: none !important;
+                height: 30px;
+                font-size: 0.74rem;
+            }
+            #stage0-summary {
+                font-size: 0.72rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 45%;
+                margin-left: auto;
+            }
+
+            /* Kompakte Klassenpalette auf Mobile */
+            .class-palette-bar {
+                padding: 4px 8px;
+                gap: 5px;
+            }
+            .class-quick-chip {
+                padding: 3px 8px;
+                font-size: 0.72rem;
+            }
+
+            /* Ausgewogene Canvas-Höhe auf Mobile, damit erkannte Bauteile direkt sichtbar sind */
+            .stage-viewport {
+                min-height: 200px;
+                height: 38vh;
+                max-height: 40vh;
+            }
+            /* Stage-HUD auf dem Smartphone komplett ausblenden (Zoom & Pan erfolgt nativ per 2-Finger-Gesten) */
+            .stage-zoom-bar {
+                display: none !important;
+            }
+            /* Im Phone-Modus Modellname in der Fortschrittsanzeige ausblenden für maximale Kompaktheit */
+            .autolabel-pill-model-wrap {
+                display: none !important;
+            }
+            /* Studio-Grid auf Mobile: Nahtloser Übergang ohne Lücke */
+            .studio-grid {
+                gap: 0 !important;
+            }
+            .studio-canvas-card {
+                border-bottom-left-radius: 0 !important;
+                border-bottom-right-radius: 0 !important;
+                border-bottom: none !important;
+            }
+            .canvas-bottom-bar {
+                border-bottom: 1px solid var(--border) !important;
+            }
+
+            /* Inspector schließt direkt ("klebt") an der Testbilder-Zeile an */
+            .studio-inspector {
+                width: 100% !important;
+                gap: 0 !important;
+                position: static !important;
+                max-height: none !important;
+                overflow: visible !important;
+            }
+            .inspector-tabs-nav {
+                position: sticky !important;
+                top: 48px !important;
+                z-index: 25 !important;
+                border-radius: 0 !important;
+                border-left: 1px solid var(--border) !important;
+                border-right: 1px solid var(--border) !important;
+                border-top: none !important;
+                border-bottom: 1px solid var(--border) !important;
+                background: var(--surface-glass) !important;
+                backdrop-filter: blur(14px) !important;
+                -webkit-backdrop-filter: blur(14px) !important;
+                padding: 4px 6px !important;
+                margin: 0 !important;
+            }
+            .inspector-card {
+                border-top-left-radius: 0 !important;
+                border-top-right-radius: 0 !important;
+                border-top: none !important;
+                border-left: 1px solid var(--border) !important;
+                border-right: 1px solid var(--border) !important;
+                border-bottom: 1px solid var(--border) !important;
+                box-shadow: none !important;
+                padding: 12px 10px !important;
+            }
+
+            /* -----------------------------------------------------------------
+               DATASET BROWSER MOBILE CLEANUP (No wrap & clean ergonomics)
+               ----------------------------------------------------------------- */
+            .dataset-top-header {
+                padding: 10px 12px !important;
+                gap: 10px !important;
+                margin-bottom: 8px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+            .dataset-title-block {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                gap: 8px !important;
+            }
+            .dataset-heading {
+                font-size: 1.1rem !important;
+            }
+            .dataset-subheading {
+                display: none !important; /* Entfernt überflüssigen Text-Ballast auf Mobile */
+            }
+            .gallery-search-wrap {
+                width: 100% !important;
+                max-width: none !important;
+                min-width: 0 !important;
+            }
+            .gallery-search-wrap input {
+                padding: 7px 12px !important;
+                font-size: 0.82rem !important;
+            }
+            .dataset-header-controls {
+                width: 100% !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                gap: 6px !important;
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                scrollbar-width: none !important;
+            }
+            .dataset-header-controls::-webkit-scrollbar {
+                display: none !important;
+            }
+            .dataset-view-switcher {
+                flex-shrink: 0 !important;
+            }
+            .dataset-view-switcher .btn-view-mode {
+                padding: 5px 7px !important;
+            }
+            .dataset-view-switcher .btn-view-mode span {
+                display: none !important;
+            }
+            /* Im Hochformat auf Smartphones die detaillierte Tabelle ausblenden (im Querformat verfügbar) */
+            @media (orientation: portrait) {
+                .btn-view-mode[data-view="detailed-list"] {
+                    display: none !important;
+                }
+            }
+            /* Action-Buttons in Datensatz-Header auf Mobile kompakt & icon-basiert halten */
+            .dataset-header-controls .btn-tool {
+                padding: 5px 8px !important;
+                font-size: 0.74rem !important;
+                flex-shrink: 0 !important;
+                min-height: 32px !important;
+            }
+            .dataset-header-controls .btn-tool span {
+                display: none !important;
+            }
+            /* Nur beim Boxen- und Auswahl-Toggle lassen wir die Beschriftung sichtbar */
+            #toggle-gallery-boxes-btn span,
+            #toggle-select-mode-btn span {
+                display: inline !important;
+                font-size: 0.72rem !important;
+            }
+
+            .dataset-filter-bar {
+                padding: 6px 10px !important;
+                margin-bottom: 10px !important;
+                gap: 8px !important;
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+            .filter-split-group {
+                flex-shrink: 0 !important;
+            }
+            .filter-split-group .filter-label {
+                display: none !important;
+            }
+
+            /* Datensatz-Galerie Kacheln auf Mobile */
+            .gallery-grid {
+                gap: 10px !important;
+            }
+            .gallery-grid.view-small-tiles {
+                grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)) !important;
+                gap: 6px !important;
+            }
+            /* Im Mobil-Modus: Button-Leiste ausblenden (Single-Tap öffnet direkt ins Studio, Swipe/Icon löscht) */
+            .sample-card-actions {
+                display: none !important;
+            }
+            .compact-actions {
+                display: none !important;
+            }
+
+            /* Floating Batch Bar auf Mobilgeräten */
+            .dataset-batch-bar {
+                bottom: max(12px, calc(8px + env(safe-area-inset-bottom))) !important;
+                padding: 4px 8px !important;
+                max-width: calc(100vw - 16px) !important;
+            }
+            .batch-bar-content {
+                gap: 6px !important;
+            }
+            .batch-selection-info {
+                gap: 4px !important;
+                padding-left: 2px !important;
+                font-size: 0.74rem !important;
+            }
+            .batch-actions-group {
+                gap: 4px !important;
+            }
+            .dataset-batch-bar .btn-sm {
+                padding: 4px 8px !important;
+                font-size: 0.72rem !important;
+                min-height: 28px !important;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .batch-selection-label {
+                display: none !important;
+            }
+        }
+
+        /* Hilfsklassen */
+        .btn {
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface-elevated);
+            color: var(--text);
+            font-size: 0.84rem;
+            font-weight: 600;

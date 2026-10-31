@@ -380,6 +380,10 @@
             color: #fff;
         }
 
+        .export-dropdown-item:hover {
+            background: var(--surface-hover) !important;
+        }
+
         .meta-pill {
             display: inline-flex;
             align-items: center;
@@ -3874,10 +3878,32 @@
                 <span class="live-dot"></span>
                 <span id="header-dataset-text">Datensatz: 0 Bilder</span>
             </div>
-            <a id="export-yolo-btn-top" href="/api/dataset/export-zip" class="btn btn-tool" download="component_dataset_yolo.zip" title="Gesamten YOLO-Datensatz (Bilder + Labels + data.yaml) als ZIP herunterladen">
-                <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                <span style="display: none; @media (min-width: 600px) { display: inline; }">YOLO ZIP</span>
-            </a>
+            <div class="export-dropdown-wrap" style="position: relative; display: inline-flex;">
+                <button id="export-yolo-btn-top" class="btn btn-tool" type="button" title="Datensatz als ZIP herunterladen (YOLO oder COCO Format)">
+                    <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span style="display: none; @media (min-width: 600px) { display: inline; }">Export</span>
+                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" style="margin-left: 2px;"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div id="export-dropdown-menu-top" class="export-dropdown-menu" style="display: none; position: absolute; top: calc(100% + 6px); right: 0; z-index: 1000; min-width: 230px; background: var(--surface-elevated); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 6px; box-shadow: var(--shadow-popover);">
+                    <div style="font-size: 0.68rem; font-weight: 700; color: var(--muted); padding: 4px 8px; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Format waehlen
+                    </div>
+                    <a href="/api/dataset/export-zip?format=yolo" download="component_dataset_yolo.zip" class="export-dropdown-item" style="display: flex; flex-direction: column; gap: 2px; padding: 6px 8px; border-radius: var(--radius-sm); text-decoration: none; color: var(--text); transition: background 0.15s ease;">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <span style="font-weight: 700; font-size: 0.82rem;">YOLO Format</span>
+                            <span style="font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: rgba(16, 185, 129, 0.18); color: #34d399; font-weight: 800;">.ZIP</span>
+                        </div>
+                        <span style="font-size: 0.7rem; color: var(--muted);">Bilder, labels/*.txt, data.yaml</span>
+                    </a>
+                    <a href="/api/dataset/export-zip?format=coco" download="component_dataset_coco.zip" class="export-dropdown-item" style="display: flex; flex-direction: column; gap: 2px; padding: 6px 8px; border-radius: var(--radius-sm); text-decoration: none; color: var(--text); transition: background 0.15s ease;">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <span style="font-weight: 700; font-size: 0.82rem;">COCO Format</span>
+                            <span style="font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: rgba(168, 85, 247, 0.18); color: #c084fc; font-weight: 800;">.ZIP</span>
+                        </div>
+                        <span style="font-size: 0.7rem; color: var(--muted);">instances_train/val.json, Pixel BBoxes</span>
+                    </a>
+                </div>
+            </div>
             <button id="theme-toggle-btn" class="theme-toggle-btn" type="button" title="Dark / Light Mode wechseln" aria-label="Theme wechseln">
                 <span class="theme-icon-dark"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
                 <span class="theme-icon-light"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></span>
@@ -4560,10 +4586,32 @@
                         <span>Importieren</span>
                     </button>
 
-                    <a href="/api/dataset/export-zip" class="btn btn-tool btn-tool-accent" download="component_dataset_yolo.zip" title="Gesamten YOLO-Datensatz als ZIP herunterladen">
-                        <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-                        <span>YOLO ZIP</span>
-                    </a>
+                    <div class="export-dropdown-wrap" style="position: relative; display: inline-flex;">
+                        <button id="export-dataset-btn-gallery" class="btn btn-tool btn-tool-accent" type="button" title="Datensatz als ZIP herunterladen (YOLO oder COCO Format)">
+                            <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                            <span>Exportieren</span>
+                            <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" style="margin-left: 2px;"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <div id="export-dropdown-menu-gallery" class="export-dropdown-menu" style="display: none; position: absolute; top: calc(100% + 6px); right: 0; z-index: 1000; min-width: 230px; background: var(--surface-elevated); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 6px; box-shadow: var(--shadow-popover);">
+                            <div style="font-size: 0.68rem; font-weight: 700; color: var(--muted); padding: 4px 8px; text-transform: uppercase; letter-spacing: 0.05em;">
+                                Format waehlen
+                            </div>
+                            <a href="/api/dataset/export-zip?format=yolo" download="component_dataset_yolo.zip" class="export-dropdown-item" style="display: flex; flex-direction: column; gap: 2px; padding: 6px 8px; border-radius: var(--radius-sm); text-decoration: none; color: var(--text); transition: background 0.15s ease;">
+                                <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    <span style="font-weight: 700; font-size: 0.82rem;">YOLO Format</span>
+                                    <span style="font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: rgba(16, 185, 129, 0.18); color: #34d399; font-weight: 800;">.ZIP</span>
+                                </div>
+                                <span style="font-size: 0.7rem; color: var(--muted);">Bilder, labels/*.txt, data.yaml</span>
+                            </a>
+                            <a href="/api/dataset/export-zip?format=coco" download="component_dataset_coco.zip" class="export-dropdown-item" style="display: flex; flex-direction: column; gap: 2px; padding: 6px 8px; border-radius: var(--radius-sm); text-decoration: none; color: var(--text); transition: background 0.15s ease;">
+                                <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    <span style="font-weight: 700; font-size: 0.82rem;">COCO Format</span>
+                                    <span style="font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: rgba(168, 85, 247, 0.18); color: #c084fc; font-weight: 800;">.ZIP</span>
+                                </div>
+                                <span style="font-size: 0.7rem; color: var(--muted);">instances_train/val.json, Pixel BBoxes</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -12913,12 +12961,19 @@
                     const splitText = Object.entries(src.splits || {})
                         .map(([k, v]) => `${v} ${k}`)
                         .join(' · ');
+                    const isCoco = (src.format || '').toLowerCase() === 'coco';
+                    const fmtBadge = isCoco
+                        ? `<span style="font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: rgba(168, 85, 247, 0.18); color: #c084fc; font-weight: 800; border: 1px solid rgba(168, 85, 247, 0.35); text-transform: uppercase;">COCO</span>`
+                        : `<span style="font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: rgba(16, 185, 129, 0.18); color: #34d399; font-weight: 800; border: 1px solid rgba(16, 185, 129, 0.35); text-transform: uppercase;">YOLO</span>`;
 
                     return `
                         <div class="import-source-card ${isSelected ? 'selected' : ''}" data-source-id="${src.id}">
                             <div class="import-source-header">
-                                <span style="font-weight: 700; font-size: 0.84rem; color: var(--text);">${src.name}</span>
-                                <span style="font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-weight: 700;">
+                                <div style="display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden;">
+                                    ${fmtBadge}
+                                    <span style="font-weight: 700; font-size: 0.84rem; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${src.name}</span>
+                                </div>
+                                <span style="font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-weight: 700; white-space: nowrap;">
                                     ${src.total_images} Bilder
                                 </span>
                             </div>
@@ -13159,6 +13214,41 @@
                     })
                     .catch(() => {});
             }
+        })();
+
+        // =====================================================================
+        // EXPORT FORMAT DROPDOWN CONTROLLER (YOLO & COCO)
+        // =====================================================================
+        (function initExportDropdowns() {
+            function setupDropdown(btnId, menuId) {
+                const btn = document.getElementById(btnId);
+                const menu = document.getElementById(menuId);
+                if (!btn || !menu) return;
+
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = menu.style.display === 'block';
+                    document.querySelectorAll('.export-dropdown-menu').forEach(m => {
+                        m.style.display = 'none';
+                    });
+                    menu.style.display = isOpen ? 'none' : 'block';
+                });
+
+                menu.querySelectorAll('.export-dropdown-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        menu.style.display = 'none';
+                    });
+                });
+            }
+
+            setupDropdown('export-yolo-btn-top', 'export-dropdown-menu-top');
+            setupDropdown('export-dataset-btn-gallery', 'export-dropdown-menu-gallery');
+
+            document.addEventListener('click', () => {
+                document.querySelectorAll('.export-dropdown-menu').forEach(m => {
+                    m.style.display = 'none';
+                });
+            });
         })();
 
         // =====================================================================

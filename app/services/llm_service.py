@@ -167,6 +167,61 @@ def extract_json_data(text: str) -> dict:
                     continue
     return {}
 
+def parse_detected_component(c: dict, default_confidence: float = 0.95) -> Optional[DetectedComponent]:
+    if not isinstance(c, dict):
+        return None
+
+    raw_label = str(c.get("label") or c.get("class") or c.get("name") or "other").strip().lower()
+    label = raw_label
+    if label not in CLASS_NAMES:
+        matched = next((cls for cls in CLASS_NAMES if cls in label or label in cls), "other")
+        label = matched
+
+    b2d = c.get("box_2d") or c.get("box") or c.get("bbox")
+    if isinstance(b2d, (list, tuple)) and len(b2d) == 4:
+        try:
+            y1, x1, y2, x2 = [float(v) for v in b2d]
+            if y1 > 1.0 or x1 > 1.0 or y2 > 1.0 or x2 > 1.0:
+                y1, x1, y2, x2 = y1 / 1000.0, x1 / 1000.0, y2 / 1000.0, x2 / 1000.0
+            ymin, xmin, ymax, xmax = min(y1, y2), min(x1, x2), max(y1, y2), max(x1, x2)
+        except Exception:
+            ymin, xmin, ymax, xmax = 0.0, 0.0, 1.0, 1.0
+    else:
+        try:
+            ymin = float(c.get("ymin", 0.0))
+            xmin = float(c.get("xmin", 0.0))
+            ymax = float(c.get("ymax", 1.0))
+            xmax = float(c.get("xmax", 1.0))
+            if ymax > 1.0 or xmax > 1.0:
+                ymin, xmin, ymax, xmax = ymin / 1000.0, xmin / 1000.0, ymax / 1000.0, xmax / 1000.0
+        except Exception:
+            ymin, xmin, ymax, xmax = 0.0, 0.0, 1.0, 1.0
+
+    ymin = max(0.0, min(1.0, ymin))
+    xmin = max(0.0, min(1.0, xmin))
+    ymax = max(0.0, min(1.0, ymax))
+    xmax = max(0.0, min(1.0, xmax))
+
+    if (ymax - ymin) <= 0.005 or (xmax - xmin) <= 0.005:
+        return None
+
+    confidence = float(c.get("confidence", default_confidence))
+    part_marking = c.get("part_marking") or c.get("marking") or c.get("text")
+    footprint = c.get("footprint") or c.get("package")
+    ic_subgroup = c.get("ic_subgroup") or c.get("functional_group") or c.get("subgroup")
+
+    return DetectedComponent(
+        label=label,
+        ymin=round(ymin, 4),
+        xmin=round(xmin, 4),
+        ymax=round(ymax, 4),
+        xmax=round(xmax, 4),
+        confidence=round(confidence, 3),
+        part_marking=str(part_marking).strip() if part_marking else None,
+        footprint=str(footprint).strip() if footprint else None,
+        ic_subgroup=str(ic_subgroup).strip() if ic_subgroup else None
+    )
+
 async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
     t0 = time.time()
     cfg = load_llm_config()
@@ -311,17 +366,9 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
                     raise e_gen
 
             for c in comps:
-                detected_components.append(DetectedComponent(
-                    label=c.get("label", "other"),
-                    ymin=float(c.get("ymin", 0.0)),
-                    xmin=float(c.get("xmin", 0.0)),
-                    ymax=float(c.get("ymax", 1.0)),
-                    xmax=float(c.get("xmax", 1.0)),
-                    confidence=float(c.get("confidence", 0.95)),
-                    part_marking=c.get("part_marking"),
-                    footprint=c.get("footprint"),
-                    ic_subgroup=c.get("ic_subgroup")
-                ))
+                parsed_comp = parse_detected_component(c, default_confidence=0.95)
+                if parsed_comp:
+                    detected_components.append(parsed_comp)
 
     elif provider in ('openai', 'lmstudio', 'ollama'):
         if provider in ('openai', 'lmstudio'):
@@ -376,17 +423,9 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
 
             comps = data.get("components", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
             for c in comps:
-                detected_components.append(DetectedComponent(
-                    label=c.get("label", "other"),
-                    ymin=float(c.get("ymin", 0.0)),
-                    xmin=float(c.get("xmin", 0.0)),
-                    ymax=float(c.get("ymax", 1.0)),
-                    xmax=float(c.get("xmax", 1.0)),
-                    confidence=float(c.get("confidence", 0.85)),
-                    part_marking=c.get("part_marking"),
-                    footprint=c.get("footprint"),
-                    ic_subgroup=c.get("ic_subgroup")
-                ))
+                parsed_comp = parse_detected_component(c, default_confidence=0.85)
+                if parsed_comp:
+                    detected_components.append(parsed_comp)
     else:
         raise ValueError(f"Unbekannter Provider: {provider}")
 

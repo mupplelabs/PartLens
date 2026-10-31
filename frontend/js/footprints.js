@@ -1,9 +1,5 @@
 // =====================================================================
-// FOOTPRINT PREVIEW & PICKER CONTROLLER (KiCad / Part-DB)
-// =====================================================================
-
-// =====================================================================
-// FOOTPRINT PREVIEW & PICKER CONTROLLER (KiCad / Part-DB)
+// FOOTPRINT PREVIEW & PICKER CONTROLLER (KiCad 3D & Autonomer CDN Cache)
 // =====================================================================
 (function initFootprintSystem() {
     const fpModal = document.getElementById('footprint-picker-modal');
@@ -13,6 +9,8 @@
     const fpSearchInput = document.getElementById('fp-picker-search');
     const fpGrid = document.getElementById('footprint-picker-grid');
     const fpCounter = document.getElementById('fp-modal-counter');
+    const cacheStatusEl = document.getElementById('fp-modal-cache-status');
+    const syncBtn = document.getElementById('btn-sync-fp-modal');
     const fpFilterChips = document.querySelectorAll('#fp-filter-chips .btn-filter-pill');
     const commonFootprintsDatalist = document.getElementById('common-footprints-list');
 
@@ -24,6 +22,19 @@
     let footprintIndexByName = new Map();
     let currentFpFilterClass = 'context';
     let fpSearchTimeout = null;
+
+    async function updateFootprintStatus() {
+        if (!cacheStatusEl) return;
+        try {
+            const res = await fetch('/api/footprints/status');
+            if (!res.ok) return;
+            const data = await res.json();
+            cacheStatusEl.innerText = `${data.cached_count} gecacht (${data.cached_size_kb} KB) / ${data.indexed_count} im Katalog`;
+        } catch (e) {
+            cacheStatusEl.innerText = 'Offline: lokal bereit';
+        }
+    }
+
 
     // Footprint Suche per API
     async function fetchFootprintsCatalog(cls = null, search = '') {
@@ -65,7 +76,10 @@
         })
         .catch(() => {});
 
+    updateFootprintStatus();
+
     // Aktualisiert die visuelle Preview-Karte in der Seitenleiste
+
     window.updateBoxFootprintPreview = async function(fpName, fpPath = null, fpSub = null) {
         if (!card || !img || !nameEl) return;
 
@@ -215,7 +229,36 @@
 
             if (fpSearchInput) fpSearchInput.value = '';
 
+            updateFootprintStatus();
             loadAndRenderFootprints();
+        });
+    }
+
+    if (syncBtn) {
+        syncBtn.addEventListener('click', async () => {
+            syncBtn.disabled = true;
+            const origText = syncBtn.textContent;
+            syncBtn.textContent = 'Syncing...';
+            if (cacheStatusEl) cacheStatusEl.innerText = 'Lade KiCad-Katalog & Bilder herunter...';
+            try {
+                const res = await fetch('/api/footprints/sync', { method: 'POST' });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (cacheStatusEl) {
+                        cacheStatusEl.innerText = `${data.preloaded} Core-Footprints offline (${data.indexed} gesamt)`;
+                    }
+                    await loadAndRenderFootprints();
+                } else {
+                    if (cacheStatusEl) cacheStatusEl.innerText = 'Sync fehlgeschlagen';
+                }
+            } catch (err) {
+                console.error('Fehler beim Footprint-Sync:', err);
+                if (cacheStatusEl) cacheStatusEl.innerText = 'Netzwerkfehler';
+            } finally {
+                syncBtn.disabled = false;
+                syncBtn.textContent = origText;
+                await updateFootprintStatus();
+            }
         });
     }
 
@@ -229,6 +272,7 @@
 
     if (closeFpBtn) closeFpBtn.addEventListener('click', closeFpModal);
     if (cancelFpBtn) cancelFpBtn.addEventListener('click', closeFpModal);
+
 
     // Delegiertes Schließen für Modal, Close-Buttons & Backdrop
     const modalEl = document.getElementById('footprint-picker-modal');

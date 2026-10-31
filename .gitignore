@@ -42,9 +42,9 @@ external_datasets/
 # Note: config.json and preprocessor_config.json remain tracked
 models/**/*.onnx
 
-# Part-DB Runtime Cache (downloaded on demand from GitHub)
-cache/footprints/
-cache/footprints_index.json
+# KiCad Runtime Cache (downloaded on demand from GitHub / CDN)
+cache/
+
 
 # Local Environment Variables & Secrets
 .env

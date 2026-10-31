@@ -1308,7 +1308,7 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
                     <div>
                         <h3 id="fp-picker-title" style="margin: 0; font-size: 1rem; font-weight: 800; color: var(--text);">Footprint & Bauform wählen</h3>
-                        <div style="font-size: 0.72rem; color: var(--muted);">Part-DB & KiCad 2D-Zeichnungen (1.703 Footprints)</div>
+                        <div id="fp-modal-subtitle" style="font-size: 0.72rem; color: var(--muted);">KiCad 3D-Vorschauen (Autonom · GitHub & jsDelivr CDN)</div>
                     </div>
                 </div>
                 <button type="button" class="btn-modal-close" id="btn-close-fp-modal" title="Schließen">
@@ -1325,7 +1325,7 @@
                 <!-- Kategorie Filter-Chips -->
                 <div class="footprint-filter-chips" id="fp-filter-chips">
                     <button type="button" class="btn-filter-pill active" data-class="context">Passend zur Klasse</button>
-                    <button type="button" class="btn-filter-pill" data-class="all">Alle (1.703)</button>
+                    <button type="button" class="btn-filter-pill" data-class="all">Alle</button>
                     <button type="button" class="btn-filter-pill" data-class="ic">ICs (DIP, SOIC, QFP)</button>
                     <button type="button" class="btn-filter-pill" data-class="resistor">Widerstände</button>
                     <button type="button" class="btn-filter-pill" data-class="capacitor">Kondensatoren</button>
@@ -1344,11 +1344,16 @@
                 </div>
             </div>
 
-            <div class="app-modal-footer" style="justify-content: space-between;">
-                <div style="font-size: 0.72rem; color: var(--muted);" id="fp-modal-counter">
-                    0 Footprints geladen
+            <div class="app-modal-footer" style="justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span style="font-size: 0.72rem; color: var(--muted);" id="fp-modal-counter">0 Footprints geladen</span>
+                    <span style="font-size: 0.72rem; color: var(--border);">|</span>
+                    <span style="font-size: 0.72rem; color: var(--muted);" id="fp-modal-cache-status">Offline: ...</span>
                 </div>
-                <div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="btn btn-secondary" id="btn-sync-fp-modal" style="padding: 4px 10px; font-size: 0.74rem;" title="KiCad Index aktualisieren und Core-Packages vorladen">
+                        Sync & Preload
+                    </button>
                     <button type="button" class="btn btn-secondary" id="btn-cancel-fp-modal">Schließen</button>
                 </div>
             </div>

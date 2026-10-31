@@ -43,6 +43,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.on_event("startup")
+async def startup_event():
+    from app.config import FOOTPRINTS_INDEX_FILE
+    if not FOOTPRINTS_INDEX_FILE.exists():
+        import asyncio
+        from app.services.kicad_footprint_builder import generate_and_save_index, preload_core_footprints
+        async def _init_footprints():
+            try:
+                await generate_and_save_index()
+                await preload_core_footprints()
+            except Exception as e:
+                print(f"Warning: Auto-init footprints failed: {e}", flush=True)
+        asyncio.create_task(_init_footprints())
+
+
 # Router einbinden
 app.include_router(system_router)
 app.include_router(settings_router)

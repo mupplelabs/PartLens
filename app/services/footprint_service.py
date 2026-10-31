@@ -5,6 +5,8 @@ from typing import Optional
 from app.config import (
     FOOTPRINTS_CACHE_DIR,
     FOOTPRINTS_INDEX_FILE,
+    FOOTPRINTS_CDN_URL,
+    FOOTPRINTS_CDN_FALLBACK,
     PARTDB_BASE_URL
 )
 
@@ -122,28 +124,55 @@ def search_footprints(class_name: Optional[str] = None, search: Optional[str] = 
         "footprints": filtered[:limit]
     }
 
+def reload_footprints_index():
+    global _footprints_index
+    _footprints_index = None
+    return get_footprints_index()
+
 async def get_footprint_image_bytes(path: str) -> Optional[bytes]:
     FOOTPRINTS_CACHE_DIR.mkdir(parents=True, exist_ok=True)
     clean_path = Path(path.strip("/\\")).as_posix()
     if ".." in clean_path:
         return None
 
+    # Check local cache directly
     cached_file = FOOTPRINTS_CACHE_DIR / clean_path
-    if cached_file.exists():
+    if cached_file.exists() and cached_file.stat().st_size > 100:
         return cached_file.read_bytes()
 
+    # Check with .png if no extension was given
+    if not clean_path.endswith((".png", ".svg", ".jpg", ".webp")):
+        cached_png = FOOTPRINTS_CACHE_DIR / f"{clean_path}.png"
+        if cached_png.exists() and cached_png.stat().st_size > 100:
+            return cached_png.read_bytes()
+
+    # Target URLs to probe:
+    # 1. KiCad GitHub Raw CDN
+    # 2. KiCad jsDelivr CDN
+    # 3. Part-DB NAS (if configured)
     target_urls = [
-        f"{PARTDB_BASE_URL.rstrip('/')}/img/footprints/{clean_path}",
-        f"{PARTDB_BASE_URL.rstrip('/')}/{clean_path}"
+        f"{FOOTPRINTS_CDN_URL.rstrip('/')}/{clean_path}",
+        f"{FOOTPRINTS_CDN_FALLBACK.rstrip('/')}/{clean_path}",
     ]
+    if not clean_path.endswith((".png", ".svg", ".jpg", ".webp")):
+        target_urls.append(f"{FOOTPRINTS_CDN_URL.rstrip('/')}/{clean_path}.png")
+        target_urls.append(f"{FOOTPRINTS_CDN_FALLBACK.rstrip('/')}/{clean_path}.png")
+
+    if PARTDB_BASE_URL:
+        target_urls.append(f"{PARTDB_BASE_URL.rstrip('/')}/img/footprints/{clean_path}")
+        target_urls.append(f"{PARTDB_BASE_URL.rstrip('/')}/{clean_path}")
+
     try:
-        async with httpx.AsyncClient(verify=False, timeout=8.0) as client:
+        async with httpx.AsyncClient(verify=False, timeout=10.0) as client:
             for url in target_urls:
                 try:
-                    resp = await client.get(url, headers={"User-Agent": "ComponentTracker/1.0"})
-                    if resp.status_code == 200:
-                        cached_file.parent.mkdir(parents=True, exist_ok=True)
-                        cached_file.write_bytes(resp.content)
+                    resp = await client.get(url, headers={"User-Agent": "PartLens/2.0"})
+                    if resp.status_code == 200 and len(resp.content) > 100:
+                        save_dest = cached_file
+                        if not clean_path.endswith((".png", ".svg", ".jpg", ".webp")) and url.endswith(".png"):
+                            save_dest = FOOTPRINTS_CACHE_DIR / f"{clean_path}.png"
+                        save_dest.parent.mkdir(parents=True, exist_ok=True)
+                        save_dest.write_bytes(resp.content)
                         return resp.content
                 except Exception:
                     continue
@@ -153,3 +182,4 @@ async def get_footprint_image_bytes(path: str) -> Optional[bytes]:
     return None
 
 get_footprint_svg = get_footprint_image_bytes
+

@@ -20,8 +20,15 @@ LLM_CONFIG_FILE = CONFIG_DIR / "llm_config.json"
 FOOTPRINTS_CACHE_DIR = CACHE_DIR / "footprints"
 FOOTPRINTS_INDEX_FILE = CACHE_DIR / "footprints_index.json"
 
-# Part-DB URL from environment
-PARTDB_BASE_URL = os.environ.get("PARTDB_URL", "https://homenas2.fritz.box:9443")
+# KiCad 3D Footprint upstream CDN (Part-DB / KiCad official previews)
+FOOTPRINTS_CDN_URL = os.environ.get(
+    "FOOTPRINTS_CDN_URL",
+    "https://raw.githubusercontent.com/Part-DB/kicad-footprint-images/master/previews_optimized"
+)
+FOOTPRINTS_CDN_FALLBACK = "https://cdn.jsdelivr.net/gh/Part-DB/kicad-footprint-images@master/previews_optimized"
+
+# Optional legacy Part-DB URL from environment (fallback if set)
+PARTDB_BASE_URL = os.environ.get("PARTDB_URL", "")
 
 # Standard 14 YOLO classes aligned with Part-DB
 CLASS_NAMES = [

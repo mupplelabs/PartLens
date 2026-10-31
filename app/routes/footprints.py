@@ -4,13 +4,47 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse, Response
 
-from app.config import FOOTPRINTS_CACHE_DIR
+from app.config import (
+    FOOTPRINTS_CACHE_DIR,
+    FOOTPRINTS_CDN_URL,
+    FOOTPRINTS_CDN_FALLBACK,
+)
 from app.services.footprint_service import (
     search_footprints,
-    get_footprint_image_bytes
+    get_footprint_image_bytes,
+    get_footprints_index,
+    reload_footprints_index,
+)
+from app.services.kicad_footprint_builder import (
+    generate_and_save_index,
+    preload_core_footprints,
 )
 
 router = APIRouter(prefix="/api/footprints", tags=["footprints"])
+
+@router.get("/status")
+async def get_footprints_status():
+    index = get_footprints_index()
+    cached_files = list(FOOTPRINTS_CACHE_DIR.glob("**/*.png")) + list(FOOTPRINTS_CACHE_DIR.glob("**/*.svg"))
+    cached_size_bytes = sum(f.stat().st_size for f in cached_files if f.is_file())
+    return {
+        "indexed_count": len(index),
+        "cached_count": len(cached_files),
+        "cached_size_kb": round(cached_size_bytes / 1024, 1),
+        "cdn_primary": FOOTPRINTS_CDN_URL,
+        "cdn_fallback": FOOTPRINTS_CDN_FALLBACK,
+    }
+
+@router.post("/sync")
+async def sync_footprints():
+    total_indexed = await generate_and_save_index()
+    reload_footprints_index()
+    preloaded = await preload_core_footprints()
+    return {
+        "status": "ok",
+        "indexed": total_indexed,
+        "preloaded": preloaded,
+    }
 
 @router.get("/list")
 async def list_footprints(
@@ -36,11 +70,9 @@ async def get_footprint_image(path: str = Query(..., description="Footprint rela
             headers={"Cache-Control": "public, max-age=2592000, immutable"}
         )
 
-    # Remote Fallback von Part-DB
+    # Remote Fallback ueber CDN / Part-DB
     content = await get_footprint_image_bytes(clean_path)
     if content is not None:
-        local_file.parent.mkdir(parents=True, exist_ok=True)
-        local_file.write_bytes(content)
         return Response(
             content=content,
             media_type=media_type,
@@ -52,3 +84,4 @@ async def get_footprint_image(path: str = Query(..., description="Footprint rela
 @router.get("/file/{path:path}")
 async def get_footprint_file(path: str):
     return await get_footprint_image(path=path)
+

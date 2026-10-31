@@ -123,6 +123,7 @@ def build_autolabel_prompt(
         instructions.append("If a component is an IC, classify its functional subgroup into 'analog', 'logic', 'mcu', or 'special'.")
 
     instructions.append("Be thorough: find every component even if rotated or partially in shadow.")
+    instructions.append("Output strictly valid, raw JSON with a single root object containing the 'components' array. Do not include markdown codeblocks, conversational text, explanations, or any characters outside the JSON object.")
     if custom_prompt:
         instructions.append(f"Additional instruction: {custom_prompt}")
 

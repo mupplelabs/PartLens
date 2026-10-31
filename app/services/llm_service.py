@@ -1,3 +1,5 @@
+import os
+import sys
 import time
 import json
 import re
@@ -12,6 +14,31 @@ from app.config import (
     load_llm_config
 )
 from app.services.dataset_service import parse_image_base64
+
+def is_llm_debug_enabled() -> bool:
+    for arg in sys.argv:
+        if arg in ("--debug", "--debug-llm", "--llm-debug", "-d"):
+            return True
+        if arg in ("--no-debug", "--no-debug-llm", "--no-llm-debug"):
+            return False
+        if arg.startswith("--debug="):
+            val = arg.split("=", 1)[1].strip().lower()
+            return val in ("1", "true", "yes", "on")
+        if arg.startswith("--llm-debug="):
+            val = arg.split("=", 1)[1].strip().lower()
+            return val in ("1", "true", "yes", "on")
+
+    env_val = os.environ.get("DEBUG_LLM") or os.environ.get("LLM_DEBUG") or os.environ.get("DEBUG")
+    if env_val:
+        return env_val.strip().lower() in ("1", "true", "yes", "on")
+
+    return False
+
+def debug_log(*args, **kwargs):
+    if is_llm_debug_enabled():
+        if "flush" not in kwargs:
+            kwargs["flush"] = True
+        print(*args, **kwargs)
 
 def build_gemini_schema(detect_footprint: bool = True, detect_part_marking: bool = True, detect_ic_subgroup: bool = True) -> dict:
     item_props = {
@@ -275,38 +302,38 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
                     "temperature": 0.1
                 }
             }
-            print(f"\n========== [DEBUG GEMINI REQUEST] ==========", flush=True)
-            print(f"Modell: {m_name} | API: generateContent", flush=True)
-            print(f"Endpoint: {url.split('?')[0]}", flush=True)
-            print(f"Prompt ({len(gemini_prompt)} Zeichen):\n{gemini_prompt}", flush=True)
-            print(f"============================================\n", flush=True)
+            debug_log(f"\n========== [DEBUG GEMINI REQUEST] ==========")
+            debug_log(f"Modell: {m_name} | API: generateContent")
+            debug_log(f"Endpoint: {url.split('?')[0]}")
+            debug_log(f"Prompt ({len(gemini_prompt)} Zeichen):\n{gemini_prompt}")
+            debug_log(f"============================================\n")
 
             async with httpx.AsyncClient(timeout=45.0) as client:
                 resp = await client.post(url, json=payload)
                 if resp.status_code != 200:
-                    print(f"\n[DEBUG GEMINI generateContent ERROR]\nStatus: {resp.status_code}\nResponse: {resp.text}\n", flush=True)
+                    debug_log(f"\n[DEBUG GEMINI generateContent ERROR]\nStatus: {resp.status_code}\nResponse: {resp.text}\n")
                     raise RuntimeError(f"Gemini API Fehler ({resp.status_code}): {resp.text}")
                 result_json = resp.json()
-                print(f"\n========== [DEBUG GEMINI generateContent RESPONSE] ==========", flush=True)
-                print(f"Modell: {m_name} (Status: {resp.status_code})", flush=True)
-                print(f"Raw Response JSON:\n{json.dumps(result_json, indent=2, ensure_ascii=False)}", flush=True)
+                debug_log(f"\n========== [DEBUG GEMINI generateContent RESPONSE] ==========")
+                debug_log(f"Modell: {m_name} (Status: {resp.status_code})")
+                debug_log(f"Raw Response JSON:\n{json.dumps(result_json, indent=2, ensure_ascii=False)}")
 
                 candidates = result_json.get("candidates", [])
                 if not candidates:
-                    print("[DEBUG GEMINI] Keine 'candidates' in der Antwort vorhanden!", flush=True)
+                    debug_log("[DEBUG GEMINI] Keine 'candidates' in der Antwort vorhanden!")
                     return []
                 cand0 = candidates[0]
                 finish_reason = cand0.get("finishReason", "UNKNOWN")
-                print(f"[DEBUG GEMINI] finishReason: {finish_reason}", flush=True)
+                debug_log(f"[DEBUG GEMINI] finishReason: {finish_reason}")
 
                 parts = cand0.get("content", {}).get("parts", [])
                 candidate = "".join([p.get("text", "") for p in parts if isinstance(p, dict) and "text" in p])
-                print(f"[DEBUG GEMINI] Zusammengesetzter Text ({len(candidate)} Zeichen):\n{candidate}", flush=True)
+                debug_log(f"[DEBUG GEMINI] Zusammengesetzter Text ({len(candidate)} Zeichen):\n{candidate}")
 
                 data = extract_json_data(candidate)
                 comps = data.get("components", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
-                print(f"[DEBUG GEMINI] Extrahierte Komponenten ({len(comps)}):\n{comps}", flush=True)
-                print(f"=============================================================\n", flush=True)
+                debug_log(f"[DEBUG GEMINI] Extrahierte Komponenten ({len(comps)}):\n{comps}")
+                debug_log(f"=============================================================\n")
                 return comps
 
         async def _call_interactions_api(m_name: str) -> list:
@@ -322,21 +349,21 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
                     }
                 ]
             }
-            print(f"\n========== [DEBUG GEMINI REQUEST] ==========", flush=True)
-            print(f"Modell: {m_name} | API: Interactions API", flush=True)
-            print(f"Endpoint: {interact_url.split('?')[0]}", flush=True)
-            print(f"Prompt ({len(gemini_prompt)} Zeichen):\n{gemini_prompt}", flush=True)
-            print(f"============================================\n", flush=True)
+            debug_log(f"\n========== [DEBUG GEMINI REQUEST] ==========")
+            debug_log(f"Modell: {m_name} | API: Interactions API")
+            debug_log(f"Endpoint: {interact_url.split('?')[0]}")
+            debug_log(f"Prompt ({len(gemini_prompt)} Zeichen):\n{gemini_prompt}")
+            debug_log(f"============================================\n")
 
             async with httpx.AsyncClient(timeout=60.0) as client:
                 resp = await client.post(interact_url, json=interact_payload)
                 if resp.status_code != 200:
-                    print(f"\n[DEBUG GEMINI interactions ERROR]\nStatus: {resp.status_code}\nResponse: {resp.text}\n", flush=True)
+                    debug_log(f"\n[DEBUG GEMINI interactions ERROR]\nStatus: {resp.status_code}\nResponse: {resp.text}\n")
                     raise RuntimeError(f"Gemini Interactions API Fehler ({resp.status_code}): {resp.text}")
                 result_json = resp.json()
-                print(f"\n========== [DEBUG GEMINI interactions RESPONSE] ==========", flush=True)
-                print(f"Modell: {m_name} (Status: {resp.status_code})", flush=True)
-                print(f"Raw Response JSON:\n{json.dumps(result_json, indent=2, ensure_ascii=False)}", flush=True)
+                debug_log(f"\n========== [DEBUG GEMINI interactions RESPONSE] ==========")
+                debug_log(f"Modell: {m_name} (Status: {resp.status_code})")
+                debug_log(f"Raw Response JSON:\n{json.dumps(result_json, indent=2, ensure_ascii=False)}")
 
                 raw_text = ""
                 for step in result_json.get("steps", []):
@@ -344,13 +371,13 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
                         for part in step.get("content", []):
                             if isinstance(part, dict) and "text" in part:
                                 raw_text += part["text"]
-                print(f"[DEBUG GEMINI] Interactions Text ({len(raw_text)} Zeichen):\n{raw_text}", flush=True)
+                debug_log(f"[DEBUG GEMINI] Interactions Text ({len(raw_text)} Zeichen):\n{raw_text}")
                 if not raw_text:
                     raise RuntimeError("Keine Textausgabe in der Interactions API Antwort erhalten.")
                 data = extract_json_data(raw_text)
                 comps = data.get("components", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
-                print(f"[DEBUG GEMINI] Extrahierte Komponenten ({len(comps)}):\n{comps}", flush=True)
-                print(f"==========================================================\n", flush=True)
+                debug_log(f"[DEBUG GEMINI] Extrahierte Komponenten ({len(comps)}):\n{comps}")
+                debug_log(f"==========================================================\n")
                 return comps
 
         is_interactions_model = any(k in model_name.lower() for k in ["3.", "4", "argon", "deep-research"])
@@ -383,8 +410,8 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
             if parsed_comp:
                 detected_components.append(parsed_comp)
 
-        print(f"[DEBUG GEMINI] Final geparste Komponenten ({len(detected_components)}):\n{[c.model_dump() for c in detected_components]}", flush=True)
-        print(f"==========================================================\n", flush=True)
+        debug_log(f"[DEBUG GEMINI] Final geparste Komponenten ({len(detected_components)}):\n{[c.model_dump() for c in detected_components]}")
+        debug_log(f"==========================================================\n")
 
     elif provider in ('openai', 'lmstudio', 'ollama'):
         if provider in ('openai', 'lmstudio'):
@@ -488,13 +515,13 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
             "temperature": 0.2
         }
 
-        print(f"\n========== [DEBUG {provider.upper()} REQUEST] ==========", flush=True)
-        print(f"Provider: {provider} | Modell: {model_name}", flush=True)
-        print(f"Target URL: {target_url} (Kandidaten: {candidates})", flush=True)
-        print(f"System Message: {messages[0]['content']}", flush=True)
-        print(f"User Prompt ({len(prompt)} Zeichen):\n{prompt}", flush=True)
-        print(f"Format Example: {example_str}", flush=True)
-        print(f"========================================================\n", flush=True)
+        debug_log(f"\n========== [DEBUG {provider.upper()} REQUEST] ==========")
+        debug_log(f"Provider: {provider} | Modell: {model_name}")
+        debug_log(f"Target URL: {target_url} (Kandidaten: {candidates})")
+        debug_log(f"System Message: {messages[0]['content']}")
+        debug_log(f"User Prompt ({len(prompt)} Zeichen):\n{prompt}")
+        debug_log(f"Format Example: {example_str}")
+        debug_log(f"========================================================\n")
 
         resp = None
         result_json = None
@@ -513,7 +540,7 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
                     # Fallback falls Server/Modell kein json_schema unterstützt (oft HTTP 400)
                     resp_text = resp.text
                     if resp.status_code == 400:
-                        print(f"[DEBUG {provider.upper()}] json_schema nicht unterstützt ({resp.status_code}): {resp_text[:120]}. Versuche Fallback...", flush=True)
+                        debug_log(f"[DEBUG {provider.upper()}] json_schema nicht unterstützt ({resp.status_code}): {resp_text[:120]}. Versuche Fallback...")
                         body_fb = dict(body)
                         body_fb["response_format"] = {"type": "json_object"}
                         resp = await client.post(endpoint, json=body_fb, headers=headers)
@@ -530,7 +557,7 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
                     continue
 
             if not resp or resp.status_code != 200:
-                print(f"\n[DEBUG {provider.upper()} ERROR]\nEndpoint: {used_endpoint}\nError: {last_resp_err}\n", flush=True)
+                debug_log(f"\n[DEBUG {provider.upper()} ERROR]\nEndpoint: {used_endpoint}\nError: {last_resp_err}\n")
                 raise RuntimeError(f"{provider.upper()} API Fehler an {used_endpoint}: {last_resp_err}")
 
             result_json = resp.json()
@@ -539,22 +566,22 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
             if choices:
                 raw_text = choices[0].get("message", {}).get("content", "") or ""
 
-            print(f"\n========== [DEBUG {provider.upper()} RESPONSE] ==========", flush=True)
-            print(f"Provider: {provider} | Modell: {model_name} (Status: {resp.status_code})", flush=True)
-            print(f"Raw Response JSON:\n{json.dumps(result_json, indent=2, ensure_ascii=False) if isinstance(result_json, dict) else result_json}", flush=True)
-            print(f"Content Text ({len(raw_text)} Zeichen):\n{raw_text}", flush=True)
+            debug_log(f"\n========== [DEBUG {provider.upper()} RESPONSE] ==========")
+            debug_log(f"Provider: {provider} | Modell: {model_name} (Status: {resp.status_code})")
+            debug_log(f"Raw Response JSON:\n{json.dumps(result_json, indent=2, ensure_ascii=False) if isinstance(result_json, dict) else result_json}")
+            debug_log(f"Content Text ({len(raw_text)} Zeichen):\n{raw_text}")
 
             data = extract_json_data(raw_text)
             comps = data.get("components", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
-            print(f"[DEBUG {provider.upper()}] Extrahierte Komponenten ({len(comps)}):\n{comps}", flush=True)
+            debug_log(f"[DEBUG {provider.upper()}] Extrahierte Komponenten ({len(comps)}):\n{comps}")
 
             for c in comps:
                 parsed_comp = parse_detected_component(c, default_confidence=0.85)
                 if parsed_comp:
                     detected_components.append(parsed_comp)
 
-            print(f"[DEBUG {provider.upper()}] Final geparste Komponenten ({len(detected_components)}):\n{[c.model_dump() for c in detected_components]}", flush=True)
-            print(f"========================================================\n", flush=True)
+            debug_log(f"[DEBUG {provider.upper()}] Final geparste Komponenten ({len(detected_components)}):\n{[c.model_dump() for c in detected_components]}")
+            debug_log(f"========================================================\n")
     else:
         raise ValueError(f"Unbekannter Provider: {provider}")
 

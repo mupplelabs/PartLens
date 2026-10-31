@@ -33,6 +33,22 @@ from app.routes.dataset import export_dataset_zip, export_dataset_coco
 from app.routes.import_data import get_import_sources
 
 if __name__ == "__main__":
-    host = os.environ.get("HOST", "0.0.0.0")
-    port = int(os.environ.get("PORT", "8000"))
-    uvicorn.run("app.main:app", host=host, port=port, reload=True, reload_dirs=["app", "frontend"])
+    import argparse
+    import sys
+
+    parser = argparse.ArgumentParser(description="PartLens Component Tracker Server")
+    parser.add_argument("--host", default=os.environ.get("HOST", "0.0.0.0"), help="Host-Adresse (Standard: 0.0.0.0)")
+    parser.add_argument("--port", type=int, default=int(os.environ.get("PORT", "8000")), help="Port (Standard: 8000)")
+    parser.add_argument("--debug", "--llm-debug", "-d", dest="debug", action="store_true", help="Aktiviert ausfuehrliches LLM-Debug-Logging im Terminal")
+    parser.add_argument("--no-debug", dest="debug", action="store_false", help="Deaktiviert das LLM-Debug-Logging")
+    parser.set_defaults(debug=os.environ.get("DEBUG_LLM", "").lower() in ("1", "true", "yes", "on"))
+
+    args, unknown = parser.parse_known_args()
+
+    if args.debug:
+        os.environ["DEBUG_LLM"] = "1"
+        print("[PartLens] LLM-Debug-Logging ist AKTIVIERT (--debug)", flush=True)
+    else:
+        os.environ["DEBUG_LLM"] = "0"
+
+    uvicorn.run("app.main:app", host=args.host, port=args.port, reload=True, reload_dirs=["app", "frontend"])

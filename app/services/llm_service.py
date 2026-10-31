@@ -106,7 +106,11 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
         if not api_key:
             raise ValueError("Kein Gemini API-Key auf dem Server hinterlegt. Bitte unter Einstellungen konfigurieren.")
 
-        model_name = req.model_name or cfg.get("default_model") or 'gemini-2.5-flash'
+        model_name = req.model_name or cfg.get("default_model") or 'gemini-2.0-flash'
+        # Fallback fuer veraltete/fiktive Modellnamen oder Modelle, die generateContent nicht unterstuetzen
+        if model_name.startswith('gemini-3.') or 'exp' in model_name.lower():
+            model_name = 'gemini-2.0-flash'
+
         model_used = f"google:{model_name}"
 
         gemini_schema = build_gemini_schema(
@@ -140,7 +144,13 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
         async with httpx.AsyncClient(timeout=45.0) as client:
             resp = await client.post(url, json=payload)
             if resp.status_code != 200:
-                raise RuntimeError(f"Gemini API Fehler ({resp.status_code}): {resp.text}")
+                err_text = resp.text
+                if "Interactions API" in err_text:
+                    raise RuntimeError(
+                        f"Das Modell '{model_name}' unterstuetzt nur die Google Interactions API. "
+                        "Bitte waehlen Sie ein Standard-Modell wie 'gemini-2.0-flash' oder 'gemini-1.5-flash'."
+                    )
+                raise RuntimeError(f"Gemini API Fehler ({resp.status_code}): {err_text}")
 
             result_json = resp.json()
             try:
@@ -295,13 +305,33 @@ async def query_gemini_models(api_key: Optional[str] = None) -> dict:
                 for m in raw_models:
                     name = m.get("name", "").replace("models/", "")
                     methods = m.get("supportedGenerationMethods", [])
-                    if "generateContent" in methods and "gemini" in name:
+                    # Filtere Modelle, die nur Interactions API unterstützen oder reine Audio-/Text-Embeddings sind
+                    is_excluded = any(x in name.lower() for x in [
+                        "embedding", "aqa", "imagen", "deep-research", "thinking", "exp-", "experimental"
+                    ])
+                    if "generateContent" in methods and "gemini" in name and not is_excluded:
                         vision_models.append({
                             "id": name,
                             "display_name": m.get("displayName", name),
                             "description": m.get("description", "")
                         })
-                vision_models.sort(key=lambda x: x["id"], reverse=True)
+
+                # Sortierung: gemini-2.0-flash ganz oben, danach 1.5-flash und Pro
+                def model_sort_key(item):
+                    mid = item["id"].lower()
+                    if mid == "gemini-2.0-flash":
+                        return (0, mid)
+                    elif "2.0" in mid and "flash" in mid:
+                        return (1, mid)
+                    elif "1.5" in mid and "flash" in mid:
+                        return (2, mid)
+                    elif "flash" in mid:
+                        return (3, mid)
+                    elif "pro" in mid:
+                        return (4, mid)
+                    return (5, mid)
+
+                vision_models.sort(key=model_sort_key)
                 return {"success": True, "models": vision_models}
             else:
                 return {"success": False, "error": f"Google API HTTP {resp.status_code}: {resp.text}", "models": []}

@@ -188,9 +188,9 @@ if (autolabelOptionsBtn && autolabelOptionsMenu) {
 }
 
 function getAutolabelModelName() {
-    if (!autolabelModelSelect) return 'gemini-3.8-flash';
+    if (!autolabelModelSelect) return 'gemini-2.0-flash';
     if (autolabelModelSelect.value === '__custom__') {
-        return (autolabelModelCustom ? autolabelModelCustom.value.trim() : '') || (autolabelProvider.value === 'gemini' ? 'gemini-3.8-flash' : 'qwen2-vl-7b-instruct');
+        return (autolabelModelCustom ? autolabelModelCustom.value.trim() : '') || (autolabelProvider.value === 'gemini' ? 'gemini-2.0-flash' : 'qwen2-vl-7b-instruct');
     }
     return autolabelModelSelect.value;
 }
@@ -482,15 +482,20 @@ async function fetchGeminiModels(preferredModel = null) {
                     customOpt.textContent = 'Eigenes Modell eingeben...';
                     autolabelModelSelect.appendChild(customOpt);
 
-                    // Bevorzugtes Modell auswählen
+                    // Bevorzugtes Modell auswählen (ignoriere ungültige oder experimentelle Altwerte)
                     const target = preferredModel || localStorage.getItem(LLM_STORAGE_KEYS.MODEL);
-                    const match = modelsList.find(m => (m.id || m) === target);
+                    const isTargetValid = target && !target.includes('exp') && !target.startsWith('gemini-3.');
+                    const match = isTargetValid ? modelsList.find(m => (m.id || m) === target) : null;
                     if (match) {
                         autolabelModelSelect.value = match.id || match;
                     } else {
-                        // Bevorzuge das erste Flash-Modell
-                        const topFlash = modelsList.find(m => (m.id || m).includes('flash')) || modelsList[0];
-                        autolabelModelSelect.value = topFlash.id || topFlash;
+                        // Bevorzuge gemini-2.0-flash oder das erste stabile Flash-Modell
+                        const topFlash = modelsList.find(m => (m.id || m) === 'gemini-2.0-flash') ||
+                                         modelsList.find(m => (m.id || m).includes('flash') && !(m.id || m).includes('exp')) ||
+                                         modelsList[0];
+                        if (topFlash) {
+                            autolabelModelSelect.value = topFlash.id || topFlash;
+                        }
                     }
                     saveLlmSettingsToStorage();
                     updateVisionHintForSelectedModel();
@@ -639,11 +644,10 @@ function handleProviderChange(isUserSwitch = false) {
         if (modelCountBadge) modelCountBadge.innerText = '';
         if (autolabelModelSelect && autolabelModelSelect.options.length === 0) {
             autolabelModelSelect.innerHTML = `
-                <option value="gemini-3.8-flash" selected>gemini-3.8-flash (Standard &amp; Schnell)</option>
-                <option value="gemini-3.0-flash">gemini-3.0-flash</option>
-                <option value="gemini-2.5-flash">gemini-2.5-flash</option>
-                <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                <option value="gemini-2.0-flash" selected>gemini-2.0-flash (Standard &amp; Schnell)</option>
                 <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                <option value="gemini-1.5-flash-8b">gemini-1.5-flash-8b</option>
+                <option value="gemini-1.5-pro">gemini-1.5-pro</option>
                 <option value="__custom__">Eigenes Modell eingeben...</option>
             `;
         }

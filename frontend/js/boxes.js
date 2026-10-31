@@ -113,7 +113,7 @@ function renderObjectsList() {
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                     <span>${detailsText}</span>
                 </button>
-                <button type="button" class="object-item-btn btn-delete-item" title="Bauteil löschen">
+                <button type="button" class="object-item-btn btn-delete-item" title="${window.t ? window.t('boxes.delete_title') : 'Bauteil löschen'}">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
             </div>
@@ -501,8 +501,8 @@ function updateIsolateButtonUI() {
     const labelObj = document.getElementById('isolate-btn-label');
 
     const titleText = isolateSelectedBox
-        ? 'Fokus aktiv: Nicht ausgewählte Boxen sind ausgeblendet (Taste: F)'
-        : 'Fokus: Nicht ausgewählte Boxen ausblenden (Taste: F)';
+        ? (window.t ? window.t('boxes.focus_active') : 'Fokus aktiv: Nicht ausgewählte Boxen sind ausgeblendet (Taste: F)')
+        : (window.t ? window.t('boxes.focus_inactive') : 'Fokus: Nicht ausgewählte Boxen ausblenden (Taste: F)');
 
     [btnTool, btnObj, btnHud].forEach(btn => {
         if (btn) {
@@ -513,7 +513,9 @@ function updateIsolateButtonUI() {
     });
 
     if (labelObj) {
-        labelObj.textContent = isolateSelectedBox ? 'Fokus an' : 'Fokus';
+        labelObj.textContent = isolateSelectedBox
+            ? (window.t ? window.t('boxes.focus_on') : 'Fokus an')
+            : (window.t ? window.t('boxes.focus') : 'Fokus');
     }
 }
 window.updateIsolateButtonUI = updateIsolateButtonUI;

@@ -148,9 +148,9 @@ async function initStudioBackground() {
     const backendChip = document.getElementById('chip-backend');
 
     // 1. Visuelles Feedback: Werkzeuge in Standby, Startstatus
-    setStudioToolsState(false, 'Studio initialisiert im Hintergrund (Backend & Bildanalyse)...');
+    setStudioToolsState(false, window.t ? window.t('telemetry.init_tools_wait') : 'Studio initialisiert im Hintergrund (Backend & Bildanalyse)...');
     if (liveIndicator) liveIndicator.className = 'status-radar-dot initializing';
-    if (statusDiv) statusDiv.innerText = 'Schritt 1/3: Verbinde mit Backend...';
+    if (statusDiv) statusDiv.innerText = window.t ? window.t('telemetry.step_connect') : 'Schritt 1/3: Verbinde mit Backend...';
 
     // Parallele Vorbereitung: Bild-Laden und Backend-Abfrage laufen zeitgleich
     const ensurePreviewReady = () => {
@@ -214,10 +214,12 @@ async function initStudioBackground() {
         updateOcrStatusChip();
         updateLlmStatusChip();
         if (serverData.has_gemini_env && autolabelStatus && !geminiApiKey.value) {
-            autolabelStatus.innerText = 'Server nutzt GEMINI_API_KEY aus Umgebungsvariable.';
+            autolabelStatus.innerText = window.t ? window.t('telemetry.server_env_key') : 'Server nutzt GEMINI_API_KEY aus Umgebungsvariable.';
         }
         if (statusDiv) {
-            statusDiv.innerText = `Schritt 2/3: Datensatz synchronisiert (${sampleCount} Bilder, ${boxCount} Boxen)...`;
+            statusDiv.innerText = window.t
+                ? window.t('telemetry.step_sync', { samples: sampleCount, boxes: boxCount })
+                : `Schritt 2/3: Datensatz synchronisiert (${sampleCount} Bilder, ${boxCount} Boxen)...`;
         }
     } else {
         if (backendVal) backendVal.innerText = 'Offline';
@@ -225,15 +227,15 @@ async function initStudioBackground() {
         updateOcrStatusChip();
         updateLlmStatusChip();
         if (statusDiv) {
-            statusDiv.innerText = 'Schritt 2/3: Lokaler Offline-Modus aktiv...';
+            statusDiv.innerText = window.t ? window.t('telemetry.step_offline') : 'Schritt 2/3: Lokaler Offline-Modus aktiv...';
         }
     }
 
-    if (clipVal) clipVal.innerText = 'Standby';
+    if (clipVal) clipVal.innerText = window.t ? window.t('footer.standby') : 'Standby';
 
     // Schritt 3: Heuristik-Detektor (Stage 0) auf Canvas ausführen
     if (statusDiv) {
-        statusDiv.innerText = 'Schritt 3/3: Führe Heuristik-Detektor für Bauteile aus...';
+        statusDiv.innerText = window.t ? window.t('telemetry.step_stage0') : 'Schritt 3/3: Führe Heuristik-Detektor für Bauteile aus...';
     }
 
     if (previewImage && previewImage.complete && previewImage.naturalWidth > 0) {
@@ -263,7 +265,7 @@ async function initStudioBackground() {
     }
 
     if (outputDiv) {
-        outputDiv.innerText = 'Bereit (CLIP-Modell wird bei Bedarf geladen)';
+        outputDiv.innerText = window.t ? window.t('telemetry.clip_ready_ondemand') : 'Bereit (CLIP-Modell wird bei Bedarf geladen)';
     }
 }
 

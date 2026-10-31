@@ -94,14 +94,16 @@ async function startWebcam(deviceId = null) {
         if (videoWrap) videoWrap.style.display = 'none';
         if (fallbackCard) fallbackCard.style.display = 'block';
         if (cameraSelect) {
-            cameraSelect.innerHTML = '<option value="native">iPhone-Kamera (Direktaufnahme)</option>';
+            const optLabel = window.t ? window.t('webcam.native_camera_opt') : 'iPhone-Kamera (Direktaufnahme)';
+            cameraSelect.innerHTML = `<option value="native">${optLabel}</option>`;
         }
         if (toggleWebcamBtn) toggleWebcamBtn.style.display = 'none';
         if (captureWebcamBtn) {
-            captureWebcamBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Foto aufnehmen</span>';
+            const btnLabel = window.t ? window.t('webcam.capture_btn') : 'Foto aufnehmen';
+            captureWebcamBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>${btnLabel}</span>`;
         }
         if (statusDiv) {
-            statusDiv.innerText = 'iOS Safari HTTP-Modus: Bitte Snapshot mit iPhone-Kamera aufnehmen.';
+            statusDiv.innerText = window.t ? window.t('webcam.ios_notice') : 'iOS Safari HTTP-Modus: Bitte Snapshot mit iPhone-Kamera aufnehmen.';
         }
         return;
     }
@@ -189,17 +191,18 @@ async function startWebcam(deviceId = null) {
             cameraSelect.appendChild(opt);
         }
 
-        statusDiv.innerText = 'Live-Webcam aktiv – Stufe 0 & Stufe 1 laufen in Echtzeit.';
+        statusDiv.innerText = window.t ? window.t('webcam.live_active') : 'Live-Webcam aktiv – Stufe 0 & Stufe 1 laufen in Echtzeit.';
         requestAnimationFrame(classifyWebcamLoop);
     } catch (err) {
         console.error('Kamera-Fehler:', err);
         if (videoWrap) videoWrap.style.display = 'none';
         if (fallbackCard) fallbackCard.style.display = 'block';
         if (cameraSelect) {
-            cameraSelect.innerHTML = '<option value="native">iPhone-Kamera (Direktaufnahme)</option>';
+            const optLabel = window.t ? window.t('webcam.native_camera_opt') : 'iPhone-Kamera (Direktaufnahme)';
+            cameraSelect.innerHTML = `<option value="native">${optLabel}</option>`;
         }
         if (statusDiv) {
-            statusDiv.innerText = 'Kamera konnte nicht gestartet werden – bitte Direktaufnahme nutzen.';
+            statusDiv.innerText = window.t ? window.t('webcam.start_failed') : 'Kamera konnte nicht gestartet werden – bitte Direktaufnahme nutzen.';
         }
     }
 }
@@ -276,11 +279,11 @@ if (captureWebcamBtn) {
         const vw = video.videoWidth;
         const vh = video.videoHeight;
         if (!vw || !vh) {
-            statusDiv.innerText = 'Kamerabild wird geladen... Bitte einen Moment gedulden.';
+            statusDiv.innerText = window.t ? window.t('webcam.loading_image') : 'Kamerabild wird geladen... Bitte einen Moment gedulden.';
             return;
         }
 
-        statusDiv.innerText = 'Snapshot erfasst – Übertrage Foto ins Studio und beende Kamera...';
+        statusDiv.innerText = window.t ? window.t('webcam.snapshot_captured') : 'Snapshot erfasst – Übertrage Foto ins Studio und beende Kamera...';
 
         // 1. Snapshot in voller Video-Auflösung auf Offscreen-Canvas erfassen
         const snapCanvas = document.createElement('canvas');
@@ -358,7 +361,7 @@ previewImage.addEventListener('load', async () => {
         await runStage0Detection();
         if (isSnapshotPendingOcr) {
             isSnapshotPendingOcr = false;
-            statusDiv.innerText = 'Snapshot als Foto im Studio geladen – führe OCR aus...';
+            statusDiv.innerText = window.t ? window.t('webcam.snapshot_loaded_ocr') : 'Snapshot als Foto im Studio geladen – führe OCR aus...';
             await executeOcrRecognition();
         }
     }

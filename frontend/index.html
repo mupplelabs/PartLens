@@ -75,7 +75,7 @@
         <div class="header-actions">
             <div class="status-pill" id="dataset-counter-badge" title="Aktueller Stand der gespeicherten YOLO-Datensätze" data-i18n-title="header.dataset_title">
                 <span class="live-dot"></span>
-                <span id="header-dataset-text">Datensatz: 0 Bilder</span>
+                <span id="header-dataset-text" data-i18n="header.dataset_initial">Datensatz: 0 Bilder</span>
             </div>
             <div class="export-dropdown-wrap" style="position: relative; display: inline-flex;">
                 <button id="export-yolo-btn-top" class="btn btn-tool" type="button" title="Datensatz als ZIP herunterladen (YOLO oder COCO Format)" data-i18n-title="export.title">
@@ -92,14 +92,14 @@
                             <span style="font-weight: 700; font-size: 0.82rem;">YOLO Format</span>
                             <span style="font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: rgba(16, 185, 129, 0.18); color: #34d399; font-weight: 800;">.ZIP</span>
                         </div>
-                        <span style="font-size: 0.7rem; color: var(--muted);">Bilder, labels/*.txt, data.yaml</span>
+                        <span style="font-size: 0.7rem; color: var(--muted);" data-i18n="export.yolo_desc">Bilder, labels/*.txt, data.yaml</span>
                     </a>
                     <a href="/api/dataset/export-zip?format=coco" download="component_dataset_coco.zip" class="export-dropdown-item" style="display: flex; flex-direction: column; gap: 2px; padding: 6px 8px; border-radius: var(--radius-sm); text-decoration: none; color: var(--text); transition: background 0.15s ease;">
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <span style="font-weight: 700; font-size: 0.82rem;">COCO Format</span>
                             <span style="font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: rgba(168, 85, 247, 0.18); color: #c084fc; font-weight: 800;">.ZIP</span>
                         </div>
-                        <span style="font-size: 0.7rem; color: var(--muted);">instances_train/val.json, Pixel BBoxes</span>
+                        <span style="font-size: 0.7rem; color: var(--muted);" data-i18n="export.coco_desc">instances_train/val.json, Pixel BBoxes</span>
                     </a>
                 </div>
             </div>
@@ -222,13 +222,13 @@
                                         <circle cx="12" cy="13" r="4"/>
                                     </svg>
                                 </div>
-                                <strong style="display: block; font-size: 0.95rem; color: var(--text); margin-bottom: 6px;">iPhone Kameraaufnahme</strong>
-                                <p style="font-size: 0.78rem; color: var(--muted); line-height: 1.45; margin-bottom: 16px;">
+                                <strong style="display: block; font-size: 0.95rem; color: var(--text); margin-bottom: 6px;" data-i18n="webcam.title">iPhone Kameraaufnahme</strong>
+                                <p style="font-size: 0.78rem; color: var(--muted); line-height: 1.45; margin-bottom: 16px;" data-i18n="webcam.ios_hint">
                                     iOS Safari erlaubt Live-Videostreams im lokalen Netzwerk nur über HTTPS. Nimm direkt mit deiner iPhone-Kamera ein hochauflösendes Foto mit Autofokus auf:
                                 </p>
                                 <button type="button" id="btn-trigger-camera-snap" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 10px 16px; font-size: 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                                    <span>Foto mit iPhone aufnehmen</span>
+                                    <span data-i18n="webcam.ios_btn">Foto mit iPhone aufnehmen</span>
                                 </button>
                             </div>
 
@@ -520,11 +520,11 @@
                             <div id="ic-subgroup-wrap" class="form-group" style="display: none; margin-bottom: 8px; background: var(--surface-elevated); padding: 8px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
                                 <label class="field-label" for="box-ic-type-select" style="color: var(--primary);" data-i18n="studio.ic_type_label">IC-Typ (Part-DB Category):</label>
                                 <select id="box-ic-type-select">
-                                    <option value="">(Nicht spezifiziert / Auto OCR)</option>
-                                    <option value="logic">Logic (74xx, 40xx Gatter, Latches, Schieberegister)</option>
-                                    <option value="analog">Analog (OpAmps, 555 Timer, Komparatoren, Audio)</option>
-                                    <option value="mcu">MCU / Mikrocontroller (AVR, ATtiny, PIC, STM32, ESP)</option>
-                                    <option value="special">Spezial (RTC, Interface, Sensoren, Motortreiber)</option>
+                                    <option value="" data-i18n="studio.ic_unspecified">(Nicht spezifiziert / Auto OCR)</option>
+                                    <option value="logic" data-i18n="studio.ic_logic">Logic (74xx, 40xx Gatter, Latches, Schieberegister)</option>
+                                    <option value="analog" data-i18n="studio.ic_analog">Analog (OpAmps, 555 Timer, Komparatoren, Audio)</option>
+                                    <option value="mcu" data-i18n="studio.ic_mcu">MCU / Mikrocontroller (AVR, ATtiny, PIC, STM32, ESP)</option>
+                                    <option value="special" data-i18n="studio.ic_special">Spezial (RTC, Interface, Sensoren, Motortreiber)</option>
                                 </select>
                             </div>
 
@@ -660,8 +660,8 @@
                                 <!-- Visueller Farbfächer / Farbpalette -->
                                 <div class="resistor-palette-section">
                                     <div class="resistor-palette-header">
-                                        <span id="active-band-label" class="palette-active-title">Ausgewählt: 1. Ziffer</span>
-                                        <span id="palette-hint" class="palette-hint">Farbe zum Zuweisen wählen:</span>
+                                        <span id="active-band-label" class="palette-active-title" data-i18n="resistor.active_band_label">Ausgewählt: 1. Ziffer</span>
+                                        <span id="palette-hint" class="palette-hint" data-i18n="resistor.palette_hint">Farbe zum Zuweisen wählen:</span>
                                     </div>
                                     <div id="resistor-swatch-grid" class="resistor-swatch-grid"></div>
                                 </div>
@@ -672,16 +672,16 @@
                                     </summary>
                                     <div style="padding-top: 6px;">
                                         <div class="smd-row" style="display: flex; gap: 6px; align-items: center;">
-                                            <label class="field-label" style="margin: 0; white-space: nowrap; font-size: 0.7rem;">SMD Code:</label>
+                                            <label class="field-label" style="margin: 0; white-space: nowrap; font-size: 0.7rem;" data-i18n="studio.resistor.smd_code">SMD Code:</label>
                                             <input type="text" id="smd-input" placeholder="472 / 01C / 4R7" style="max-width: 90px; padding: 3px 5px; font-size: 0.74rem;" />
                                             <span id="smd-output" style="font-size: 0.74rem; font-weight: 700; color: var(--amber);">= 4,7 kΩ</span>
                                         </div>
                                         <div class="band-selectors" style="display: none;">
-                                            <div class="band-select-col"><label>1. Ring</label><select id="band-1-select"></select></div>
-                                            <div class="band-select-col"><label>2. Ring</label><select id="band-2-select"></select></div>
-                                            <div class="band-select-col"><label>3. Ring</label><select id="band-3-select"></select></div>
-                                            <div class="band-select-col"><label>Multiplikator</label><select id="band-4-select"></select></div>
-                                            <div class="band-select-col"><label>Toleranz</label><select id="band-5-select"></select></div>
+                                            <div class="band-select-col"><label data-i18n="resistor.band_1">1. Ring</label><select id="band-1-select"></select></div>
+                                            <div class="band-select-col"><label data-i18n="resistor.band_2">2. Ring</label><select id="band-2-select"></select></div>
+                                            <div class="band-select-col"><label data-i18n="resistor.band_3">3. Ring</label><select id="band-3-select"></select></div>
+                                            <div class="band-select-col"><label data-i18n="resistor.multiplier">Multiplikator</label><select id="band-4-select"></select></div>
+                                            <div class="band-select-col"><label data-i18n="resistor.tolerance">Toleranz</label><select id="band-5-select"></select></div>
                                         </div>
                                     </div>
                                 </details>
@@ -771,65 +771,65 @@
                         <span id="gallery-total-badge" class="badge-pill">0</span>
                         <span id="gallery-boxes-badge" class="badge-pill accent">0 Boxen</span>
                     </div>
-                    <span class="dataset-subheading">Kuratierte Trainings- &amp; Validierungs-Samples mit Bounding Boxes</span>
+                    <span class="dataset-subheading" data-i18n="gallery.subheading">Kuratierte Trainings- &amp; Validierungs-Samples mit Bounding Boxes</span>
                 </div>
 
                 <!-- Dataloop Search Input -->
                 <div class="gallery-search-wrap">
-                    <input type="text" id="gallery-search-input" placeholder="Dateiname oder Label suchen..." />
+                    <input type="text" id="gallery-search-input" placeholder="Dateiname oder Label suchen..." data-i18n-placeholder="gallery.search_placeholder" />
                 </div>
 
                 <div class="dataset-header-controls">
                     <!-- Segmented View Switcher -->
                     <div class="dataset-view-switcher" id="gallery-view-switcher" role="radiogroup" aria-label="Ansichtsmodus">
-                        <button class="btn-view-mode active" data-view="tiles" type="button" title="Standard-Kacheln mit Bounding-Boxen">
+                        <button class="btn-view-mode active" data-view="tiles" type="button" title="Standard-Kacheln mit Bounding-Boxen" data-i18n-title="gallery.view_tiles">
                             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                            <span>Tiles</span>
+                            <span data-i18n="gallery.view_tiles">Tiles</span>
                         </button>
-                        <button class="btn-view-mode" data-view="small-tiles" type="button" title="Dichte Mini-Kacheln (Schnelldurchsicht)">
+                        <button class="btn-view-mode" data-view="small-tiles" type="button" title="Dichte Mini-Kacheln (Schnelldurchsicht)" data-i18n-title="gallery.view_small_tiles">
                             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="4" height="4"/><rect x="10" y="3" width="4" height="4"/><rect x="17" y="3" width="4" height="4"/><rect x="3" y="10" width="4" height="4"/><rect x="10" y="10" width="4" height="4"/><rect x="17" y="10" width="4" height="4"/><rect x="3" y="17" width="4" height="4"/><rect x="10" y="17" width="4" height="4"/><rect x="17" y="17" width="4" height="4"/></svg>
-                            <span>Small Tiles</span>
+                            <span data-i18n="gallery.view_small_tiles">Small Tiles</span>
                         </button>
-                        <button class="btn-view-mode" data-view="detailed-list" type="button" title="Detaillierte Tabellenansicht mit Metadaten">
+                        <button class="btn-view-mode" data-view="detailed-list" type="button" title="Detaillierte Tabellenansicht mit Metadaten" data-i18n-title="gallery.view_detailed_list">
                             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="10" x2="8" y2="20"/></svg>
-                            <span>Detailed List</span>
+                            <span data-i18n="gallery.view_detailed_list">Detailed List</span>
                         </button>
-                        <button class="btn-view-mode" data-view="list" type="button" title="Kompakte Dateiliste">
+                        <button class="btn-view-mode" data-view="list" type="button" title="Kompakte Dateiliste" data-i18n-title="gallery.view_list">
                             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                            <span>List</span>
+                            <span data-i18n="gallery.view_list">List</span>
                         </button>
                     </div>
 
                     <!-- Toggle Box Overlays (Labellerr Eye Icon) -->
-                    <button id="toggle-gallery-boxes-btn" class="btn btn-tool active" type="button" title="Bounding Boxen auf den Thumbnails ein-/ausblenden">
+                    <button id="toggle-gallery-boxes-btn" class="btn btn-tool active" type="button" title="Bounding Boxen auf den Thumbnails ein-/ausblenden" data-i18n-title="gallery.toggle_boxes_title">
                         <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                        <span>Boxen</span>
+                        <span data-i18n="gallery.toggle_boxes">Boxen</span>
                     </button>
 
                     <!-- Auswahlmodus Toggle (Batch Select & Delete) -->
-                    <button id="toggle-select-mode-btn" class="btn btn-tool" type="button" title="Auswahlmodus aktivieren um mehrere Bilder auszuwählen">
+                    <button id="toggle-select-mode-btn" class="btn btn-tool" type="button" title="Auswahlmodus aktivieren um mehrere Bilder auszuwählen" data-i18n-title="gallery.select_mode_title">
                         <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-                        <span id="select-mode-btn-text">Auswählen</span>
+                        <span id="select-mode-btn-text" data-i18n="gallery.select_mode">Auswählen</span>
                     </button>
 
-                    <button id="refresh-gallery-btn" class="btn btn-tool" type="button" title="Datensatz neu laden">
+                    <button id="refresh-gallery-btn" class="btn btn-tool" type="button" title="Datensatz neu laden" data-i18n-title="gallery.refresh_btn_title">
                         <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-                        <span>Aktualisieren</span>
+                        <span data-i18n="gallery.refresh_btn">Aktualisieren</span>
                     </button>
 
-                    <button id="open-import-modal-btn" class="btn btn-tool" type="button" title="Externe Datensätze (Mendeley, Roboflow) importieren & mappen">
+                    <button id="open-import-modal-btn" class="btn btn-tool" type="button" title="Externe Datensätze (Mendeley, Roboflow) importieren & mappen" data-i18n-title="gallery.import_btn_title">
                         <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        <span>Importieren</span>
+                        <span data-i18n="gallery.import_btn">Importieren</span>
                     </button>
 
                     <div class="export-dropdown-wrap" style="position: relative; display: inline-flex;">
-                        <button id="export-dataset-btn-gallery" class="btn btn-tool btn-tool-accent" type="button" title="Datensatz als ZIP herunterladen (YOLO oder COCO Format)">
+                        <button id="export-dataset-btn-gallery" class="btn btn-tool btn-tool-accent" type="button" title="Datensatz als ZIP herunterladen (YOLO oder COCO Format)" data-i18n-title="gallery.export_btn_title">
                             <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-                            <span>Exportieren</span>
+                            <span data-i18n="gallery.export_btn">Exportieren</span>
                             <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" style="margin-left: 2px;"><polyline points="6 9 12 15 18 9"/></svg>
                         </button>
                         <div id="export-dropdown-menu-gallery" class="export-dropdown-menu" style="display: none; position: absolute; top: calc(100% + 6px); right: 0; z-index: 1000; min-width: 230px; background: var(--surface-elevated); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 6px; box-shadow: var(--shadow-popover);">
-                            <div style="font-size: 0.68rem; font-weight: 700; color: var(--muted); padding: 4px 8px; text-transform: uppercase; letter-spacing: 0.05em;">
+                            <div style="font-size: 0.68rem; font-weight: 700; color: var(--muted); padding: 4px 8px; text-transform: uppercase; letter-spacing: 0.05em;" data-i18n="export.title">
                                 Format waehlen
                             </div>
                             <a href="/api/dataset/export-zip?format=yolo" download="component_dataset_yolo.zip" class="export-dropdown-item" style="display: flex; flex-direction: column; gap: 2px; padding: 6px 8px; border-radius: var(--radius-sm); text-decoration: none; color: var(--text); transition: background 0.15s ease;">
@@ -837,14 +837,14 @@
                                     <span style="font-weight: 700; font-size: 0.82rem;">YOLO Format</span>
                                     <span style="font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: rgba(16, 185, 129, 0.18); color: #34d399; font-weight: 800;">.ZIP</span>
                                 </div>
-                                <span style="font-size: 0.7rem; color: var(--muted);">Bilder, labels/*.txt, data.yaml</span>
+                                <span style="font-size: 0.7rem; color: var(--muted);" data-i18n="export.yolo_sub">Bilder, labels/*.txt, data.yaml</span>
                             </a>
                             <a href="/api/dataset/export-zip?format=coco" download="component_dataset_coco.zip" class="export-dropdown-item" style="display: flex; flex-direction: column; gap: 2px; padding: 6px 8px; border-radius: var(--radius-sm); text-decoration: none; color: var(--text); transition: background 0.15s ease;">
                                 <div style="display: flex; align-items: center; justify-content: space-between;">
                                     <span style="font-weight: 700; font-size: 0.82rem;">COCO Format</span>
                                     <span style="font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: rgba(168, 85, 247, 0.18); color: #c084fc; font-weight: 800;">.ZIP</span>
                                 </div>
-                                <span style="font-size: 0.7rem; color: var(--muted);">instances_train/val.json, Pixel BBoxes</span>
+                                <span style="font-size: 0.7rem; color: var(--muted);" data-i18n="export.coco_sub">instances_train/val.json, Pixel BBoxes</span>
                             </a>
                         </div>
                     </div>
@@ -855,7 +855,7 @@
             <div class="dataset-filter-bar">
                 <div class="filter-split-group">
                     <span class="filter-label">Split:</span>
-                    <button class="btn-filter-pill active gallery-split-btn" data-split="all" type="button">Alle</button>
+                    <button class="btn-filter-pill active gallery-split-btn" data-split="all" type="button" data-i18n="gallery.split_all">Alle</button>
                     <button class="btn-filter-pill gallery-split-btn" data-split="train" type="button"><span class="chip-dot" style="width:7px; height:7px; border-radius:50%; background:#22c55e; display:inline-block; margin-right:4px;"></span>Train</button>
                     <button class="btn-filter-pill gallery-split-btn" data-split="val" type="button"><span class="chip-dot" style="width:7px; height:7px; border-radius:50%; background:#3b82f6; display:inline-block; margin-right:4px;"></span>Val</button>
                 </div>
@@ -874,7 +874,7 @@
                     <div style="margin-bottom: 8px;">
                         <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity: 0.5;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                     </div>
-                    <div>Lade kuratierte Datensätze...</div>
+                    <div data-i18n="gallery.loading">Lade kuratierte Datensätze...</div>
             </div>
 
             <!-- Paginierungsleiste für große Datensätze (1000 - 3000 Bilder) -->
@@ -886,18 +886,18 @@
                     <button id="pagination-first-btn" class="btn btn-tool btn-pagination" type="button" title="Erste Seite" disabled>«</button>
                     <button id="pagination-prev-btn" class="btn btn-tool btn-pagination" type="button" title="Vorherige Seite" disabled>‹</button>
                     <span class="pagination-page-indicator">
-                        Seite <input type="number" id="pagination-page-input" min="1" max="1" value="1" aria-label="Seitenzahl" /> von <span id="pagination-total-pages">1</span>
+                        <span data-i18n="gallery.page_page">Seite</span> <input type="number" id="pagination-page-input" min="1" max="1" value="1" aria-label="Seitenzahl" /> <span data-i18n="gallery.page_of">von</span> <span id="pagination-total-pages">1</span>
                     </span>
                     <button id="pagination-next-btn" class="btn btn-tool btn-pagination" type="button" title="Nächste Seite" disabled>›</button>
                     <button id="pagination-last-btn" class="btn btn-tool btn-pagination" type="button" title="Letzte Seite" disabled>»</button>
                 </div>
                 <div class="pagination-size-select">
-                    <label for="pagination-size-select-input" class="pagination-size-label">Pro Seite:</label>
+                    <label for="pagination-size-select-input" class="pagination-size-label" data-i18n="gallery.page_size_label">Pro Seite:</label>
                     <select id="pagination-size-select-input" class="pagination-select" aria-label="Samples pro Seite">
                         <option value="24">24</option>
                         <option value="48" selected>48</option>
                         <option value="96">96</option>
-                        <option value="all">Endlos</option>
+                        <option value="all" data-i18n="gallery.page_size_all">Endlos</option>
                     </select>
                 </div>
             </div>
@@ -907,15 +907,15 @@
                 <div class="batch-bar-content">
                     <div class="batch-selection-info">
                         <span class="batch-count-badge" id="batch-selected-count">0</span>
-                        <span id="batch-selection-label" class="batch-selection-label">ausgewählt</span>
+                        <span id="batch-selection-label" class="batch-selection-label" data-i18n="gallery.batch_selected">ausgewählt</span>
                     </div>
                     <div class="batch-actions-group">
-                        <button id="batch-select-all-btn" class="btn btn-sm btn-tool" type="button" title="Alle gefilterten Samples auswählen oder abwählen">Alle auswählen</button>
+                        <button id="batch-select-all-btn" class="btn btn-sm btn-tool" type="button" title="Alle gefilterten Samples auswählen oder abwählen" data-i18n="gallery.batch_select_all">Alle auswählen</button>
                         <button id="batch-delete-btn" class="btn btn-sm btn-danger" type="button" disabled title="Ausgewählte Samples löschen" style="display: inline-flex; align-items: center; gap: 4px;">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                            <span>Löschen</span>
+                            <span data-i18n="gallery.btn_delete_selected">Löschen</span>
                         </button>
-                        <button id="batch-cancel-btn" class="btn btn-sm btn-tool" type="button" title="Auswahlmodus beenden">Fertig</button>
+                        <button id="batch-cancel-btn" class="btn btn-sm btn-tool" type="button" title="Auswahlmodus beenden" data-i18n="gallery.batch_cancel">Fertig</button>
                     </div>
                 </div>
             </div>
@@ -928,24 +928,24 @@
             <!-- Top KPI Cards -->
             <div class="analytics-kpi-grid">
                 <div class="kpi-card">
-                    <div class="kpi-label">Trainings-Bilder</div>
+                    <div class="kpi-label" data-i18n="analytics.kpi_train">Trainings-Bilder</div>
                     <div class="kpi-val" id="kpi-train-imgs" style="color: #34d399;">0</div>
                     <div class="kpi-sub">Split: dataset/images/train</div>
                 </div>
                 <div class="kpi-card">
-                    <div class="kpi-label">Validierungs-Bilder</div>
+                    <div class="kpi-label" data-i18n="analytics.kpi_val">Validierungs-Bilder</div>
                     <div class="kpi-val" id="kpi-val-imgs" style="color: #60a5fa;">0</div>
                     <div class="kpi-sub">Split: dataset/images/val</div>
                 </div>
                 <div class="kpi-card">
-                    <div class="kpi-label">Gelabelte Bounding Boxes</div>
+                    <div class="kpi-label" data-i18n="analytics.kpi_boxes">Gelabelte Bounding Boxes</div>
                     <div class="kpi-val" id="kpi-total-boxes" style="color: #c084fc;">0</div>
-                    <div class="kpi-sub">Gesamtanzahl annotierte Komponenten</div>
+                    <div class="kpi-sub" data-i18n="analytics.kpi_boxes_sub">Gesamtanzahl annotierte Komponenten</div>
                 </div>
                 <div class="kpi-card">
-                    <div class="kpi-label">Klassen-Balance Score</div>
+                    <div class="kpi-label" data-i18n="analytics.kpi_balance">Klassen-Balance Score</div>
                     <div class="kpi-val" id="kpi-balance-score" style="color: #fcd34d;">-</div>
-                    <div class="kpi-sub" id="kpi-balance-sub">Noch keine Daten vorhanden</div>
+                    <div class="kpi-sub" id="kpi-balance-sub" data-i18n="analytics.kpi_balance_empty">Noch keine Daten vorhanden</div>
                 </div>
             </div>
 
@@ -954,9 +954,9 @@
                 <div class="card-header-row">
                     <span class="card-title" style="display: flex; align-items: center; gap: 6px;">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                        <span>Klassen-Verteilung (YOLO Klassen)</span>
+                        <span data-i18n="analytics.distribution_title">Klassen-Verteilung (YOLO Klassen)</span>
                     </span>
-                    <span style="font-size: 0.75rem; color: var(--muted);">Empfohlen: mind. 20–30 Samples pro Klasse für Initiales Fine-Tuning</span>
+                    <span style="font-size: 0.75rem; color: var(--muted);" data-i18n="analytics.distribution_hint">Empfohlen: mind. 20–30 Samples pro Klasse für Initiales Fine-Tuning</span>
                 </div>
 
                 <div id="analytics-distribution-list">
@@ -975,17 +975,17 @@
                     <div class="card-header-row">
                         <span class="card-title" style="display: flex; align-items: center; gap: 6px;">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="2" height="2"/><rect x="13" y="9" width="2" height="2"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-                            <span>LLM Auto-Labeling Provider</span>
+                            <span data-i18n="settings.llm_card_title">LLM Auto-Labeling Provider</span>
                         </span>
                         <span style="font-size: 0.72rem; color: #34d399; font-weight: 600; display: flex; align-items: center; gap: 4px;">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                            <span>Auto-Speicherung aktiv</span>
+                            <span data-i18n="settings.autosave_active">Auto-Speicherung aktiv</span>
                         </span>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                         <div>
-                            <label class="field-label" for="autolabel-provider">Provider:</label>
+                            <label class="field-label" for="autolabel-provider" data-i18n="settings.provider_label">Provider:</label>
                             <select id="autolabel-provider">
                                 <option value="gemini" selected>Google Gemini (Cloud API)</option>
                                 <option value="openai">OpenAI-kompatibel (oMLX, LM Studio, vLLM)</option>
@@ -994,33 +994,33 @@
                         </div>
                         <div>
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                                <label class="field-label" for="autolabel-model-select" style="margin: 0;">Modell:</label>
+                                <label class="field-label" for="autolabel-model-select" style="margin: 0;" data-i18n="settings.model_label">Modell:</label>
                                 <span id="model-count-badge" style="font-size: 0.7rem; color: var(--muted);"></span>
                             </div>
                             <div style="display: flex; gap: 6px;">
                                 <select id="autolabel-model-select">
-                                    <option value="gemini-2.0-flash" selected>2.0 Flash (Standard &amp; Schnell · Empfohlen)</option>
-                                    <option value="gemini-3.8-flash">3.8 Flash (Vielseitige Unterstützung)</option>
-                                    <option value="gemini-3.5-flash-lite">3.5 Flash-Lite (Schnellste Antworten)</option>
-                                    <option value="gemini-3.1-pro">3.1 Pro (Logisches Schlussfolgern)</option>
-                                    <option value="gemini-4-argon">4 Argon (Komplexe Aufgaben)</option>
-                                    <option value="gemini-1.5-pro">1.5 Pro (Hohe Genauigkeit)</option>
-                                    <option value="gemini-1.5-flash">1.5 Flash (Klassisch &amp; Sparsam)</option>
-                                    <option value="__custom__">Eigenes Modell eingeben...</option>
+                                    <option value="gemini-2.0-flash" selected data-i18n="settings.model_2_0_flash">2.0 Flash (Standard &amp; Schnell · Empfohlen)</option>
+                                    <option value="gemini-3.8-flash" data-i18n="settings.model_3_8_flash">3.8 Flash (Vielseitige Unterstützung)</option>
+                                    <option value="gemini-3.5-flash-lite" data-i18n="settings.model_3_5_flash_lite">3.5 Flash-Lite (Schnellste Antworten)</option>
+                                    <option value="gemini-3.1-pro" data-i18n="settings.model_3_1_pro">3.1 Pro (Logisches Schlussfolgern)</option>
+                                    <option value="gemini-4-argon" data-i18n="settings.model_4_argon">4 Argon (Komplexe Aufgaben)</option>
+                                    <option value="gemini-1.5-pro" data-i18n="settings.model_1_5_pro">1.5 Pro (Hohe Genauigkeit)</option>
+                                    <option value="gemini-1.5-flash" data-i18n="settings.model_1_5_flash">1.5 Flash (Klassisch &amp; Sparsam)</option>
+                                    <option value="__custom__" data-i18n="settings.model_custom_placeholder">Eigenes Modell eingeben...</option>
                                 </select>
-                                <button id="refresh-models-btn" class="btn" type="button" style="display: inline-block; padding: 4px 8px;" title="Verfügbare Modelle live abrufen">
+                                <button id="refresh-models-btn" class="btn" type="button" style="display: inline-block; padding: 4px 8px;" title="Verfügbare Modelle live abrufen" data-i18n-title="settings.refresh_models_title">
                                     <svg class="tool-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
                                 </button>
                             </div>
-                            <input type="text" id="autolabel-model-custom" placeholder="Modellname eingeben, z.B. qwen2-vl-7b-instruct" style="display: none; margin-top: 6px;" />
+                            <input type="text" id="autolabel-model-custom" placeholder="Modellname eingeben, z.B. qwen2-vl-7b-instruct" data-i18n-placeholder="settings.model_custom_placeholder" style="display: none; margin-top: 6px;" />
                         </div>
                     </div>
 
                     <!-- Gemini API Key -->
                     <div id="gemini-key-row" style="margin-bottom: 12px;">
-                        <label class="field-label" for="gemini-api-key">Gemini API Key (wird sicher auf dem Server gespeichert): <span id="gemini-key-status" style="font-size: 0.72rem; color: #38bdf8; font-weight: normal;"></span></label>
+                        <label class="field-label" for="gemini-api-key"><span data-i18n="settings.gemini_key_label">Gemini API Key (wird sicher auf dem Server gespeichert):</span> <span id="gemini-key-status" style="font-size: 0.72rem; color: #38bdf8; font-weight: normal;"></span></label>
                         <div style="display: flex; gap: 6px;">
-                            <input type="password" id="gemini-api-key" placeholder="AIzaSy... (oder Umgebungsvariable GEMINI_API_KEY)" />
+                            <input type="password" id="gemini-api-key" placeholder="AIzaSy... (oder Umgebungsvariable GEMINI_API_KEY)" data-i18n-placeholder="settings.gemini_key_placeholder" />
                             <button id="toggle-key-vis-btn" type="button" class="btn" style="padding: 6px 10px;">
                                 <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                             </button>
@@ -1030,55 +1030,55 @@
                     <!-- Local Endpoint URL -->
                     <div id="local-url-row" style="margin-bottom: 12px; display: none;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                            <label class="field-label" id="local-url-label" for="local-url" style="margin: 0;">OpenAI / oMLX Endpoint URL:</label>
+                            <label class="field-label" id="local-url-label" for="local-url" style="margin: 0;" data-i18n="settings.local_url_label">OpenAI / oMLX Endpoint URL:</label>
                             <span id="local-status-badge" style="font-size: 0.72rem; color: var(--muted);"></span>
                         </div>
                         <input type="text" id="local-url" placeholder="z.B. http://192.168.178.39:8000/v1 oder http://127.0.0.1:1234/v1" />
                         <div id="local-vision-hint" style="font-size: 0.75rem; color: #f59e0b; margin-top: 6px; line-height: 1.4;">
-                            <strong>Vision-Modell erforderlich:</strong> Stelle sicher, dass im Server ein multimodales Vision-Modell aktiv ist (z.B. Qwen2-VL, Qwen3.8-27B).
+                            <strong data-i18n="settings.local_url_hint_title">Vision-Modell erforderlich:</strong> <span data-i18n="settings.local_url_hint_text">Stelle sicher, dass im Server ein multimodales Vision-Modell aktiv ist (z.B. Qwen2-VL, Qwen3.8-27B).</span>
                         </div>
                     </div>
 
                     <!-- OpenAI API Key (optional) -->
                     <div id="openai-key-row" style="margin-bottom: 12px; display: none;">
                         <label class="field-label" for="openai-api-key">
-                            OpenAI API Key (optional für externe oder geschützte Endpunkte): <span id="openai-key-status" style="font-size: 0.72rem; color: #38bdf8; font-weight: normal;"></span>
+                            <span data-i18n="settings.openai_key_label">OpenAI API Key (optional für externe oder geschützte Endpunkte):</span> <span id="openai-key-status" style="font-size: 0.72rem; color: #38bdf8; font-weight: normal;"></span>
                         </label>
                         <div style="display: flex; gap: 6px;">
-                            <input type="password" id="openai-api-key" placeholder="sk-... (optional für lokale Server frei lassen)" />
+                            <input type="password" id="openai-api-key" placeholder="sk-... (optional für lokale Server frei lassen)" data-i18n-placeholder="settings.openai_key_placeholder" />
                             <button id="toggle-openai-key-vis-btn" type="button" class="btn" style="padding: 6px 10px;" title="Key anzeigen/verbergen">
                                 <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                             </button>
                         </div>
-                        <div style="font-size: 0.72rem; color: var(--muted); margin-top: 4px;">
+                        <div style="font-size: 0.72rem; color: var(--muted); margin-top: 4px;" data-i18n="settings.openai_key_hint">
                             Wird sicher auf dem Server gespeichert. Für lokale Server (LM Studio, Ollama, oMLX) nicht erforderlich.
                         </div>
                     </div>
 
                     <!-- Modulare Feature-Toggles für LLM Auto-Labeling -->
                     <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px;">
-                        <label class="field-label" style="margin-bottom: 8px; color: var(--accent); font-weight: 600;">
+                        <label class="field-label" style="margin-bottom: 8px; color: var(--accent); font-weight: 600;" data-i18n="settings.features_label">
                             Erkennungsumfang &amp; Prompt-Module:
                         </label>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px;">
-                            <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; background: var(--surface-hover); padding: 8px 10px; border-radius: 6px; cursor: not-allowed; opacity: 0.75;" title="Grundlegende Lokalisierung und YOLO-Klasse ist immer aktiv">
+                            <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; background: var(--surface-hover); padding: 8px 10px; border-radius: 6px; cursor: not-allowed; opacity: 0.75;" title="Grundlegende Lokalisierung und YOLO-Klasse ist immer aktiv" data-i18n-title="settings.opt_box_title">
                                 <input type="checkbox" id="autolabel-opt-box" checked disabled style="accent-color: var(--accent);" />
-                                <span><strong>Box &amp; Grundklasse</strong> (YOLO)</span>
+                                <span data-i18n="settings.opt_box">Box &amp; Grundklasse</span>
                             </label>
-                            <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; background: var(--surface-hover); padding: 8px 10px; border-radius: 6px; cursor: pointer;" title="Physische Bauform erkennen (DIP, TO-92, SOIC, 0805...) und automatisch mit Part-DB Footprint-Katalog abgleichen">
+                            <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; background: var(--surface-hover); padding: 8px 10px; border-radius: 6px; cursor: pointer;" title="Physische Bauform erkennen (DIP, TO-92, SOIC, 0805...) und automatisch mit Part-DB Footprint-Katalog abgleichen" data-i18n-title="settings.opt_footprint_title">
                                 <input type="checkbox" id="autolabel-opt-footprint" checked style="accent-color: var(--accent);" />
-                                <span><strong>Bauform / Footprint</strong> (Part-DB)</span>
+                                <span data-i18n="settings.opt_footprint">Bauform / Footprint</span>
                             </label>
-                            <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; background: var(--surface-hover); padding: 8px 10px; border-radius: 6px; cursor: pointer;" title="Beschriftung / Bauteilbezeichnung (OCR) auf dem Bauteil ablesen (z.B. NE555, LM358, 2N2222)">
+                            <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; background: var(--surface-hover); padding: 8px 10px; border-radius: 6px; cursor: pointer;" title="Beschriftung / Bauteilbezeichnung (OCR) auf dem Bauteil ablesen (z.B. NE555, LM358, 2N2222)" data-i18n-title="settings.opt_marking_title">
                                 <input type="checkbox" id="autolabel-opt-marking" checked style="accent-color: var(--accent);" />
-                                <span><strong>Beschriftung (OCR)</strong> (Part Marking)</span>
+                                <span data-i18n="settings.opt_marking">Beschriftung (OCR)</span>
                             </label>
-                            <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; background: var(--surface-hover); padding: 8px 10px; border-radius: 6px; cursor: pointer;" title="IC-Kategorie für Part-DB ermitteln (analog, logic, mcu, special)">
+                            <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; background: var(--surface-hover); padding: 8px 10px; border-radius: 6px; cursor: pointer;" title="IC-Kategorie für Part-DB ermitteln (analog, logic, mcu, special)" data-i18n-title="settings.opt_subgroup_title">
                                 <input type="checkbox" id="autolabel-opt-subgroup" checked style="accent-color: var(--accent);" />
-                                <span><strong>IC-Typ / Subgruppe</strong> (Part-DB)</span>
+                                <span data-i18n="settings.opt_subgroup">IC-Typ / Subgruppe</span>
                             </label>
                         </div>
-                        <div style="font-size: 0.72rem; color: var(--muted); margin-top: 6px; line-height: 1.4;">
+                        <div style="font-size: 0.72rem; color: var(--muted); margin-top: 6px; line-height: 1.4;" data-i18n="settings.features_hint">
                             Prompt und JSON-Schema passen sich dynamisch an. Deaktivierte Felder reduzieren die Inferenzzeit und Tokens des LLMs.
                         </div>
                     </div>
@@ -1088,23 +1088,23 @@
                     <div class="card-header-row">
                         <span class="card-title">
                             <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block; vertical-align:-2px; margin-right:4px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                            <span>Texterkennung &amp; OCR-Engine</span>
+                            <span data-i18n="settings.ocr_card_title">Texterkennung &amp; OCR-Engine</span>
                         </span>
                     </div>
                     <div class="form-group">
-                        <label class="field-label" for="ocr-select">OCR-Engine für IC-Beschriftungen:</label>
+                        <label class="field-label" for="ocr-select" data-i18n="settings.ocr_engine_label">OCR-Engine für IC-Beschriftungen:</label>
                         <select id="ocr-select">
-                            <option value="tesseract" selected>Tesseract.js v5 (Multi-Pass WASM · Schnell)</option>
-                            <option value="florence2">Florence-2 (VisionLM In-Browser ONNX · Empfohlen für ICs)</option>
+                            <option value="tesseract" selected data-i18n="settings.ocr_tesseract">Tesseract.js v5 (Multi-Pass WASM · Schnell)</option>
+                            <option value="florence2" data-i18n="settings.ocr_florence2">Florence-2 (VisionLM In-Browser ONNX · Empfohlen für ICs)</option>
                         </select>
-                        <small class="field-hint" style="display:block; margin-top:5px; font-size:0.73rem; opacity:0.8; line-height:1.35;">
-                            Hinweis: Tesseract ist für gedruckte Dokumente optimiert. Für laser-geätzte ICs und raue Halbleitergehäuse liefert das integrierte <strong>Florence-2 VisionLM</strong> deutlich überlegene Ergebnisse.
+                        <small class="field-hint" style="display:block; margin-top:5px; font-size:0.73rem; opacity:0.8; line-height:1.35;" data-i18n="settings.ocr_hint">
+                            Hinweis: Tesseract ist für gedruckte Dokumente optimiert. Für laser-geätzte ICs und raue Halbleitergehäuse liefert das integrierte Florence-2 VisionLM deutlich überlegene Ergebnisse.
                         </small>
                     </div>
 
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label class="field-label" for="custom-classes">Zusätzliche CLIP-Klassen (optional):</label>
-                        <input type="text" id="custom-classes" placeholder="z.B. Arduino, ESP32, voltage regulator, fuse" />
+                        <label class="field-label" for="custom-classes" data-i18n="settings.clip_label">Zusätzliche CLIP-Klassen (optional):</label>
+                        <input type="text" id="custom-classes" placeholder="z.B. Arduino, ESP32, voltage regulator, fuse" data-i18n-placeholder="settings.clip_placeholder" />
                     </div>
                 </div>
 
@@ -1172,11 +1172,11 @@
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     <div>
-                        <h3 id="import-modal-title" style="margin: 0; font-size: 1rem; font-weight: 800; color: var(--text);">Datensatz importieren</h3>
-                        <div style="font-size: 0.72rem; color: var(--muted);">Mendeley & Roboflow Datensätze scannen, mappen & als YOLO Samples integrieren</div>
+                        <h3 id="import-modal-title" style="margin: 0; font-size: 1rem; font-weight: 800; color: var(--text);" data-i18n="import.title">Datensatz importieren</h3>
+                        <div style="font-size: 0.72rem; color: var(--muted);" data-i18n="import.subtitle">Mendeley &amp; Roboflow Datensätze scannen, mappen &amp; als YOLO Samples integrieren</div>
                     </div>
                 </div>
-                <button type="button" class="btn-modal-close" id="btn-close-import-modal" title="Schließen">
+                <button type="button" class="btn-modal-close" id="btn-close-import-modal" title="Schließen" data-i18n-title="import.close_btn">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
             </div>
@@ -1185,14 +1185,14 @@
                 <!-- Schritt 1: Quelle auswählen -->
                 <div class="import-section">
                     <div class="import-section-title">
-                        <span>1. Datenquelle wählen</span>
+                        <span data-i18n="import.step_source">1. Datenquelle wählen</span>
                         <span id="import-sources-loading" style="font-size: 0.72rem; color: #38bdf8; display: none; align-items: center; gap: 4px;">
                             <svg class="ai-hud-spinner" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>
-                            <span>Scanne Verzeichnis...</span>
+                            <span data-i18n="import.scan_dir">Scanne Verzeichnis...</span>
                         </span>
                     </div>
                     <div id="import-sources-grid" class="import-sources-grid">
-                        <div style="grid-column: 1 / -1; padding: 16px; text-align: center; color: var(--muted); font-size: 0.8rem;">
+                        <div style="grid-column: 1 / -1; padding: 16px; text-align: center; color: var(--muted); font-size: 0.8rem;" data-i18n="import.sources_loading">
                             Lade verfügbare Quellen aus external_datasets/...
                         </div>
                     </div>
@@ -1201,34 +1201,34 @@
                 <!-- Schritt 2: Import-Umfang -->
                 <div class="import-section">
                     <div class="import-section-title">
-                        <span>2. Umfang (Batch-Größe)</span>
+                        <span data-i18n="import.step_scope">2. Umfang (Batch-Größe)</span>
                     </div>
                     <div class="import-scope-grid">
                         <label class="import-radio-card active" data-scope="50">
                             <input type="radio" name="import-scope-choice" value="50" checked style="margin-top: 3px;" />
                             <div>
-                                <div style="font-weight: 700; font-size: 0.82rem; color: var(--text);">50 Samples</div>
-                                <div style="font-size: 0.7rem; color: var(--muted);">Schnelltest / Schneller Import</div>
+                                <div style="font-weight: 700; font-size: 0.82rem; color: var(--text);" data-i18n="import.scope_50">50 Samples</div>
+                                <div style="font-size: 0.7rem; color: var(--muted);" data-i18n="import.scope_50_sub">Schnelltest / Schneller Import</div>
                             </div>
                         </label>
                         <label class="import-radio-card" data-scope="250">
                             <input type="radio" name="import-scope-choice" value="250" style="margin-top: 3px;" />
                             <div>
-                                <div style="font-weight: 700; font-size: 0.82rem; color: var(--text);">250 Samples</div>
-                                <div style="font-size: 0.7rem; color: var(--muted);">Ausgewogener Trainings-Batch</div>
+                                <div style="font-weight: 700; font-size: 0.82rem; color: var(--text);" data-i18n="import.scope_250">250 Samples</div>
+                                <div style="font-size: 0.7rem; color: var(--muted);" data-i18n="import.scope_250_sub">Ausgewogener Trainings-Batch</div>
                             </div>
                         </label>
                         <label class="import-radio-card" data-scope="all">
                             <input type="radio" name="import-scope-choice" value="all" style="margin-top: 3px;" />
                             <div>
-                                <div style="font-weight: 700; font-size: 0.82rem; color: var(--text);">Alle Bilder</div>
-                                <div style="font-size: 0.7rem; color: var(--muted);" id="import-scope-all-desc">Gesamter Datensatz</div>
+                                <div style="font-weight: 700; font-size: 0.82rem; color: var(--text);" data-i18n="import.scope_all">Alle Bilder</div>
+                                <div style="font-size: 0.7rem; color: var(--muted);" id="import-scope-all-desc" data-i18n="import.scope_all_sub">Gesamter Datensatz</div>
                             </div>
                         </label>
                     </div>
                     <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
                         <input type="checkbox" id="import-skip-other-checkbox" style="cursor: pointer;" />
-                        <label for="import-skip-other-checkbox" style="font-size: 0.76rem; color: var(--text); cursor: pointer;">
+                        <label for="import-skip-other-checkbox" style="font-size: 0.76rem; color: var(--text); cursor: pointer;" data-i18n="import.skip_other">
                             Klasse <strong>"other"</strong> (nicht zugeordnete Bauteile) überspringen
                         </label>
                     </div>
@@ -1237,21 +1237,21 @@
                 <!-- Schritt 3: Klassen-Mapping -->
                 <div class="import-section">
                     <div class="import-section-title">
-                        <span>3. Klassen-Zuordnung (Mapping zu Part-DB Klassen)</span>
+                        <span data-i18n="import.step_mapping">3. Klassen-Zuordnung (Mapping zu Part-DB Klassen)</span>
                         <span id="import-mapping-stats" style="font-size: 0.72rem; color: var(--muted);">0 Klassen</span>
                     </div>
                     <div class="import-mapping-table-scroll">
                         <table class="import-mapping-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 45%;">Original-Klasse</th>
-                                    <th style="width: 15%; text-align: center;">Status</th>
-                                    <th style="width: 40%;">Ziel-Klasse (Part-DB)</th>
+                                    <th style="width: 45%;" data-i18n="import.col_original">Original-Klasse</th>
+                                    <th style="width: 15%; text-align: center;" data-i18n="import.col_status">Status</th>
+                                    <th style="width: 40%;" data-i18n="import.col_target">Ziel-Klasse (Part-DB)</th>
                                 </tr>
                             </thead>
                             <tbody id="import-mapping-tbody">
                                 <tr>
-                                    <td colspan="3" style="text-align: center; color: var(--muted); padding: 16px;">
+                                    <td colspan="3" style="text-align: center; color: var(--muted); padding: 16px;" data-i18n="import.select_source_first">
                                         Bitte zuerst eine Datenquelle auswählen
                                     </td>
                                 </tr>
@@ -1263,7 +1263,7 @@
                 <!-- Live-Fortschrittsanzeige (während Import aktiv) -->
                 <div id="import-progress-container" style="display: none; flex-direction: column; gap: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem;">
-                        <span id="import-progress-status" style="font-weight: 700; color: #38bdf8;">Import läuft...</span>
+                        <span id="import-progress-status" style="font-weight: 700; color: #38bdf8;" data-i18n="import.progress_running">Import läuft...</span>
                         <span id="import-progress-counter" style="color: var(--muted); font-family: monospace;">0 / 0</span>
                     </div>
                     <div class="import-progress-bar-wrap">
@@ -1272,30 +1272,30 @@
                     <div class="import-stats-box">
                         <div class="import-stat-item">
                             <span id="import-stat-imported" class="stat-num accent">0</span>
-                            <span class="stat-lbl">Importiert</span>
+                            <span class="stat-lbl" data-i18n="import.imported_lbl">Importiert</span>
                         </div>
                         <div class="import-stat-item">
                             <span id="import-stat-boxes" class="stat-num">0</span>
-                            <span class="stat-lbl">Boxen</span>
+                            <span class="stat-lbl" data-i18n="import.boxes_lbl">Boxen</span>
                         </div>
                         <div class="import-stat-item">
                             <span id="import-stat-skipped" class="stat-num" style="color: #f59e0b;">0</span>
-                            <span class="stat-lbl">Ignoriert</span>
+                            <span class="stat-lbl" data-i18n="import.skipped_lbl">Ignoriert</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="app-modal-footer" style="justify-content: space-between;">
-                <div style="font-size: 0.72rem; color: var(--muted);" id="import-footer-hint">
+                <div style="font-size: 0.72rem; color: var(--muted);" id="import-footer-hint" data-i18n="import.footer_hint">
                     Konvertiert Bounding-Boxen & bereitet Thumbnails vor.
                 </div>
                 <div style="display: flex; gap: 8px;">
-                    <button type="button" class="btn btn-secondary" id="btn-cancel-import-modal">Schließen</button>
-                    <button type="button" class="btn btn-danger" id="btn-abort-import-exec" style="display: none;">Import abbrechen</button>
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-import-modal" data-i18n="import.close_btn">Schließen</button>
+                    <button type="button" class="btn btn-danger" id="btn-abort-import-exec" style="display: none;" data-i18n="import.abort_btn">Import abbrechen</button>
                     <button type="button" class="btn btn-accent" id="btn-start-import-exec" disabled style="display: inline-flex; align-items: center; gap: 5px;">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
-                        <span>Import starten</span>
+                        <span data-i18n="import.start_btn">Import starten</span>
                     </button>
                 </div>
             </div>
@@ -1350,7 +1350,7 @@
 
             <div class="app-modal-footer" style="justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                    <span style="font-size: 0.72rem; color: var(--muted);" id="fp-modal-counter">0 Footprints geladen</span>
+                    <span style="font-size: 0.72rem; color: var(--muted);" id="fp-modal-counter" data-i18n="footprints.counter_initial">0 Footprints geladen</span>
                     <span style="font-size: 0.72rem; color: var(--border);">|</span>
                     <span style="font-size: 0.72rem; color: var(--muted);" id="fp-modal-cache-status">Offline: ...</span>
                 </div>

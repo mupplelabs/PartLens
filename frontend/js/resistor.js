@@ -144,10 +144,12 @@ function renderSwatchGrid() {
     const slotType = getSlotType(activeBandIndex);
 
     if (activeBandLabel) {
-        activeBandLabel.innerText = `Ausgewählt: Ring ${activeBandIndex + 1} (${getSlotLabel(activeBandIndex)})`;
+        activeBandLabel.innerText = window.t
+            ? window.t('resistor.selected_band', { band: activeBandIndex + 1, name: getSlotLabel(activeBandIndex) })
+            : `Ausgewählt: Ring ${activeBandIndex + 1} (${getSlotLabel(activeBandIndex)})`;
     }
     if (paletteHint) {
-        paletteHint.innerText = 'Farbe zum Zuweisen wählen:';
+        paletteHint.innerText = window.t ? window.t('resistor.palette_hint') : 'Farbe zum Zuweisen wählen:';
     }
 
     resistorSwatchGrid.innerHTML = '';

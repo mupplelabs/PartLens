@@ -168,12 +168,12 @@ if (autolabelOptionsBtn && autolabelOptionsMenu) {
             await CTApi.saveLlmSettings(payload);
             const statusSpan = document.getElementById('gemini-key-status');
             if (statusSpan && payload.gemini_api_key) {
-                statusSpan.innerText = '(Auf Server gespeichert)';
+                statusSpan.innerText = window.t ? window.t('autolabel.saved_on_server') : '(Auf Server gespeichert)';
                 statusSpan.style.color = '#10b981';
             }
             const openaiStatusSpan = document.getElementById('openai-key-status');
             if (openaiStatusSpan && payload.openai_api_key) {
-                openaiStatusSpan.innerText = '(Auf Server gespeichert)';
+                openaiStatusSpan.innerText = window.t ? window.t('autolabel.saved_on_server') : '(Auf Server gespeichert)';
                 openaiStatusSpan.style.color = '#10b981';
             }
         } catch (netErr) {
@@ -1324,7 +1324,7 @@ if (runAutolabelBtn) {
     runAutolabelBtn.addEventListener('click', async () => {
         const imgB64 = captureCurrentImageBase64();
         if (!imgB64) {
-            alert('Bitte zuerst ein Bild laden oder die Webcam aktivieren!');
+            alert(window.t ? window.t('autolabel.please_load_image') : 'Bitte zuerst ein Bild laden oder die Webcam aktivieren!');
             return;
         }
 
@@ -1376,9 +1376,15 @@ if (runAutolabelBtn) {
 
             if (!data.components || data.components.length === 0) {
                 hideAutoLabelLoading(true);
-                autolabelStatus.innerText = (window.innerWidth <= 768)
-                    ? `Keine Bauteile im Bild gefunden (${data.latency_ms} ms).`
-                    : `${data.model} hat keine Bauteile im Bild gefunden (${data.latency_ms} ms).`;
+                if (window.t) {
+                    autolabelStatus.innerText = (window.innerWidth <= 768)
+                        ? window.t('autolabel.no_components_found', { ms: data.latency_ms })
+                        : window.t('autolabel.no_components_found_model', { model: data.model, ms: data.latency_ms });
+                } else {
+                    autolabelStatus.innerText = (window.innerWidth <= 768)
+                        ? `Keine Bauteile im Bild gefunden (${data.latency_ms} ms).`
+                        : `${data.model} hat keine Bauteile im Bild gefunden (${data.latency_ms} ms).`;
+                }
                 return;
             }
 
@@ -1430,9 +1436,10 @@ if (runAutolabelBtn) {
                 return;
             }
             console.error('Auto-Label Fehler:', err);
-            autolabelStatus.innerText = `Fehler: ${err.message}`;
+            autolabelStatus.innerText = window.t ? window.t('autolabel.error_prefix', { error: err.message }) : `Fehler: ${err.message}`;
             hideAutoLabelLoading(false);
-            alert(`Auto-Label Fehler:\n${err.message}`);
+            const errTitle = window.t ? window.t('autolabel.error_prefix', { error: '' }) : 'Auto-Label Fehler: ';
+            alert(`${errTitle}\n${err.message}`);
         } finally {
             autoLabelAbortController = null;
         }
@@ -1463,13 +1470,13 @@ function normalizeLabelForYolo(rawLabel) {
 if (saveDatasetBtn) {
     saveDatasetBtn.addEventListener('click', async () => {
         if (detectedBoxes.length === 0) {
-            alert('Es gibt keine Bounding Boxes zum Speichern! Bitte zuerst Auto-Label ausführen oder manuell Boxen zeichnen.');
+            alert(window.t ? window.t('autolabel.no_boxes_to_save') : 'Es gibt keine Bounding Boxes zum Speichern! Bitte zuerst Auto-Label ausführen oder manuell Boxen zeichnen.');
             return;
         }
 
         const imgB64 = captureCurrentImageBase64();
         if (!imgB64) {
-            alert('Kein Bild zum Speichern vorhanden!');
+            alert(window.t ? window.t('autolabel.no_image_to_save') : 'Kein Bild zum Speichern vorhanden!');
             return;
         }
 
@@ -1529,7 +1536,9 @@ if (saveDatasetBtn) {
                     ? window.formatDatasetBadge(resData.stats.train_images, resData.stats.val_images, resData.stats.total_annotations)
                     : `Datensatz: ${resData.stats.train_images} Train • ${resData.stats.val_images} Val (${resData.stats.total_annotations} Boxen)`;
             }
-            autolabelStatus.innerText = `Gespeichert als ${resData.sample_id} (${resData.annotations_saved} Boxen)!`;
+            autolabelStatus.innerText = window.t
+                ? window.t('autolabel.saved_as', { id: resData.sample_id, count: resData.annotations_saved })
+                : `Gespeichert als ${resData.sample_id} (${resData.annotations_saved} Boxen)!`;
 
             // Inkrementelle Aktualisierung der Datensatz-Galerie ohne blockierenden Full-Fetch
             const newSampleObj = {
@@ -1553,7 +1562,9 @@ if (saveDatasetBtn) {
             }
         } catch (err) {
             console.error('Fehler beim Speichern:', err);
-            autolabelStatus.innerText = `Speichern fehlgeschlagen: ${err.message}`;
+            autolabelStatus.innerText = window.t
+                ? window.t('autolabel.save_failed', { error: err.message })
+                : `Speichern fehlgeschlagen: ${err.message}`;
         } finally {
             saveDatasetBtn.disabled = false;
         }

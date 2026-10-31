@@ -164,7 +164,7 @@
                             ${src.total_images} Bilder
                         </span>
                     </div>
-                    <div style="font-size: 0.7rem; color: var(--muted);">${splitText} · ${src.classes ? src.classes.length : 0} Klassen</div>
+                    <div style="font-size: 0.7rem; color: var(--muted);">${splitText} · ${src.classes ? src.classes.length : 0} ${window.t ? window.t('import.classes_suffix') : 'Klassen'}</div>
                     <div style="font-size: 0.65rem; color: var(--muted); opacity: 0.7; font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                         ${src.folder}
                     </div>
@@ -185,7 +185,9 @@
         // Update "Alle Bilder" Beschriftung
         const curSrc = availableSources.find(s => s.id === selectedSourceId);
         if (curSrc && scopeAllDesc) {
-            scopeAllDesc.textContent = `Gesamter Datensatz (${curSrc.total_images} Bilder)`;
+            scopeAllDesc.textContent = window.t
+                ? window.t('import.scope_all_desc', { count: curSrc.total_images })
+                : `Gesamter Datensatz (${curSrc.total_images} Bilder)`;
         }
 
         if (startBtn && !isImporting) startBtn.disabled = false;
@@ -196,24 +198,31 @@
         if (!mappingTbody) return;
         const src = availableSources.find(s => s.id === selectedSourceId);
         if (!src) {
-            mappingTbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--muted); padding: 16px;">Quelle nicht gefunden</td></tr>';
+            const notFoundText = window.t ? window.t('import.source_not_found') : 'Quelle nicht gefunden';
+            mappingTbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--muted); padding: 16px;">${notFoundText}</td></tr>`;
             return;
         }
 
         const rawClasses = src.classes || [];
         if (mappingStats) {
-            mappingStats.textContent = `${rawClasses.length} Original-Klassen`;
+            mappingStats.textContent = window.t
+                ? window.t('import.classes_count', { count: rawClasses.length })
+                : `${rawClasses.length} Original-Klassen`;
         }
 
         const mapping = activeMappings[src.id] || {};
 
+        const partdbOptgroup = window.t ? window.t('import.partdb_optgroup') : 'Part-DB Bauteil-Klassen';
+        const specialOptgroup = window.t ? window.t('import.opt_special') : 'Sonderoptionen';
+        const ignoreOption = window.t ? window.t('import.opt_ignore') : '[Ignorieren / Überspringen]';
+
         // Target options bauen
         const targetOptionsHtml = [
-            '<optgroup label="Part-DB Bauteil-Klassen">',
+            `<optgroup label="${partdbOptgroup}">`,
             ...targetClassesList.map(tc => `<option value="${tc}">${tc}</option>`),
             '</optgroup>',
-            '<optgroup label="Sonderoptionen">',
-            '<option value="_ignore_">[Ignorieren / Überspringen]</option>',
+            `<optgroup label="${specialOptgroup}">`,
+            `<option value="_ignore_">${ignoreOption}</option>`,
             '</optgroup>'
         ].join('');
 
@@ -230,7 +239,7 @@
                     <td>
                         <select class="import-mapping-select" data-raw-class="${rc}">
                             ${targetClassesList.map(tc => `<option value="${tc}" ${tc === mappedTarget ? 'selected' : ''}>${tc}</option>`).join('')}
-                            <option value="_ignore_" ${mappedTarget === '_ignore_' ? 'selected' : ''}>[Ignorieren / Überspringen]</option>
+                            <option value="_ignore_" ${mappedTarget === '_ignore_' ? 'selected' : ''}>${ignoreOption}</option>
                         </select>
                     </td>
                 </tr>
@@ -285,9 +294,10 @@
                 setRunningUI(true);
                 startPolling();
             } catch (err) {
-                alert('Fehler: ' + err.message);
+                const errPrefix = window.t ? window.t('autolabel.error_prefix', { error: '' }) : 'Fehler: ';
+                alert(errPrefix + err.message);
                 startBtn.disabled = false;
-                if (footerHint) footerHint.innerText = 'Fehler beim Starten des Imports.';
+                if (footerHint) footerHint.innerText = window.t ? window.t('import.start_error') : 'Fehler beim Starten des Imports.';
             }
         });
     }
@@ -295,11 +305,11 @@
     // Abort Execution
     if (abortBtn) {
         abortBtn.addEventListener('click', async () => {
-            if (!confirm('Möchten Sie den laufenden Import wirklich abbrechen? Bereits importierte Bilder bleiben erhalten.')) {
+            if (!confirm(window.t ? window.t('import.confirm_abort') : 'Möchten Sie den laufenden Import wirklich abbrechen? Bereits importierte Bilder bleiben erhalten.')) {
                 return;
             }
             abortBtn.disabled = true;
-            if (footerHint) footerHint.innerText = 'Sende Abbruch-Signal...';
+            if (footerHint) footerHint.innerText = window.t ? window.t('import.sending_abort') : 'Sende Abbruch-Signal...';
             try {
                 await fetch('/api/dataset/import/abort', { method: 'POST' });
             } catch (e) {
@@ -344,16 +354,24 @@
         if (progressStatus) {
             if (state.status === 'running') {
                 const file = state.current_file ? ` (${state.current_file})` : '';
-                progressStatus.textContent = `Importiere ${state.current_dataset || ''}${file}... ${pct}%`;
+                progressStatus.textContent = window.t
+                    ? window.t('import.importing_status', { dataset: state.current_dataset || '', file, pct })
+                    : `Importiere ${state.current_dataset || ''}${file}... ${pct}%`;
                 progressStatus.style.color = 'var(--text)';
             } else if (state.status === 'completed') {
-                progressStatus.textContent = `Import abgeschlossen (${state.imported_images} Bilder, ${state.imported_boxes} Boxen)`;
+                progressStatus.textContent = window.t
+                    ? window.t('import.completed_status', { images: state.imported_images, boxes: state.imported_boxes })
+                    : `Import abgeschlossen (${state.imported_images} Bilder, ${state.imported_boxes} Boxen)`;
                 progressStatus.style.color = '#10b981';
             } else if (state.status === 'aborted') {
-                progressStatus.textContent = `Import abgebrochen (${state.imported_images} Bilder übernommen)`;
+                progressStatus.textContent = window.t
+                    ? window.t('import.aborted_status', { images: state.imported_images })
+                    : `Import abgebrochen (${state.imported_images} Bilder übernommen)`;
                 progressStatus.style.color = '#f59e0b';
             } else if (state.status === 'failed') {
-                progressStatus.textContent = `Import fehlgeschlagen: ${state.error || 'Unbekannter Fehler'}`;
+                progressStatus.textContent = window.t
+                    ? window.t('import.failed_prefix', { error: state.error || 'Unbekannter Fehler' })
+                    : `Import fehlgeschlagen: ${state.error || 'Unbekannter Fehler'}`;
                 progressStatus.style.color = '#ef4444';
             }
         }
@@ -373,10 +391,14 @@
             abortBtn.disabled = !running;
         }
         if (cancelBtn) {
-            cancelBtn.textContent = running ? 'Im Hintergrund' : 'Schließen';
+            cancelBtn.textContent = running
+                ? (window.t ? window.t('import.btn_background') : 'Im Hintergrund')
+                : (window.t ? window.t('import.close_btn') : 'Schließen');
         }
         if (footerHint) {
-            footerHint.innerText = running ? 'Import läuft asynchron. Sie können dieses Fenster schließen.' : 'Konvertiert Bounding-Boxen & bereitet Thumbnails vor.';
+            footerHint.innerText = running
+                ? (window.t ? window.t('import.running_hint') : 'Import läuft asynchron. Sie können dieses Fenster schließen.')
+                : (window.t ? window.t('import.idle_hint') : 'Konvertiert Bounding-Boxen & bereitet Thumbnails vor.');
         }
     }
 

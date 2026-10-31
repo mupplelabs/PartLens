@@ -108,7 +108,9 @@ function updateBatchBar() {
 
     const isMobile = window.matchMedia('(max-width: 600px)').matches;
     if (labelEl) {
-        labelEl.textContent = isMobile ? 'gewählt' : 'ausgewählt';
+        labelEl.textContent = isMobile
+            ? (window.t ? window.t('gallery.selected_short') : 'gewählt')
+            : (window.t ? window.t('gallery.selected_long') : 'ausgewählt');
     }
     if (delBtn) {
         delBtn.disabled = count === 0;
@@ -116,9 +118,13 @@ function updateBatchBar() {
     if (selectAllBtn && galleryFilteredSamples) {
         const allSelected = galleryFilteredSamples.length > 0 && galleryFilteredSamples.every(s => selectedSampleKeys.has(`${s.split}:${s.id}`));
         if (isMobile) {
-            selectAllBtn.textContent = allSelected ? 'Keine' : 'Alle';
+            selectAllBtn.textContent = allSelected
+                ? (window.t ? window.t('gallery.select_none') : 'Keine')
+                : (window.t ? window.t('gallery.select_all') : 'Alle');
         } else {
-            selectAllBtn.textContent = allSelected ? 'Auswahl aufheben' : 'Alle auswählen';
+            selectAllBtn.textContent = allSelected
+                ? (window.t ? window.t('gallery.batch_deselect_all') : 'Auswahl aufheben')
+                : (window.t ? window.t('gallery.batch_select_all') : 'Alle auswählen');
         }
     }
 }
@@ -126,7 +132,9 @@ function updateBatchBar() {
 async function batchDeleteSelectedSamples() {
     const count = selectedSampleKeys.size;
     if (count === 0) return;
-    const confirmed = confirm(`Möchtest du wirklich ${count} ausgewählte${count === 1 ? 's Sample' : ' Samples'} unwiderruflich löschen?`);
+    const confirmed = confirm(window.t
+        ? window.t('gallery.confirm_batch_delete', { count })
+        : `Möchtest du wirklich ${count} ausgewählte${count === 1 ? 's Sample' : ' Samples'} unwiderruflich löschen?`);
     if (!confirmed) return;
 
     const samplesToDelete = Array.from(selectedSampleKeys).map(k => {
@@ -158,11 +166,11 @@ async function batchDeleteSelectedSamples() {
             const deleteResponses = await Promise.all(deletePromises);
             const anyFailed = deleteResponses.some(r => !r.ok);
             if (anyFailed && !deleteResponses.some(r => r.ok)) {
-                alert('Löschen der ausgewählten Samples fehlgeschlagen.');
+                alert(window.t ? window.t('gallery.batch_delete_failed') : 'Löschen der ausgewählten Samples fehlgeschlagen.');
                 return;
             }
         } else if (!res.ok) {
-            alert(`Fehler beim Stapellöschen (HTTP ${res.status})`);
+            alert(window.t ? window.t('gallery.batch_delete_error', { error: `HTTP ${res.status}` }) : `Fehler beim Stapellöschen (HTTP ${res.status})`);
             return;
         }
 
@@ -178,13 +186,14 @@ async function batchDeleteSelectedSamples() {
             fetchDatasetStatus();
         }, 240);
     } catch (err) {
-        alert(`Fehler beim Stapellöschen: ${err.message}`);
+        alert(window.t ? window.t('gallery.batch_delete_error', { error: err.message }) : `Fehler beim Stapellöschen: ${err.message}`);
     } finally {
         if (delBtn) {
             delBtn.disabled = selectedSampleKeys.size === 0;
+            const delLabel = window.t ? window.t('gallery.delete_btn_label') : 'Löschen';
             delBtn.innerHTML = `
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                <span>Löschen</span>
+                <span>${delLabel}</span>
             `;
         }
         updateBatchBar();
@@ -343,7 +352,7 @@ function renderGalleryClassFilters(samples) {
 
     const classes = Object.keys(classCounts).sort();
     if (classes.length === 0) {
-        container.innerHTML = '<span style="font-size: 0.72rem; color: var(--muted);">Keine Klassen-Labels vorhanden</span>';
+        container.innerHTML = `<span style="font-size: 0.72rem; color: var(--muted);">${window.t ? window.t('gallery.no_class_labels') : 'Keine Klassen-Labels vorhanden'}</span>`;
         return;
     }
 
@@ -353,7 +362,8 @@ function renderGalleryClassFilters(samples) {
     const allPill = document.createElement('button');
     allPill.type = 'button';
     allPill.className = `class-filter-pill ${currentGalleryClass === 'all' ? 'active' : ''}`;
-    allPill.textContent = `Alle (${samples.length})`;
+    const allLabel = window.t ? window.t('gallery.select_all') : 'Alle';
+    allPill.textContent = `${allLabel} (${samples.length})`;
     allPill.addEventListener('click', () => {
         currentGalleryClass = 'all';
         galleryCurrentPage = 1;
@@ -404,7 +414,9 @@ document.addEventListener('click', (e) => {
 });
 
 async function deleteSampleItem(split, id, cardEl) {
-    const confirmed = confirm(`Möchtest du Sample ${id} (${split}) wirklich löschen?`);
+    const confirmed = confirm(window.t
+        ? window.t('gallery.confirm_delete_single', { id, split })
+        : `Möchtest du Sample ${id} (${split}) wirklich löschen?`);
     if (!confirmed) {
         // Bei Abbruch sofort und zuverlässig wieder zurückschnappen
         if (cardEl && cardEl._resetSwipe) {
@@ -428,13 +440,13 @@ async function deleteSampleItem(split, id, cardEl) {
             }, 240);
             return true;
         } else {
-            alert(`Löschen fehlgeschlagen (HTTP ${dres.status})`);
+            alert(window.t ? window.t('gallery.delete_failed', { error: `HTTP ${dres.status}` }) : `Löschen fehlgeschlagen (HTTP ${dres.status})`);
             if (cardEl && cardEl._resetSwipe) {
                 cardEl._resetSwipe(true);
             }
         }
     } catch (err) {
-        alert(`Löschen fehlgeschlagen: ${err.message}`);
+        alert(window.t ? window.t('gallery.delete_failed', { error: err.message }) : `Löschen fehlgeschlagen: ${err.message}`);
         if (cardEl && cardEl._resetSwipe) {
             cardEl._resetSwipe(true);
         }
@@ -633,16 +645,16 @@ function createSampleCardElement(s) {
     }).join('');
 
     card.innerHTML = `
-        <div class="swipe-delete-reveal" data-id="${s.id}" data-split="${s.split}" title="Sample löschen">
+        <div class="swipe-delete-reveal" data-id="${s.id}" data-split="${s.split}" title="${window.t ? window.t('gallery.delete_btn_title') : 'Sample löschen'}">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="3 6 5 6 21 6"/>
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
             </svg>
-            <span class="swipe-delete-label">Löschen</span>
+            <span class="swipe-delete-label">${window.t ? window.t('gallery.delete_btn_label') : 'Löschen'}</span>
         </div>
         <div class="sample-card-swipe-inner">
-            <div class="sample-thumb-wrap" data-id="${s.id}" data-split="${s.split}" title="Klicken / Antippen zum Öffnen im Studio">
-                <div class="sample-select-checkbox" data-split="${s.split}" data-id="${s.id}" title="Sample auswählen">
+            <div class="sample-thumb-wrap" data-id="${s.id}" data-split="${s.split}" title="${window.t ? window.t('gallery.open_hint') : 'Klicken / Antippen zum Öffnen im Studio'}">
+                <div class="sample-select-checkbox" data-split="${s.split}" data-id="${s.id}" title="${window.t ? window.t('gallery.select_sample_title') : 'Sample auswählen'}">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                 </div>
                 <img src="${s.thumb_url || s.image_url}" alt="${s.id}" loading="lazy" />
@@ -660,12 +672,12 @@ function createSampleCardElement(s) {
             <div class="sample-card-body">
                 <div class="sample-card-header-row">
                     <div class="sample-card-title" title="${s.id}">${s.id}</div>
-                    <button class="btn-delete-title-sm" type="button" title="Sample löschen" data-id="${s.id}" data-split="${s.split}">
+                    <button class="btn-delete-title-sm" type="button" title="${window.t ? window.t('gallery.delete_btn_title') : 'Sample löschen'}" data-id="${s.id}" data-split="${s.split}">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                     </button>
                 </div>
                 <div class="sample-classes-wrap" style="display: flex; flex-wrap: wrap; gap: 4px;">
-                    ${classesHtml || '<span style="color: var(--muted); font-size: 0.7rem;">Keine Labels</span>'}
+                    ${classesHtml || `<span style="color: var(--muted); font-size: 0.7rem;">${window.t ? window.t('gallery.no_labels') : 'Keine Labels'}</span>`}
                 </div>
                 ${tagsList.length > 0 ? `
                 <div class="sample-tags-wrap" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px;">
@@ -874,7 +886,7 @@ function createSampleDetailedRowElement(s) {
         <td style="font-weight: 600; font-family: ui-monospace, monospace; color: var(--text-bright);">
             <div style="display: flex; align-items: center; gap: 6px;">
                 <span class="table-sample-name" title="${s.id}">${s.id}</span>
-                <button class="btn-delete-title-sm" type="button" title="Sample löschen" data-id="${s.id}" data-split="${s.split}">
+                <button class="btn-delete-title-sm" type="button" title="${window.t ? window.t('gallery.delete_btn_title') : 'Sample löschen'}" data-id="${s.id}" data-split="${s.split}">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
                 </button>
             </div>
@@ -899,9 +911,9 @@ function createSampleDetailedRowElement(s) {
             <div style="display: inline-flex; align-items: center; gap: 6px;">
                 <button class="btn btn-tool btn-open-sample" type="button" style="padding: 4px 8px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 4px;" data-id="${s.id}" data-split="${s.split}">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-                    <span>Prüfen</span>
+                    <span>${window.t ? window.t('gallery.inspect_btn') : 'Prüfen'}</span>
                 </button>
-                <button class="btn btn-danger btn-delete-sample" type="button" style="padding: 4px 8px; font-size: 0.75rem; display: inline-flex; align-items: center;" data-id="${s.id}" data-split="${s.split}" title="Sample löschen">
+                <button class="btn btn-danger btn-delete-sample" type="button" style="padding: 4px 8px; font-size: 0.75rem; display: inline-flex; align-items: center;" data-id="${s.id}" data-split="${s.split}" title="${window.t ? window.t('gallery.delete_btn_title') : 'Sample löschen'}">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                 </button>
             </div>
@@ -973,15 +985,15 @@ function createSampleCompactRowElement(s) {
     `).join('');
 
     row.innerHTML = `
-        <div class="swipe-delete-reveal" data-id="${s.id}" data-split="${s.split}" title="Sample löschen">
+        <div class="swipe-delete-reveal" data-id="${s.id}" data-split="${s.split}" title="${window.t ? window.t('gallery.delete_btn_title') : 'Sample löschen'}">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="3 6 5 6 21 6"/>
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
             </svg>
-            <span class="swipe-delete-label">Löschen</span>
+            <span class="swipe-delete-label">${window.t ? window.t('gallery.delete_btn_label') : 'Löschen'}</span>
         </div>
         <div class="compact-row-swipe-inner">
-            <div class="sample-select-checkbox" data-split="${s.split}" data-id="${s.id}" title="Sample auswählen" style="margin-right: 4px;">
+            <div class="sample-select-checkbox" data-split="${s.split}" data-id="${s.id}" title="${window.t ? window.t('gallery.select_sample_title') : 'Sample auswählen'}" style="margin-right: 4px;">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
             <div class="compact-thumb-box" data-id="${s.id}" data-split="${s.split}">
@@ -990,7 +1002,7 @@ function createSampleCompactRowElement(s) {
             <span class="compact-split-dot ${s.split}" title="${s.split}"></span>
             <div class="compact-id-wrap" style="display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0;">
                 <div class="compact-id" title="${s.id}">${s.id}</div>
-                <button class="btn-delete-title-sm" type="button" title="Sample löschen" data-id="${s.id}" data-split="${s.split}">
+                <button class="btn-delete-title-sm" type="button" title="${window.t ? window.t('gallery.delete_btn_title') : 'Sample löschen'}" data-id="${s.id}" data-split="${s.split}">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
                 </button>
             </div>
@@ -1002,9 +1014,9 @@ function createSampleCompactRowElement(s) {
             </div>
             <div class="compact-actions">
                 <button class="btn btn-tool btn-open-sample" type="button" style="padding: 2px 7px; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 3px;" data-id="${s.id}" data-split="${s.split}">
-                    <span>Öffnen</span>
+                    <span>${window.t ? window.t('gallery.open_btn') : 'Öffnen'}</span>
                 </button>
-                <button class="btn btn-danger btn-delete-sample" type="button" style="padding: 2px 6px; font-size: 0.72rem; display: inline-flex; align-items: center;" data-id="${s.id}" data-split="${s.split}" title="Sample löschen">
+                <button class="btn btn-danger btn-delete-sample" type="button" style="padding: 2px 6px; font-size: 0.72rem; display: inline-flex; align-items: center;" data-id="${s.id}" data-split="${s.split}" title="${window.t ? window.t('gallery.delete_btn_title') : 'Sample löschen'}">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
                 </button>
             </div>
@@ -1077,7 +1089,8 @@ function renderNextGalleryChunk() {
             galleryIntersectionObserver.unobserve(sentinel);
         }
         if (sentinel) {
-            sentinel.innerHTML = `<span style="opacity: 0.6; display: inline-flex; align-items: center; gap: 6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Alle ${galleryFilteredSamples.length} Samples geladen</span>`;
+            const allLoaded = window.t ? window.t('gallery.all_samples_loaded', { count: galleryFilteredSamples.length }) : `Alle ${galleryFilteredSamples.length} Samples geladen`;
+            sentinel.innerHTML = `<span style="opacity: 0.6; display: inline-flex; align-items: center; gap: 6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> ${allLoaded}</span>`;
         }
         return;
     }
@@ -1124,7 +1137,8 @@ function renderNextGalleryChunk() {
             galleryIntersectionObserver.unobserve(sentinel);
         }
         if (sentinel) {
-            sentinel.innerHTML = `<span style="opacity: 0.6; display: inline-flex; align-items: center; gap: 6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Alle ${galleryFilteredSamples.length} Samples geladen</span>`;
+            const allLoaded = window.t ? window.t('gallery.all_samples_loaded', { count: galleryFilteredSamples.length }) : `Alle ${galleryFilteredSamples.length} Samples geladen`;
+            sentinel.innerHTML = `<span style="opacity: 0.6; display: inline-flex; align-items: center; gap: 6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> ${allLoaded}</span>`;
         }
     }
 }
@@ -1148,7 +1162,9 @@ function updatePaginationBar(isInfinite, startIndex = 0, endIndex = 0, totalPage
 
     if (isInfinite) {
         if (rangeText) {
-            rangeText.innerText = `Endlos-Modus: ${galleryRenderedCount} von ${galleryFilteredSamples.length} Samples geladen`;
+            rangeText.innerText = window.t
+                ? window.t('gallery.pagination_infinite', { count: galleryRenderedCount, total: galleryFilteredSamples.length })
+                : `Endlos-Modus: ${galleryRenderedCount} von ${galleryFilteredSamples.length} Samples geladen`;
         }
         if (controls) controls.style.opacity = '0.35';
         if (firstBtn) firstBtn.disabled = true;
@@ -1166,7 +1182,11 @@ function updatePaginationBar(isInfinite, startIndex = 0, endIndex = 0, totalPage
     if (controls) controls.style.opacity = '1';
     const total = galleryFilteredSamples.length;
     if (rangeText) {
-        rangeText.innerText = `Zeige ${total > 0 ? (startIndex + 1) : 0}–${endIndex} von ${total.toLocaleString('de-DE')} Samples`;
+        const start = total > 0 ? (startIndex + 1) : 0;
+        const totalStr = (window.currentLang === 'de') ? total.toLocaleString('de-DE') : total.toLocaleString('en-US');
+        rangeText.innerText = window.t
+            ? window.t('gallery.pagination_range', { start, end: endIndex, total: totalStr })
+            : `Zeige ${start}–${endIndex} von ${totalStr} Samples`;
     }
 
     if (pageInput) {
@@ -1304,8 +1324,8 @@ function renderFilteredGallery() {
         grid.innerHTML = `
             <div style="grid-column: 1 / -1; text-align: center; padding: 48px 16px; color: var(--muted); background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius-lg);">
                 <div style="display: flex; justify-content: center; margin-bottom: 12px; color: var(--muted);"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div>
-                <strong style="color: var(--text); font-size: 1rem; display: block; margin-bottom: 4px;">Keine Datensätze gefunden</strong>
-                <span>Keine Samples für die aktuelle Filterauswahl vorhanden.</span>
+                <strong style="color: var(--text); font-size: 1rem; display: block; margin-bottom: 4px;">${window.t ? window.t('gallery.empty_title') : 'Keine Datensätze gefunden'}</strong>
+                <span>${window.t ? window.t('gallery.empty_desc') : 'Keine Samples für die aktuelle Filterauswahl vorhanden.'}</span>
             </div>
         `;
         if (paginationBar) paginationBar.style.display = 'none';
@@ -1326,16 +1346,20 @@ function renderFilteredGallery() {
         grid.className = 'gallery-table-wrap view-detailed-list';
         const table = document.createElement('table');
         table.className = 'gallery-table';
+        const thPreview = window.t ? window.t('gallery.th_preview') : 'Vorschau';
+        const thBoxes = window.t ? window.t('gallery.th_boxes') : 'Boxen';
+        const thClasses = window.t ? window.t('gallery.th_classes') : 'Klassen';
+        const thActions = window.t ? window.t('gallery.th_actions') : 'Aktionen';
         table.innerHTML = `
             <thead>
                 <tr>
-                    <th style="width: 58px;">Vorschau</th>
+                    <th style="width: 58px;">${thPreview}</th>
                     <th>Sample ID</th>
                     <th style="width: 78px;">Split</th>
-                    <th style="width: 85px;">Boxen</th>
-                    <th>Klassen</th>
+                    <th style="width: 85px;">${thBoxes}</th>
+                    <th>${thClasses}</th>
                     <th>Tags</th>
-                    <th style="width: 140px; text-align: right;">Aktionen</th>
+                    <th style="width: 140px; text-align: right;">${thActions}</th>
                 </tr>
             </thead>
             <tbody id="gallery-table-tbody"></tbody>
@@ -1447,7 +1471,7 @@ async function loadDatasetGallery(forceRefresh = false) {
                 : `Datensatz: ${data.stats.train_images} Train • ${data.stats.val_images} Val (${data.stats.total_annotations} Boxen)`;
         }
     } catch (err) {
-        grid.innerHTML = `<div style="grid-column: 1 / -1; color: #fca5a5; padding: 24px; text-align: center;">Fehler beim Laden: ${err.message}</div>`;
+        grid.innerHTML = `<div style="grid-column: 1 / -1; color: #fca5a5; padding: 24px; text-align: center;">${window.t ? window.t('gallery.load_error', { error: err.message }) : `Fehler beim Laden: ${err.message}`}</div>`;
     }
 }
 
@@ -1494,13 +1518,17 @@ async function openSampleInStudio(split, sampleId) {
 
             // Wechsle in den Studio View
             switchAppView(navStudioBtn);
-            if (stage0Summary) stage0Summary.innerText = `Geladen aus Datensatz: ${sampleId} (${detectedBoxes.length} Boxen)`;
-            if (statusDiv) statusDiv.innerText = `Sample ${sampleId} im Studio geladen (${detectedBoxes.length} Boxen).`;
+            if (stage0Summary) stage0Summary.innerText = window.t
+                ? window.t('gallery.loaded_in_studio', { id: sampleId, count: detectedBoxes.length })
+                : `Geladen aus Datensatz: ${sampleId} (${detectedBoxes.length} Boxen)`;
+            if (statusDiv) statusDiv.innerText = window.t
+                ? window.t('gallery.status_loaded_in_studio', { id: sampleId, count: detectedBoxes.length })
+                : `Sample ${sampleId} im Studio geladen (${detectedBoxes.length} Boxen).`;
             selectComponentBox(0, true);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
     } catch (err) {
-        alert(`Fehler beim Öffnen: ${err.message}`);
+        alert(window.t ? window.t('gallery.open_error', { error: err.message }) : `Fehler beim Öffnen: ${err.message}`);
     }
 }
 
@@ -1529,19 +1557,19 @@ async function loadAnalyticsView() {
 
         if (totalImgs === 0) {
             scoreEl.innerText = '-';
-            subEl.innerText = 'Noch keine Trainingsbilder vorhanden';
+            subEl.innerText = window.t ? window.t('gallery.no_images_subheading') : 'Noch keine Trainingsbilder vorhanden';
         } else {
             const valRatio = valImgs / totalImgs;
             if (valRatio >= 0.15 && valRatio <= 0.25) {
-                scoreEl.innerText = 'Optimal';
+                scoreEl.innerText = window.t ? window.t('analytics.score_optimal') : 'Optimal';
                 scoreEl.style.color = '#10b981';
                 subEl.innerText = `Train/Val Split: ${(100-valRatio*100).toFixed(0)}% / ${(valRatio*100).toFixed(0)}%`;
             } else if (valImgs === 0) {
-                scoreEl.innerText = 'Nur Train';
+                scoreEl.innerText = window.t ? window.t('analytics.score_train_only') : 'Nur Train';
                 scoreEl.style.color = '#f59e0b';
-                subEl.innerText = 'Erstelle auch Validation-Samples!';
+                subEl.innerText = window.t ? window.t('analytics.hint_create_val') : 'Erstelle auch Validation-Samples!';
             } else {
-                scoreEl.innerText = 'Ungleich';
+                scoreEl.innerText = window.t ? window.t('analytics.score_imbalanced') : 'Ungleich';
                 scoreEl.style.color = '#f59e0b';
                 subEl.innerText = `Train/Val Split: ${(100-valRatio*100).toFixed(0)}% / ${(valRatio*100).toFixed(0)}%`;
             }
@@ -1560,13 +1588,13 @@ async function loadAnalyticsView() {
             const color = getClassColor(cls);
 
             let healthClass = 'low';
-            let healthText = 'Zu wenige (<5)';
+            let healthText = window.t ? window.t('analytics.health_low') : 'Zu wenige (<5)';
             if (count >= 20) {
                 healthClass = 'good';
-                healthText = 'Gute Basis';
+                healthText = window.t ? window.t('analytics.health_good') : 'Gute Basis';
             } else if (count >= 5) {
                 healthClass = 'fair';
-                healthText = 'Ausbaufähig';
+                healthText = window.t ? window.t('analytics.health_fair') : 'Ausbaufähig';
             }
 
             const row = document.createElement('div');
@@ -1589,4 +1617,15 @@ async function loadAnalyticsView() {
         console.error('Analytics Fehler:', err);
     }
 }
+
+window.addEventListener('languageChanged', () => {
+    if (cachedGallerySamples && cachedGallerySamples.length > 0) {
+        renderGalleryClassFilters(cachedGallerySamples);
+        renderFilteredGallery();
+    }
+    const analyticsView = document.getElementById('view-analytics');
+    if (analyticsView && analyticsView.classList.contains('active')) {
+        loadAnalyticsView();
+    }
+});
 

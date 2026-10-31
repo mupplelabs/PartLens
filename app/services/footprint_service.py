@@ -1,5 +1,6 @@
 import json
 import httpx
+from pathlib import Path
 from typing import Optional
 from app.config import (
     FOOTPRINTS_CACHE_DIR,
@@ -121,22 +122,34 @@ def search_footprints(class_name: Optional[str] = None, search: Optional[str] = 
         "footprints": filtered[:limit]
     }
 
-async def get_footprint_svg(path: str) -> Optional[bytes]:
+async def get_footprint_image_bytes(path: str) -> Optional[bytes]:
     FOOTPRINTS_CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    clean_path = path.lstrip("/")
+    clean_path = Path(path.strip("/\\")).as_posix()
+    if ".." in clean_path:
+        return None
+
     cached_file = FOOTPRINTS_CACHE_DIR / clean_path
     if cached_file.exists():
         return cached_file.read_bytes()
 
-    target_url = f"{PARTDB_BASE_URL.rstrip('/')}/{clean_path}"
+    target_urls = [
+        f"{PARTDB_BASE_URL.rstrip('/')}/img/footprints/{clean_path}",
+        f"{PARTDB_BASE_URL.rstrip('/')}/{clean_path}"
+    ]
     try:
-        async with httpx.AsyncClient(verify=False, timeout=10.0) as client:
-            resp = await client.get(target_url)
-            if resp.status_code == 200:
-                cached_file.parent.mkdir(parents=True, exist_ok=True)
-                cached_file.write_bytes(resp.content)
-                return resp.content
+        async with httpx.AsyncClient(verify=False, timeout=8.0) as client:
+            for url in target_urls:
+                try:
+                    resp = await client.get(url, headers={"User-Agent": "ComponentTracker/1.0"})
+                    if resp.status_code == 200:
+                        cached_file.parent.mkdir(parents=True, exist_ok=True)
+                        cached_file.write_bytes(resp.content)
+                        return resp.content
+                except Exception:
+                    continue
     except Exception as e:
-        print(f"Error fetching footprint SVG from {target_url}: {e}", flush=True)
+        print(f"Error fetching footprint image for '{clean_path}': {e}", flush=True)
 
     return None
+
+get_footprint_svg = get_footprint_image_bytes

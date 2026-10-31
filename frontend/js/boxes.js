@@ -187,7 +187,12 @@ const popoverClassBtns = document.querySelectorAll('.popover-class-btn');
 
 if (popoverClassSelect) {
     popoverClassSelect.innerHTML = '';
-    knownDatasetClasses.forEach(c => {
+    const classList = (typeof knownDatasetClasses !== 'undefined' && Array.isArray(knownDatasetClasses)) ? knownDatasetClasses : [
+        'resistor', 'capacitor', 'inductor', 'diode', 'led',
+        'transistor', 'ic', 'potentiometer', 'switch_button',
+        'relay', 'connector', 'display', 'board', 'other'
+    ];
+    classList.forEach(c => {
         const opt = document.createElement('option');
         opt.value = c;
         opt.textContent = c;
@@ -208,7 +213,7 @@ function openQuickTagPopoverAt(clientX, clientY, boxIdx) {
     const box = detectedBoxes[boxIdx];
     
     if (popoverTag) {
-        const color = getClassColor(box.label);
+        const color = (typeof getClassColor === 'function') ? getClassColor(box.label) : '#3b82f6';
         popoverTag.innerHTML = `<span class="class-dot" style="background:${color};"></span> #${boxIdx + 1} ${box.label || 'Box'}`;
     }
     if (popoverClassSelect) {
@@ -241,26 +246,34 @@ function closeQuickTagPopover() {
 window.closeQuickTagPopover = closeQuickTagPopover;
 
 if (popoverCloseBtn) {
-    popoverCloseBtn.addEventListener('click', closeQuickTagPopover);
+    popoverCloseBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        closeQuickTagPopover();
+    });
 }
 
 if (popoverDelBtn) {
-    popoverDelBtn.addEventListener('click', () => {
+    popoverDelBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
         if (selectedBoxIndex >= 0 && selectedBoxIndex < detectedBoxes.length) {
             detectedBoxes.splice(selectedBoxIndex, 1);
             selectedBoxIndex = detectedBoxes.length > 0 ? Math.min(selectedBoxIndex, detectedBoxes.length - 1) : -1;
             drawBboxOverlay();
             renderStage0Chips();
-            renderObjectsList();
+            if (typeof renderObjectsList === 'function') renderObjectsList();
             updateStage0CropPreview();
-            updateBoxEditBar();
+            if (typeof updateBoxEditBar === 'function') updateBoxEditBar();
             closeQuickTagPopover();
         }
     });
 }
 
 popoverClassBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
         const cls = btn.getAttribute('data-class');
         if (selectedBoxIndex >= 0 && selectedBoxIndex < detectedBoxes.length) {
             applyClassToBox(selectedBoxIndex, cls);
@@ -273,7 +286,9 @@ function applyClassToBox(idx, cls) {
     if (idx < 0 || idx >= detectedBoxes.length) return;
     detectedBoxes[idx].label = cls;
     detectedBoxes[idx].kind = (cls === 'ic' || cls === 'transistor' || cls === 'diode' || cls === 'led') ? 'semiconductor' : (cls === 'resistor' ? 'resistor' : 'other');
-    if (boxClassSelect) boxClassSelect.value = cls;
+    if (typeof boxClassSelect !== 'undefined' && boxClassSelect) {
+        boxClassSelect.value = cls;
+    }
     
     // Kontext-sensitive Rechner für Widerstände
     const isResistor = (cls === 'resistor');
@@ -287,10 +302,10 @@ function applyClassToBox(idx, cls) {
 
     drawBboxOverlay();
     renderStage0Chips();
-    renderObjectsList();
+    if (typeof renderObjectsList === 'function') renderObjectsList();
     updateStage0CropPreview();
-    updateBoxEditBar();
-    updateQuickPaletteActiveState();
+    if (typeof updateBoxEditBar === 'function') updateBoxEditBar();
+    if (typeof updateQuickPaletteActiveState === 'function') updateQuickPaletteActiveState();
 }
 window.applyClassToBox = applyClassToBox;
 
@@ -317,7 +332,7 @@ splitPillBtns.forEach(btn => {
         const s = btn.getAttribute('data-split');
         splitPillBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        if (datasetSplit) datasetSplit.value = s;
+        if (typeof datasetSplit !== 'undefined' && datasetSplit) datasetSplit.value = s;
     });
 });
 
@@ -337,20 +352,28 @@ if (rotateImageBtn) {
         cx.rotate(90 * Math.PI / 180);
         cx.drawImage(sourceEl, -srcW / 2, -srcH / 2);
         
+        suppressAutoStage0 = true;
         // Aktualisiere das Preview-Image
         previewImage.src = c.toDataURL('image/jpeg', 0.95);
         previewImage.onload = () => {
+            suppressAutoStage0 = false;
             // Boxen rotieren (x' = h - y, y' = x)
             detectedBoxes = detectedBoxes.map(b => {
                 const newX1 = srcH - b.y2;
                 const newY1 = b.x1;
                 const newX2 = srcH - b.y1;
                 const newY2 = b.x2;
-                return { ...b, x1: newX1, y1: newY1, x2: newX2, y2: newY2 };
+                return {
+                    ...b,
+                    x1: newX1, y1: newY1, x2: newX2, y2: newY2,
+                    ocrX1: newX1, ocrY1: newY1, ocrX2: newX2, ocrY2: newY2
+                };
             });
             drawBboxOverlay();
             renderStage0Chips();
+            if (typeof renderObjectsList === 'function') renderObjectsList();
             updateStage0CropPreview();
+            if (typeof updateBoxEditBar === 'function') updateBoxEditBar();
         };
     });
 }
@@ -369,6 +392,8 @@ if (clearBoxesBtn) {
             if (typeof closeQuickTagPopover === 'function') closeQuickTagPopover();
             updateStage0CropPreview();
             if (typeof updateBoxEditBar === 'function') updateBoxEditBar();
+            const statusEl = document.getElementById('autolabel-status');
+            if (statusEl) statusEl.innerText = 'Alle Bounding Boxes entfernt.';
         }
     });
 }

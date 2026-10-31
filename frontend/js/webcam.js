@@ -348,6 +348,12 @@ document.querySelectorAll('.sample-btn').forEach(btn => {
 
 previewImage.addEventListener('load', async () => {
     resetStageZoomPan();
+    if (typeof suppressAutoStage0 !== 'undefined' && suppressAutoStage0) {
+        if (typeof setStudioToolsState === 'function') {
+            setStudioToolsState(true);
+        }
+        return;
+    }
     if (currentMode === 'upload') {
         await runStage0Detection();
         if (isSnapshotPendingOcr) {

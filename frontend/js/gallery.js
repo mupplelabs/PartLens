@@ -1457,9 +1457,11 @@ async function openSampleInStudio(split, sampleId) {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
 
+        suppressAutoStage0 = true;
         // Bild in Preview setzen (direkt via optimierter URL)
         previewImage.src = data.image_url || data.image_base64;
         previewImage.onload = () => {
+            suppressAutoStage0 = false;
             resetStageZoomPan();
             const srcW = previewImage.naturalWidth || 640;
             const srcH = previewImage.naturalHeight || 480;
@@ -1490,7 +1492,8 @@ async function openSampleInStudio(split, sampleId) {
 
             // Wechsle in den Studio View
             switchAppView(navStudioBtn);
-            stage0Summary.innerText = `Geladen aus Datensatz: ${sampleId} (${detectedBoxes.length} Boxen)`;
+            if (stage0Summary) stage0Summary.innerText = `Geladen aus Datensatz: ${sampleId} (${detectedBoxes.length} Boxen)`;
+            if (statusDiv) statusDiv.innerText = `Sample ${sampleId} im Studio geladen (${detectedBoxes.length} Boxen).`;
             selectComponentBox(0, true);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };

@@ -138,6 +138,28 @@ let isOcrRunning = false;
 let lastWebcamAutoOcrAt = 0;
 let currentStream = null;
 
+let isRotatingImage = false;
+let suppressAutoStage0 = false;
+
+let knownDatasetClasses = [
+    'resistor', 'capacitor', 'inductor', 'diode', 'led',
+    'transistor', 'ic', 'potentiometer', 'switch_button',
+    'relay', 'connector', 'display', 'board', 'other'
+];
+
+// DOM-Elemente für Auto-Label & Box-Editor
+const runAutolabelBtn = document.getElementById('run-autolabel-btn');
+const modeSelectBtn = document.getElementById('mode-select-btn');
+const addManualBoxBtn = document.getElementById('add-manual-box-btn');
+const boxEditBar = document.getElementById('box-edit-bar');
+const selectedBoxTag = document.getElementById('selected-box-tag');
+const boxClassSelect = document.getElementById('box-class-select');
+const deleteBoxBtn = document.getElementById('delete-box-btn');
+const datasetSplit = document.getElementById('dataset-split');
+const saveDatasetBtn = document.getElementById('save-dataset-btn');
+const autolabelStatus = document.getElementById('autolabel-status');
+const datasetCounterBadge = document.getElementById('dataset-counter-badge');
+
 let florenceBundle = null;
 let tesseractWorker = null;
 

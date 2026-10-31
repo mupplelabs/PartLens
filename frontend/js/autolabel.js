@@ -22,23 +22,6 @@ const localUrlRow = document.getElementById('local-url-row');
 const localUrlLabel = document.getElementById('local-url-label');
 const localUrl = document.getElementById('local-url');
 const localStatusBadge = document.getElementById('local-status-badge');
-const runAutolabelBtn = document.getElementById('run-autolabel-btn');
-const modeSelectBtn = document.getElementById('mode-select-btn');
-const addManualBoxBtn = document.getElementById('add-manual-box-btn');
-const boxEditBar = document.getElementById('box-edit-bar');
-const selectedBoxTag = document.getElementById('selected-box-tag');
-const boxClassSelect = document.getElementById('box-class-select');
-const deleteBoxBtn = document.getElementById('delete-box-btn');
-const datasetSplit = document.getElementById('dataset-split');
-const saveDatasetBtn = document.getElementById('save-dataset-btn');
-const autolabelStatus = document.getElementById('autolabel-status');
-const datasetCounterBadge = document.getElementById('dataset-counter-badge');
-
-let knownDatasetClasses = [
-    'resistor', 'capacitor', 'inductor', 'diode', 'led',
-    'transistor', 'ic', 'potentiometer', 'switch_button',
-    'relay', 'connector', 'display', 'board', 'other'
-];
 
 // --- LLM & OCR Einstellungs-Persistenz im Browser (localStorage) ---
 const LLM_STORAGE_KEYS = {

@@ -407,6 +407,12 @@ if (quickSampleSelect) {
         if (val.startsWith('../')) {
             val = '/studies/' + val.replace(/^\.\.\//, '');
         }
+        if (val.includes('4xDIP14_zuviel_Licht')) {
+            val = '/studies/4xDIP14_zuviel_Licht.jpeg';
+        } else if (val.includes('4xDIP14_teils')) {
+            val = '/studies/4xDIP14_teils_im_schatten.jpeg';
+        }
+        val = encodeURI(val);
         if (currentMode !== 'upload' && tabUpload) {
             tabUpload.click();
         }

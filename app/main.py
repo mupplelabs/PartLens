@@ -1,4 +1,5 @@
 import os
+import urllib.parse
 
 # Verhindere Pydantic, OTEL & Telemetrie Overhead
 os.environ["OTEL_SDK_DISABLED"] = "true"
@@ -54,6 +55,14 @@ app.include_router(import_router)
 if DATASET_DIR.exists():
     app.mount("/dataset", StaticFiles(directory=str(DATASET_DIR)), name="dataset")
 
+# Fallback falls unescaped ? den Dateinamen als Query-String abschneidet
+@app.get("/studies/4xDIP14_zuviel_Licht")
+async def alias_zuviel_licht():
+    target = STUDIES_DIR / "4xDIP14_zuviel_Licht.jpeg"
+    if target.exists():
+        return FileResponse(target)
+    raise HTTPException(status_code=404, detail="Datei nicht gefunden.")
+
 if STUDIES_DIR.exists():
     app.mount("/studies", StaticFiles(directory=str(STUDIES_DIR)), name="studies")
 
@@ -101,10 +110,15 @@ async def apple_touch_icon():
 
 @app.get("/{filename}")
 async def serve_root_fallback(filename: str):
-    study_file = STUDIES_DIR / filename
+    clean_name = urllib.parse.unquote(filename)
+    if clean_name.startswith("4xDIP14_zuviel_Licht"):
+        study_file = STUDIES_DIR / "4xDIP14_zuviel_Licht.jpeg"
+        if study_file.exists():
+            return FileResponse(study_file)
+    study_file = STUDIES_DIR / clean_name
     if study_file.exists() and study_file.is_file():
         return FileResponse(study_file)
-    frontend_file = FRONTEND_DIR / filename
+    frontend_file = FRONTEND_DIR / clean_name
     if frontend_file.exists() and frontend_file.is_file():
         return FileResponse(frontend_file)
-    raise HTTPException(status_code=404, detail=f"Datei '{filename}' nicht gefunden.")
+    raise HTTPException(status_code=404, detail=f"Datei '{clean_name}' nicht gefunden.")

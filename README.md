@@ -64,7 +64,7 @@
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/<your-username>/PartLens.git
+git clone https://github.com/mupplelabs/PartLens.git
 cd PartLens
 
 # 2. Create and activate a virtual environment

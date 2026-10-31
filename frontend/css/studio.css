@@ -200,6 +200,80 @@
             color: var(--text);
         }
 
+        /* Subtiles Workflow- & Shortcut-Banner am unteren Rand des Arbeitsbereichs */
+        .stage-hint-banner {
+            position: absolute;
+            bottom: 12px;
+            left: 14px;
+            z-index: 24;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface-glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 4px 8px 4px 10px;
+            box-shadow: var(--shadow-sm);
+            user-select: none;
+            -webkit-user-select: none;
+            pointer-events: auto;
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            animation: fadeIn 0.2s ease-out;
+            max-width: calc(100% - 200px);
+        }
+        .stage-hint-content {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .stage-hint-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+        .stage-hint-key {
+            background: var(--surface-elevated);
+            border: 1px solid var(--border-hover);
+            color: var(--text-bright);
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.68rem;
+            padding: 1px 4px;
+            border-radius: 3px;
+            line-height: 1.2;
+        }
+        .stage-hint-sep {
+            color: var(--border-hover);
+            font-size: 0.75rem;
+        }
+        .stage-hint-close-btn {
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 2px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 3px;
+            transition: color 0.15s, background 0.15s;
+            margin-left: 2px;
+        }
+        .stage-hint-close-btn:hover {
+            color: var(--text-bright);
+            background: var(--surface-hover);
+        }
+        @media (max-width: 860px) {
+            .stage-hint-banner {
+                display: none;
+            }
+        }
+
         .stage-zoom-bar.collapsed {
             padding: 2px 4px;
             cursor: pointer;

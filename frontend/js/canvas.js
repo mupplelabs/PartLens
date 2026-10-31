@@ -731,3 +731,20 @@ if (runDetectBtn) {
     runDetectBtn.addEventListener('click', () => runStage0Detection());
 }
 
+// Subtiles Stage-Hinweis-Banner Schließen & Preference Persistierung
+const stageHintBanner = document.getElementById('stage-hint-banner');
+const btnCloseStageHint = document.getElementById('btn-close-stage-hint');
+if (btnCloseStageHint && stageHintBanner) {
+    try {
+        if (localStorage.getItem('partlens_hide_stage_hint') === '1') {
+            stageHintBanner.style.display = 'none';
+        }
+    } catch (_) {}
+    btnCloseStageHint.addEventListener('click', () => {
+        stageHintBanner.style.display = 'none';
+        try {
+            localStorage.setItem('partlens_hide_stage_hint', '1');
+        } catch (_) {}
+    });
+}
+

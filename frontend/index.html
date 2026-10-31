@@ -198,7 +198,7 @@
                         <div id="upload-panel" style="width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                             <div class="image-stage-wrap">
                                 <img id="preview-image" src="/studies/F0526717-01.webp" alt="Bauteil-Vorschau" />
-                                <canvas id="bbox-overlay-canvas" title="Klicke auf eine Box zum Auswählen, ziehe an den Anfassern oder ziehe mit 'Box zeichnen' eine neue Box auf."></canvas>
+                                <canvas id="bbox-overlay-canvas"></canvas>
                                 <!-- Lupe für iPhone 16 Pro Toucheingabe -->
                                 <canvas id="touch-loupe-canvas" width="120" height="120"></canvas>
                             </div>
@@ -309,6 +309,26 @@
                                     <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                                 </button>
                             </div>
+                        </div>
+
+                        <!-- Subtiles Workflow- & Shortcut-Banner am unteren Rand des Arbeitsbereichs -->
+                        <div class="stage-hint-banner" id="stage-hint-banner">
+                            <div class="stage-hint-content">
+                                <span class="stage-hint-item"><span class="stage-hint-key">Klick</span> Auswählen</span>
+                                <span class="stage-hint-sep">·</span>
+                                <span class="stage-hint-item"><span class="stage-hint-key">Ziehen</span> Verschieben</span>
+                                <span class="stage-hint-sep">·</span>
+                                <span class="stage-hint-item"><span class="stage-hint-key">Anfasser</span> Größe</span>
+                                <span class="stage-hint-sep">·</span>
+                                <span class="stage-hint-item"><span class="stage-hint-key">R</span> Box zeichnen</span>
+                                <span class="stage-hint-sep">·</span>
+                                <span class="stage-hint-item"><span class="stage-hint-key">F</span> Fokus</span>
+                                <span class="stage-hint-sep">·</span>
+                                <span class="stage-hint-item"><span class="stage-hint-key">Leertaste</span> Pan</span>
+                            </div>
+                            <button type="button" class="stage-hint-close-btn" id="btn-close-stage-hint" title="Hinweisleiste schließen">
+                                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
                         </div>
                     </div>
 
@@ -1337,18 +1357,18 @@
 
 
     <!-- PartLens Modular Scripts -->
-    <script src="/frontend/js/state.js?v=2.0.4"></script>
-    <script src="/frontend/js/api.js?v=2.0.4"></script>
-    <script src="/frontend/js/analysis.js?v=2.0.4"></script>
-    <script src="/frontend/js/resistor.js?v=2.0.4"></script>
-    <script src="/frontend/js/canvas.js?v=2.0.4"></script>
-    <script src="/frontend/js/boxes.js?v=2.0.4"></script>
-    <script src="/frontend/js/footprints.js?v=2.0.4"></script>
-    <script src="/frontend/js/autolabel.js?v=2.0.4"></script>
-    <script src="/frontend/js/gallery.js?v=2.0.4"></script>
-    <script src="/frontend/js/import_modal.js?v=2.0.4"></script>
-    <script src="/frontend/js/export.js?v=2.0.4"></script>
-    <script src="/frontend/js/webcam.js?v=2.0.4"></script>
-    <script src="/frontend/js/app.js?v=2.0.4"></script>
+    <script src="/frontend/js/state.js?v=2.0.5"></script>
+    <script src="/frontend/js/api.js?v=2.0.5"></script>
+    <script src="/frontend/js/analysis.js?v=2.0.5"></script>
+    <script src="/frontend/js/resistor.js?v=2.0.5"></script>
+    <script src="/frontend/js/canvas.js?v=2.0.5"></script>
+    <script src="/frontend/js/boxes.js?v=2.0.5"></script>
+    <script src="/frontend/js/footprints.js?v=2.0.5"></script>
+    <script src="/frontend/js/autolabel.js?v=2.0.5"></script>
+    <script src="/frontend/js/gallery.js?v=2.0.5"></script>
+    <script src="/frontend/js/import_modal.js?v=2.0.5"></script>
+    <script src="/frontend/js/export.js?v=2.0.5"></script>
+    <script src="/frontend/js/webcam.js?v=2.0.5"></script>
+    <script src="/frontend/js/app.js?v=2.0.5"></script>
 </body>
 </html>

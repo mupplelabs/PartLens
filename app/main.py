@@ -8,7 +8,7 @@ os.environ["PYDANTIC_AI_NO_BANNER"] = "1"
 os.environ["LOGFIRE_IGNORE_NO_CONFIG"] = "1"
 os.environ["FASTAPI_TELEMETRY_ENABLED"] = "0"
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -98,3 +98,13 @@ async def apple_touch_icon():
     if icon.exists():
         return FileResponse(icon)
     return FileResponse(FRONTEND_DIR / "favicon.png")
+
+@app.get("/{filename}")
+async def serve_root_fallback(filename: str):
+    study_file = STUDIES_DIR / filename
+    if study_file.exists() and study_file.is_file():
+        return FileResponse(study_file)
+    frontend_file = FRONTEND_DIR / filename
+    if frontend_file.exists() and frontend_file.is_file():
+        return FileResponse(frontend_file)
+    raise HTTPException(status_code=404, detail=f"Datei '{filename}' nicht gefunden.")

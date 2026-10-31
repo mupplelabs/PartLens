@@ -377,8 +377,11 @@ if (clearBoxesBtn) {
 const quickSampleSelect = document.getElementById('quick-sample-select');
 if (quickSampleSelect) {
     quickSampleSelect.addEventListener('change', () => {
-        const val = quickSampleSelect.value;
+        let val = quickSampleSelect.value;
         if (!val) return;
+        if (val.startsWith('../')) {
+            val = '/studies/' + val.replace(/^\.\.\//, '');
+        }
         if (currentMode !== 'upload' && tabUpload) {
             tabUpload.click();
         }

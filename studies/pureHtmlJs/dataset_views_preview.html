@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PartLens – Datensatz Browser Ansichten</title>
+  <style>
+    :root {
+      --bg: #0e0e11;
+      --surface: #151518;
+      --surface-elevated: #1a1a20;
+      --surface-hover: #22222a;
+      --border: #272730;
+      --border-subtle: #1e1e26;
+      --text: #d4d4d8;
+      --text-bright: #fafafa;
+      --muted: #71717a;
+      --primary: #38bdf8;
+      --accent: #10b981;
+      --blue: #3b82f6;
+      --amber: #f59e0b;
+      --purple: #a855f7;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      background: transparent;
+      color: var(--text);
+      padding: 16px;
+      font-size: 13px;
+    }
+    .preview-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .top-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .title-group h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-bright);
+    }
+    .title-group p {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    
+    /* Segmented Control for Views */
+    .view-switcher {
+      display: inline-flex;
+      background: #09090b;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 2px;
+    }
+    .view-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .view-btn:hover {
+      color: var(--text-bright);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .view-btn.active {
+      background: var(--surface-elevated);
+      color: var(--primary);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    /* Subbar with search & split pills */
+    .sub-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      background: var(--surface-elevated);
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+    }
+    .split-pills {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .pill.active {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--primary);
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+    .search-mock {
+      background: #09090b;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: var(--muted);
+      width: 220px;
+    }
+
+    /* Common Chips & Badges */
+    .badge-split {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-split.train {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+    .badge-split.val {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.35);
+    }
+    .class-chip {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 3px;
+      border: 1px solid;
+      display: inline-block;
+    }
+    .chip-ic { color: #38bdf8; border-color: rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.1); }
+    .chip-resistor { color: #f59e0b; border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.1); }
+    .chip-cap { color: #a855f7; border-color: rgba(168, 85, 247, 0.4); background: rgba(168, 85, 247, 0.1); }
+    .chip-trans { color: #10b981; border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.1); }
+
+    /* =========================================================================
+       1. TILES VIEW (Standard Grid)
+       ========================================================================= */
+    .view-container {
+      min-height: 380px;
+    }
+    .grid-tiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+    }
+    .tile-card {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    .tile-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+    .tile-thumb {
+      width: 100%;
+      height: 140px;
+      background: #090e17;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tile-body {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .tile-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-bright);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* =========================================================================
+       2. SMALL TILES VIEW (Dense Micro-Grid)
+       ========================================================================= */
+    .grid-small-tiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 8px;
+    }
+    .small-tile-card {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+    .small-tile-card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+    .small-tile-thumb {
+      width: 100%;
+      height: 85px;
+      background: #090e17;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .small-tile-footer {
+      padding: 4px 6px;
+      background: #111116;
+      border-top: 1px solid var(--border-subtle);
+    }
+    .small-tile-name {
+      font-size: 10px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* =========================================================================
+       3. DETAILED LIST (Table View)
+       ========================================================================= */
+    .table-detailed {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .table-detailed th {
+      background: #101014;
+      padding: 9px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      text-align: left;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .table-detailed td {
+      padding: 8px 12px;
+      font-size: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--surface-elevated);
+      vertical-align: middle;
+    }
+    .table-detailed tr:last-child td {
+      border-bottom: none;
+    }
+    .table-detailed tr:hover td {
+      background: var(--surface-hover);
+    }
+    .table-thumb {
+      width: 48px;
+      height: 36px;
+      border-radius: 4px;
+      background: #090e17;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* =========================================================================
+       4. COMPACT LIST (Minimalist List)
+       ========================================================================= */
+    .list-compact-wrap {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--surface-elevated);
+    }
+    .list-compact-row {
+      display: flex;
+      align-items: center;
+      padding: 6px 12px;
+      border-bottom: 1px solid var(--border-subtle);
+      gap: 12px;
+      transition: background 0.1s ease;
+      cursor: pointer;
+    }
+    .list-compact-row:last-child {
+      border-bottom: none;
+    }
+    .list-compact-row:hover {
+      background: var(--surface-hover);
+    }
+    .list-mini-thumb {
+      width: 28px;
+      height: 22px;
+      border-radius: 3px;
+      background: #090e17;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .list-id {
+      font-weight: 600;
+      font-size: 12px;
+      color: var(--text-bright);
+      flex: 1;
+      font-family: ui-monospace, monospace;
+    }
+    .btn-action-sm {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-action-sm:hover {
+      color: var(--primary);
+      border-color: var(--primary);
+      background: rgba(56, 189, 248, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="preview-card">
+    <!-- Top Bar with View Switcher -->
+    <div class="top-header">
+      <div class="title-group">
+        <h2>PartLens Datensatz Browser</h2>
+        <p>Interaktiver Entwurf für 4 Ansichtsmodi (Kacheln, Mini-Kacheln, Detail-Tabelle, Kompaktliste)</p>
+      </div>
+
+      <!-- Segmented View Switcher -->
+      <div class="view-switcher">
+        <button class="view-btn active" id="btn-tiles" onclick="setView('tiles')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>Tiles</span>
+        </button>
+
+        <button class="view-btn" id="btn-small-tiles" onclick="setView('small-tiles')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="4" height="4"/><rect x="10" y="3" width="4" height="4"/><rect x="17" y="3" width="4" height="4"/><rect x="3" y="10" width="4" height="4"/><rect x="10" y="10" width="4" height="4"/><rect x="17" y="10" width="4" height="4"/><rect x="3" y="17" width="4" height="4"/><rect x="10" y="17" width="4" height="4"/><rect x="17" y="17" width="4" height="4"/></svg>
+          <span>Small Tiles</span>
+        </button>
+
+        <button class="view-btn" id="btn-detailed-list" onclick="setView('detailed-list')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="10" x2="8" y2="20"/></svg>
+          <span>Detailed List</span>
+        </button>
+
+        <button class="view-btn" id="btn-list" onclick="setView('list')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          <span>List</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter & Search Subbar -->
+    <div class="sub-bar">
+      <div class="split-pills">
+        <span style="font-size: 11px; color: var(--muted); font-weight: 600;">Split:</span>
+        <span class="pill active">Alle (38)</span>
+        <span class="pill">Train (30)</span>
+        <span class="pill">Val (8)</span>
+      </div>
+      <div class="search-mock">Dateiname oder Label suchen...</div>
+    </div>
+
+    <!-- View Content Area -->
+    <div id="view-content" class="view-container">
+      <!-- Injected by JavaScript -->
+    </div>
+  </div>
+
+  <script>
+    const samples = [
+      { id: "comp_1793133873_ca25dd", split: "train", boxes: 3, classes: ["ic", "resistor"], tags: ["DIP-16", "NE555P"], date: "Heute, 08:30" },
+      { id: "comp_1793132145_8f91ea", split: "train", boxes: 5, classes: ["resistor", "capacitor"], tags: ["SMD 0805"], date: "Gestern, 19:42" },
+      { id: "comp_1793129088_bc3310", split: "val",   boxes: 1, classes: ["transistor"], tags: ["TO-92", "2N2222"], date: "Gestern, 16:15" },
+      { id: "comp_1793125401_114a8f", split: "train", boxes: 4, classes: ["ic", "capacitor"], tags: ["SOIC-8"], date: "28. Okt, 11:20" },
+      { id: "comp_1793118920_fa9831", split: "val",   boxes: 2, classes: ["resistor"], tags: ["THT 1/4W"], date: "27. Okt, 21:05" },
+      { id: "comp_1793114421_90cd42", split: "train", boxes: 6, classes: ["ic", "transistor", "resistor"], tags: ["QFP-32", "ATmega"], date: "26. Okt, 14:10" }
+    ];
+
+    function getClassBadge(c) {
+      if (c === "ic") return '<span class="class-chip chip-ic">ic</span>';
+      if (c === "resistor") return '<span class="class-chip chip-resistor">resistor</span>';
+      if (c === "capacitor") return '<span class="class-chip chip-cap">capacitor</span>';
+      if (c === "transistor") return '<span class="class-chip chip-trans">transistor</span>';
+      return `<span class="class-chip">${c}</span>`;
+    }
+
+    function renderMockGraphic(w, h, label) {
+      return `<svg width="${w}" height="${h}" viewBox="0 0 100 80" fill="none" style="display:block;">
+        <rect x="2" y="2" width="96" height="76" rx="4" fill="#0b101c" stroke="#1e293b" stroke-width="2"/>
+        <rect x="30" y="25" width="40" height="30" rx="3" fill="rgba(56, 189, 248, 0.2)" stroke="#38bdf8" stroke-width="2"/>
+        <text x="50" y="44" fill="#38bdf8" font-size="11" font-weight="700" text-anchor="middle">${label || 'SAMPLE'}</text>
+      </svg>`;
+    }
+
+    function setView(mode) {
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('btn-' + mode).classList.add('active');
+
+      const container = document.getElementById('view-content');
+
+      if (mode === 'tiles') {
+        // 1. TILES
+        let html = '<div class="grid-tiles">';
+        samples.forEach(s => {
+          html += `
+            <div class="tile-card">
+              <div class="tile-thumb">
+                ${renderMockGraphic(160, 100, s.classes[0])}
+                <span class="badge-split ${s.split}" style="position: absolute; top: 6px; left: 6px;">${s.split}</span>
+                <span style="position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,0.7); font-size: 10px; font-weight: 700; color: #fff; padding: 2px 6px; border-radius: 4px;">${s.boxes} Boxen</span>
+              </div>
+              <div class="tile-body">
+                <div class="tile-title" title="${s.id}">${s.id}</div>
+                <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                  ${s.classes.map(getClassBadge).join('')}
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; pt-2; border-top: 1px solid var(--border-subtle);">
+                  <span style="font-size: 10px; color: var(--muted);">${s.tags[0]}</span>
+                  <button class="btn-action-sm">Im Studio prüfen</button>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+
+      } else if (mode === 'small-tiles') {
+        // 2. SMALL TILES (Dichte Kacheln)
+        let html = '<div class="grid-small-tiles">';
+        samples.forEach(s => {
+          html += `
+            <div class="small-tile-card" title="${s.id} (${s.boxes} Boxen)">
+              <div class="small-tile-thumb">
+                ${renderMockGraphic(90, 60, s.boxes + 'x')}
+                <span class="badge-split ${s.split}" style="position: absolute; top: 4px; left: 4px; padding: 1px 4px; font-size: 8px;">${s.split}</span>
+              </div>
+              <div class="small-tile-footer">
+                <div class="small-tile-name">${s.id.substring(0, 14)}...</div>
+              </div>
+            </div>
+          `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+
+      } else if (mode === 'detailed-list') {
+        // 3. DETAILED LIST (Tabelle)
+        let html = `
+          <table class="table-detailed">
+            <thead>
+              <tr>
+                <th style="width: 60px;">Vorschau</th>
+                <th>Sample ID</th>
+                <th style="width: 80px;">Split</th>
+                <th style="width: 80px;">Boxen</th>
+                <th>Klassen</th>
+                <th>Tags & Footprint</th>
+                <th>Erstellt</th>
+                <th style="width: 110px; text-align: right;">Aktion</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        samples.forEach(s => {
+          html += `
+            <tr>
+              <td><div class="table-thumb">${renderMockGraphic(44, 32, '')}</div></td>
+              <td style="font-weight: 600; font-family: ui-monospace, monospace; color: var(--text-bright);">${s.id}</td>
+              <td><span class="badge-split ${s.split}">${s.split}</span></td>
+              <td style="font-weight: 700; color: var(--primary);">${s.boxes} Boxen</td>
+              <td><div style="display: flex; gap: 4px; flex-wrap: wrap;">${s.classes.map(getClassBadge).join('')}</div></td>
+              <td style="color: var(--muted); font-size: 11px;">${s.tags.join(', ')}</td>
+              <td style="color: var(--muted); font-size: 11px;">${s.date}</td>
+              <td style="text-align: right;"><button class="btn-action-sm">Im Studio</button></td>
+            </tr>
+          `;
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+
+      } else if (mode === 'list') {
+        // 4. LIST (Kompaktliste)
+        let html = '<div class="list-compact-wrap">';
+        samples.forEach(s => {
+          html += `
+            <div class="list-compact-row">
+              <div class="list-mini-thumb">${renderMockGraphic(24, 18, '')}</div>
+              <span class="badge-split ${s.split}" style="padding: 1px 4px; font-size: 9px;">${s.split}</span>
+              <div class="list-id">${s.id}</div>
+              <div style="display: flex; gap: 4px;">${s.classes.map(getClassBadge).join('')}</div>
+              <span style="font-size: 11px; font-weight: 700; color: var(--primary); min-width: 60px; text-align: right;">${s.boxes} Boxen</span>
+              <button class="btn-action-sm" style="margin-left: 8px;">Öffnen</button>
+            </div>
+          `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+      }
+    }
+
+    // Default to 'tiles'
+    setView('tiles');
+  </script>
+</body>
+</html>

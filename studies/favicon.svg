@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="8" fill="#0b0f19"/>
+  <!-- Sucher-Ecken -->
+  <path d="M6 12V7a1 1 0 0 1 1-1h5" stroke="#38bdf8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M20 6h5a1 1 0 0 1 1 1v5" stroke="#38bdf8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M26 20v5a1 1 0 0 1-1 1h-5" stroke="#38bdf8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M12 26H7a1 1 0 0 1-1-1v-5" stroke="#38bdf8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  
+  <!-- DIP-IC Gehaeuse mit transparenter Kerbe -->
+  <path d="M12.5 10 h1.5 a1.2 1.2 0 0 0 2 0 h1.5 a1.2 1.2 0 0 1 1.2 1.2 v9.6 a1.2 1.2 0 0 1 -1.2 1.2 h-5 a1.2 1.2 0 0 1 -1.2 -1.2 v-9.6 a1.2 1.2 0 0 1 1.2 -1.2 z" fill="#38bdf8"/>
+  
+  <!-- Pins links -->
+  <line x1="8.5" y1="12.5" x2="11.5" y2="12.5" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="8.5" y1="16" x2="11.5" y2="16" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="8.5" y1="19.5" x2="11.5" y2="19.5" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/>
+  
+  <!-- Pins rechts -->
+  <line x1="17.5" y1="12.5" x2="20.5" y2="12.5" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="17.5" y1="16" x2="20.5" y2="16" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="17.5" y1="19.5" x2="20.5" y2="19.5" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/>
+</svg>

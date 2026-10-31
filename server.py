@@ -1047,6 +1047,58 @@ async def delete_dataset_sample(split: Literal['train', 'val'], sample_id: str):
 
     return {"success": True, "deleted_id": sample_id, "stats": get_stats()}
 
+class BatchDeleteSampleItem(BaseModel):
+    split: Literal['train', 'val']
+    id: str
+
+class BatchDeleteRequest(BaseModel):
+    samples: list[BatchDeleteSampleItem]
+
+@app.api_route("/api/dataset/samples/batch-delete", methods=["POST", "DELETE"])
+async def batch_delete_dataset_samples(payload: BatchDeleteRequest):
+    global _cached_samples_data, _cached_stats
+    deleted_ids = []
+    
+    for item in payload.samples:
+        split = item.split
+        sample_id = item.id
+        
+        img_path = DATASET_DIR / "images" / split / f"{sample_id}.jpg"
+        lbl_path = DATASET_DIR / "labels" / split / f"{sample_id}.txt"
+        meta_path = DATASET_DIR / "metadata" / split / f"{sample_id}.json"
+        thumb_path = THUMBNAILS_DIR / split / f"{sample_id}.webp"
+        
+        if thumb_path.exists():
+            thumb_path.unlink()
+        if meta_path.exists():
+            meta_path.unlink()
+        if img_path.exists():
+            img_path.unlink()
+        if lbl_path.exists():
+            lbl_path.unlink()
+            
+        deleted_ids.append(sample_id)
+        
+        if _cached_samples_data is not None:
+            idx = next((i for i, s in enumerate(_cached_samples_data) if s.get("id") == sample_id and s.get("split") == split), None)
+            if idx is not None:
+                removed = _cached_samples_data.pop(idx)
+                if _cached_stats is not None:
+                    if split == 'train':
+                        _cached_stats.train_images = max(0, _cached_stats.train_images - 1)
+                    else:
+                        _cached_stats.val_images = max(0, _cached_stats.val_images - 1)
+                    _cached_stats.total_annotations = max(0, _cached_stats.total_annotations - removed.get("box_count", 0))
+                    for b in removed.get("boxes", []):
+                        cname = b.get("label", "other")
+                        if cname in _cached_stats.class_counts:
+                            _cached_stats.class_counts[cname] = max(0, _cached_stats.class_counts[cname] - 1)
+                            
+    if _cached_samples_data is not None:
+        save_dataset_index_async()
+        
+    return {"success": True, "deleted_count": len(deleted_ids), "deleted_ids": deleted_ids, "stats": get_stats()}
+
 @app.get("/api/dataset/export-zip")
 async def export_dataset_zip():
     import zipfile
@@ -1625,6 +1677,13 @@ app.mount("/vendor", StaticFiles(directory=str(PURE_HTML_DIR / "vendor")), name=
 
 @app.api_route("/", methods=["GET", "HEAD"])
 async def root():
+    return FileResponse(str(PURE_HTML_DIR / "index.html"))
+
+@app.api_route("/v2", methods=["GET", "HEAD"])
+async def root_v2():
+    v2_file = PURE_HTML_DIR / "index_v2.html"
+    if v2_file.is_file():
+        return FileResponse(str(v2_file))
     return FileResponse(str(PURE_HTML_DIR / "index.html"))
 
 @app.get("/pureHtmlJs/{path:path}")

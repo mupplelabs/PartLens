@@ -222,11 +222,30 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
             async with httpx.AsyncClient(timeout=45.0) as client:
                 resp = await client.post(url, json=payload)
                 if resp.status_code != 200:
+                    print(f"\n[DEBUG GEMINI generateContent ERROR]\nStatus: {resp.status_code}\nResponse: {resp.text}\n", flush=True)
                     raise RuntimeError(f"Gemini API Fehler ({resp.status_code}): {resp.text}")
                 result_json = resp.json()
-                candidate = result_json["candidates"][0]["content"]["parts"][0]["text"]
+                print(f"\n========== [DEBUG GEMINI generateContent RESPONSE] ==========", flush=True)
+                print(f"Modell: {m_name} (Status: {resp.status_code})", flush=True)
+                print(f"Raw Response JSON:\n{json.dumps(result_json, indent=2, ensure_ascii=False)}", flush=True)
+
+                candidates = result_json.get("candidates", [])
+                if not candidates:
+                    print("[DEBUG GEMINI] Keine 'candidates' in der Antwort vorhanden!", flush=True)
+                    return []
+                cand0 = candidates[0]
+                finish_reason = cand0.get("finishReason", "UNKNOWN")
+                print(f"[DEBUG GEMINI] finishReason: {finish_reason}", flush=True)
+
+                parts = cand0.get("content", {}).get("parts", [])
+                candidate = "".join([p.get("text", "") for p in parts if isinstance(p, dict) and "text" in p])
+                print(f"[DEBUG GEMINI] Zusammengesetzter Text ({len(candidate)} Zeichen):\n{candidate}", flush=True)
+
                 data = extract_json_data(candidate)
-                return data.get("components", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
+                comps = data.get("components", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
+                print(f"[DEBUG GEMINI] Extrahierte Komponenten ({len(comps)}):\n{comps}", flush=True)
+                print(f"=============================================================\n", flush=True)
+                return comps
 
         async def _call_interactions_api(m_name: str) -> list:
             interact_url = f"https://generativelanguage.googleapis.com/v1beta/interactions?key={api_key}"
@@ -244,18 +263,27 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
             async with httpx.AsyncClient(timeout=60.0) as client:
                 resp = await client.post(interact_url, json=interact_payload)
                 if resp.status_code != 200:
+                    print(f"\n[DEBUG GEMINI interactions ERROR]\nStatus: {resp.status_code}\nResponse: {resp.text}\n", flush=True)
                     raise RuntimeError(f"Gemini Interactions API Fehler ({resp.status_code}): {resp.text}")
                 result_json = resp.json()
+                print(f"\n========== [DEBUG GEMINI interactions RESPONSE] ==========", flush=True)
+                print(f"Modell: {m_name} (Status: {resp.status_code})", flush=True)
+                print(f"Raw Response JSON:\n{json.dumps(result_json, indent=2, ensure_ascii=False)}", flush=True)
+
                 raw_text = ""
                 for step in result_json.get("steps", []):
                     if step.get("type") == "model_output":
                         for part in step.get("content", []):
-                            if "text" in part:
+                            if isinstance(part, dict) and "text" in part:
                                 raw_text += part["text"]
+                print(f"[DEBUG GEMINI] Interactions Text ({len(raw_text)} Zeichen):\n{raw_text}", flush=True)
                 if not raw_text:
                     raise RuntimeError("Keine Textausgabe in der Interactions API Antwort erhalten.")
                 data = extract_json_data(raw_text)
-                return data.get("components", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
+                comps = data.get("components", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
+                print(f"[DEBUG GEMINI] Extrahierte Komponenten ({len(comps)}):\n{comps}", flush=True)
+                print(f"==========================================================\n", flush=True)
+                return comps
 
         is_interactions_model = any(k in model_name.lower() for k in ["3.", "4", "argon", "deep-research"])
         comps = []

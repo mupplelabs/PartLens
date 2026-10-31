@@ -60,6 +60,49 @@ def build_gemini_schema(detect_footprint: bool = True, detect_part_marking: bool
         "required": ["components"]
     }
 
+CURATED_GEMINI_MODELS = [
+    {
+        "id": "gemini-2.0-flash",
+        "display_name": "2.0 Flash",
+        "description": "Standard & Schnell (Empfohlen)"
+    },
+    {
+        "id": "gemini-3.8-flash",
+        "display_name": "3.8 Flash",
+        "description": "Vielseitige Unterstützung"
+    },
+    {
+        "id": "gemini-3.5-flash-lite",
+        "display_name": "3.5 Flash-Lite",
+        "description": "Schnellste Antworten"
+    },
+    {
+        "id": "gemini-3.1-pro",
+        "display_name": "3.1 Pro",
+        "description": "Logisches Schlussfolgern"
+    },
+    {
+        "id": "gemini-4-argon",
+        "display_name": "4 Argon",
+        "description": "Komplexe Aufgaben"
+    },
+    {
+        "id": "gemini-1.5-pro",
+        "display_name": "1.5 Pro",
+        "description": "Hohe Erkennungsgenauigkeit"
+    },
+    {
+        "id": "gemini-1.5-flash",
+        "display_name": "1.5 Flash",
+        "description": "Klassisch & Sparsam"
+    },
+    {
+        "id": "gemini-1.5-flash-8b",
+        "display_name": "1.5 Flash-8B",
+        "description": "Ultraleicht"
+    }
+]
+
 def build_autolabel_prompt(
     detect_footprint: bool = True,
     detect_part_marking: bool = True,
@@ -107,10 +150,6 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
             raise ValueError("Kein Gemini API-Key auf dem Server hinterlegt. Bitte unter Einstellungen konfigurieren.")
 
         model_name = req.model_name or cfg.get("default_model") or 'gemini-2.0-flash'
-        # Fallback fuer veraltete/fiktive Modellnamen oder Modelle, die generateContent nicht unterstuetzen
-        if model_name.startswith('gemini-3.') or 'exp' in model_name.lower():
-            model_name = 'gemini-2.0-flash'
-
         model_used = f"google:{model_name}"
 
         gemini_schema = build_gemini_schema(
@@ -119,46 +158,94 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
             detect_ic_subgroup=bool(req.detect_ic_subgroup)
         )
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
-        payload = {
-            "contents": [
-                {
-                    "parts": [
-                        {"text": prompt},
-                        {
-                            "inline_data": {
-                                "mime_type": media_type,
-                                "data": b64_str
+        async def _call_generate_content(m_name: str) -> list:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{m_name}:generateContent?key={api_key}"
+            payload = {
+                "contents": [
+                    {
+                        "parts": [
+                            {"text": prompt},
+                            {
+                                "inline_data": {
+                                    "mime_type": media_type,
+                                    "data": b64_str
+                                }
                             }
-                        }
-                    ]
+                        ]
+                    }
+                ],
+                "generationConfig": {
+                    "response_mime_type": "application/json",
+                    "response_schema": gemini_schema,
+                    "temperature": 0.1
                 }
-            ],
-            "generationConfig": {
-                "response_mime_type": "application/json",
-                "response_schema": gemini_schema,
-                "temperature": 0.1
             }
-        }
-
-        async with httpx.AsyncClient(timeout=45.0) as client:
-            resp = await client.post(url, json=payload)
-            if resp.status_code != 200:
-                err_text = resp.text
-                if "Interactions API" in err_text:
-                    raise RuntimeError(
-                        f"Das Modell '{model_name}' unterstuetzt nur die Google Interactions API. "
-                        "Bitte waehlen Sie ein Standard-Modell wie 'gemini-2.0-flash' oder 'gemini-1.5-flash'."
-                    )
-                raise RuntimeError(f"Gemini API Fehler ({resp.status_code}): {err_text}")
-
-            result_json = resp.json()
-            try:
+            async with httpx.AsyncClient(timeout=45.0) as client:
+                resp = await client.post(url, json=payload)
+                if resp.status_code != 200:
+                    raise RuntimeError(f"Gemini API Fehler ({resp.status_code}): {resp.text}")
+                result_json = resp.json()
                 candidate = result_json["candidates"][0]["content"]["parts"][0]["text"]
                 data = json.loads(candidate)
-                comps = data.get("components", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
-            except Exception as e:
-                raise RuntimeError(f"Fehler beim Parsen der Gemini Antwort: {e}")
+                return data.get("components", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
+
+        async def _call_interactions_api(m_name: str) -> list:
+            interact_url = f"https://generativelanguage.googleapis.com/v1beta/interactions?key={api_key}"
+            interact_payload = {
+                "model": m_name,
+                "input": [
+                    {"type": "text", "text": prompt},
+                    {
+                        "type": "image",
+                        "mime_type": media_type,
+                        "data": b64_str
+                    }
+                ]
+            }
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                resp = await client.post(interact_url, json=interact_payload)
+                if resp.status_code != 200:
+                    raise RuntimeError(f"Gemini Interactions API Fehler ({resp.status_code}): {resp.text}")
+                result_json = resp.json()
+                raw_text = ""
+                for step in result_json.get("steps", []):
+                    if step.get("type") == "model_output":
+                        for part in step.get("content", []):
+                            if "text" in part:
+                                raw_text += part["text"]
+                if not raw_text:
+                    raise RuntimeError("Keine Textausgabe in der Interactions API Antwort erhalten.")
+                try:
+                    data = json.loads(raw_text)
+                except Exception:
+                    json_match = re.search(r'\{.*\}', raw_text, re.DOTALL)
+                    data = json.loads(json_match.group(0)) if json_match else {}
+                return data.get("components", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
+
+        is_interactions_model = any(k in model_name.lower() for k in ["3.", "4", "argon", "deep-research"])
+        comps = []
+
+        if is_interactions_model:
+            try:
+                comps = await _call_interactions_api(model_name)
+            except Exception as e_inter:
+                # Automatischer Fallback auf stabiles Standardmodell
+                try:
+                    comps = await _call_generate_content('gemini-2.0-flash')
+                    model_used = "google:gemini-2.0-flash (Fallback)"
+                except Exception:
+                    raise e_inter
+        else:
+            try:
+                comps = await _call_generate_content(model_name)
+            except Exception as e_gen:
+                if "Interactions API" in str(e_gen):
+                    try:
+                        comps = await _call_interactions_api(model_name)
+                    except Exception:
+                        raise e_gen
+                else:
+                    raise e_gen
 
             for c in comps:
                 detected_components.append(DetectedComponent(
@@ -292,7 +379,7 @@ async def query_local_models(provider: str = 'openai', url: Optional[str] = None
 async def query_gemini_models(api_key: Optional[str] = None) -> dict:
     key = api_key or get_api_key_for_provider("gemini")
     if not key or not key.strip():
-        return {"success": False, "error": "Kein API-Key angegeben.", "models": []}
+        return {"success": True, "models": CURATED_GEMINI_MODELS}
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models?key={key.strip()}"
     try:
@@ -301,39 +388,21 @@ async def query_gemini_models(api_key: Optional[str] = None) -> dict:
             if resp.status_code == 200:
                 data = resp.json()
                 raw_models = data.get("models", [])
-                vision_models = []
-                for m in raw_models:
-                    name = m.get("name", "").replace("models/", "")
-                    methods = m.get("supportedGenerationMethods", [])
-                    # Filtere Modelle, die nur Interactions API unterstützen oder reine Audio-/Text-Embeddings sind
-                    is_excluded = any(x in name.lower() for x in [
-                        "embedding", "aqa", "imagen", "deep-research", "thinking", "exp-", "experimental"
-                    ])
-                    if "generateContent" in methods and "gemini" in name and not is_excluded:
-                        vision_models.append({
-                            "id": name,
-                            "display_name": m.get("displayName", name),
-                            "description": m.get("description", "")
-                        })
+                api_model_ids = {m.get("name", "").replace("models/", "").lower() for m in raw_models}
 
-                # Sortierung: gemini-2.0-flash ganz oben, danach 1.5-flash und Pro
-                def model_sort_key(item):
-                    mid = item["id"].lower()
-                    if mid == "gemini-2.0-flash":
-                        return (0, mid)
-                    elif "2.0" in mid and "flash" in mid:
-                        return (1, mid)
-                    elif "1.5" in mid and "flash" in mid:
-                        return (2, mid)
-                    elif "flash" in mid:
-                        return (3, mid)
-                    elif "pro" in mid:
-                        return (4, mid)
-                    return (5, mid)
+                # Filtere anhand unserer kuratierten Whitelist vor (wie die offizielle Gemini App)
+                matched_models = []
+                for c in CURATED_GEMINI_MODELS:
+                    cid = c["id"].lower()
+                    clean_short = cid.replace("gemini-", "")
+                    if cid in api_model_ids or any(cid in aid or clean_short in aid for aid in api_model_ids):
+                        matched_models.append(c)
 
-                vision_models.sort(key=model_sort_key)
-                return {"success": True, "models": vision_models}
+                # Falls der spezifische API-Key nicht alle Modelle meldet oder Whitelists abweichen,
+                # bieten wir die kuratierte Standardpalette an
+                result_models = matched_models if len(matched_models) >= 2 else CURATED_GEMINI_MODELS
+                return {"success": True, "models": result_models}
             else:
-                return {"success": False, "error": f"Google API HTTP {resp.status_code}: {resp.text}", "models": []}
-    except Exception as e:
-        return {"success": False, "error": str(e), "models": []}
+                return {"success": True, "models": CURATED_GEMINI_MODELS}
+    except Exception:
+        return {"success": True, "models": CURATED_GEMINI_MODELS}

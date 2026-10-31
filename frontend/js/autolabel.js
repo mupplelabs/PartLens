@@ -473,8 +473,8 @@ async function fetchGeminiModels(preferredModel = null) {
                         const opt = document.createElement('option');
                         opt.value = m.id || m;
                         const dName = m.display_name || m.id || m;
-                        const isFlash = (m.id || m).includes('flash');
-                        opt.textContent = isFlash ? `${m.id || m} (${dName}) [Flash]` : `${m.id || m} (${dName})`;
+                        const desc = m.description ? ` (${m.description})` : '';
+                        opt.textContent = `${dName}${desc}`;
                         autolabelModelSelect.appendChild(opt);
                     });
                     const customOpt = document.createElement('option');
@@ -644,10 +644,13 @@ function handleProviderChange(isUserSwitch = false) {
         if (modelCountBadge) modelCountBadge.innerText = '';
         if (autolabelModelSelect && autolabelModelSelect.options.length === 0) {
             autolabelModelSelect.innerHTML = `
-                <option value="gemini-2.0-flash" selected>gemini-2.0-flash (Standard &amp; Schnell)</option>
-                <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                <option value="gemini-1.5-flash-8b">gemini-1.5-flash-8b</option>
-                <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                <option value="gemini-2.0-flash" selected>2.0 Flash (Standard &amp; Schnell · Empfohlen)</option>
+                <option value="gemini-3.8-flash">3.8 Flash (Vielseitige Unterstützung)</option>
+                <option value="gemini-3.5-flash-lite">3.5 Flash-Lite (Schnellste Antworten)</option>
+                <option value="gemini-3.1-pro">3.1 Pro (Logisches Schlussfolgern)</option>
+                <option value="gemini-4-argon">4 Argon (Komplexe Aufgaben)</option>
+                <option value="gemini-1.5-pro">1.5 Pro (Hohe Genauigkeit)</option>
+                <option value="gemini-1.5-flash">1.5 Flash (Klassisch &amp; Sparsam)</option>
                 <option value="__custom__">Eigenes Modell eingeben...</option>
             `;
         }

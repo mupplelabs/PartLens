@@ -3,6 +3,8 @@
     "title": "PartLens",
     "subtitle": "Computer Vision Studio & Auto-Labeling for Electronics",
     "dataset_status": "Dataset: {count} images",
+    "dataset_badge": "Dataset: {train} Train • {val} Val ({boxes} Boxes)",
+    "dataset_title": "Current status of saved YOLO datasets",
     "gallery_btn": "Gallery",
     "import_btn": "Import",
     "export_btn": "Export",
@@ -47,7 +49,10 @@
     "dropzone_bold": "Drag & drop image here",
     "dropzone_or": "or click to browse",
     "samples_placeholder": "Select test image...",
-    "status_ready": "Ready."
+    "status_ready": "Ready.",
+    "ai_analyzing": "AI analyzing components",
+    "autolabel_result": "Auto-Label: {count} component(s) detected ({ms} ms)",
+    "autolabel_status_success": "{count} component(s) detected ({ms} ms). Please inspect and save!"
   },
   "hud": {
     "opacity_title": "Box fill opacity (Key: O)",
@@ -68,6 +73,7 @@
     "hint_pan": "Pan"
   },
   "studio": {
+    "class_header": "Class:",
     "tab_objects": "Objects",
     "tab_details": "Details",
     "tab_dataset": "Dataset",
@@ -175,7 +181,7 @@
     "ic": "ICs / Chips",
     "resistor": "Resistors",
     "capacitor": "Capacitors",
-    "diode": "Dioden",
+    "diode": "Diodes",
     "led": "LEDs",
     "transistor": "Transistors",
     "connector": "Connectors",
@@ -185,7 +191,21 @@
     "display": "Displays",
     "inductor": "Inductors",
     "board": "Modules / Boards",
-    "other": "Other"
+    "other": "Other",
+    "ic_chip": "IC",
+    "resistor_chip": "Resistor",
+    "capacitor_chip": "Capacitor",
+    "transistor_chip": "Transistor",
+    "diode_chip": "Diode",
+    "led_chip": "LED",
+    "connector_chip": "Connector",
+    "switch_button_chip": "Switch",
+    "potentiometer_chip": "Potentiometer",
+    "relay_chip": "Relay",
+    "display_chip": "Display",
+    "inductor_chip": "Inductor",
+    "board_chip": "Board",
+    "other_chip": "Other"
   },
   "gallery": {
     "title": "Dataset Gallery",
@@ -212,9 +232,34 @@
     "split_train": "Train",
     "split_val": "Validation",
     "split_test": "Test",
+    "split_all": "All",
     "batch_actions": "Batch Actions",
     "btn_delete_selected": "Delete Selection",
-    "items_selected": "{count} images selected"
+    "items_selected": "{count} images selected",
+    "loading": "Loading curated dataset samples..."
+  },
+  "footer": {
+    "initializing": "Initializing Studio: Connecting to backend...",
+    "connecting": "Connecting...",
+    "checking": "Checking...",
+    "standby": "Standby",
+    "status_activity": "Status Activity",
+    "backend_title": "Backend Server Status",
+    "llm_title": "Active AI Model for Auto-Labeling (Click opens settings)",
+    "ocr_title": "Active Optical Character Recognition Engine (Click opens settings)",
+    "clip_title": "Local CLIP Model (Xenova) loaded on-demand",
+    "studio_ready": "Studio ready • Backend online ({samples} samples, {boxes} boxes) • {ms}ms",
+    "studio_ready_offline": "Studio ready (Offline mode: detector & tools active) • {ms}ms"
+  },
+  "mobile": {
+    "photo": "Photo",
+    "photo_title": "Take photo with camera or choose from gallery",
+    "autolabel": "Auto-Label",
+    "autolabel_title": "Run Auto-Label with AI model",
+    "box": "Box",
+    "box_title": "Draw new box manually",
+    "save": "Save",
+    "save_title": "Save sample"
   },
   "import": {
     "title": "Import Images & Datasets",

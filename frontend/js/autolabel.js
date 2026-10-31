@@ -1175,7 +1175,9 @@ async function fetchDatasetStatus() {
                 populateClassDropdown(knownDatasetClasses);
             }
             if (data.stats && datasetCounterBadge) {
-                datasetCounterBadge.innerText = `Datensatz: ${data.stats.train_images} Train / ${data.stats.val_images} Val (${data.stats.total_annotations} Boxen)`;
+                datasetCounterBadge.innerText = typeof window.formatDatasetBadge === 'function'
+                    ? window.formatDatasetBadge(data.stats.train_images, data.stats.val_images, data.stats.total_annotations)
+                    : `Datensatz: ${data.stats.train_images} Train • ${data.stats.val_images} Val (${data.stats.total_annotations} Boxen)`;
             }
             const backendVal = document.getElementById('chip-backend-val');
             const backendChip = document.getElementById('chip-backend');
@@ -1238,12 +1240,13 @@ function showAutoLabelLoading(modelName, provider) {
     clearInterval(autoLabelTimerInterval);
 
     const isMobile = window.innerWidth <= 768;
+    const aiAnalyzingBase = window.t ? window.t('canvas.ai_analyzing') : 'KI analysiert Bauteile';
     if (autolabelStatus) {
         const modelTag = isMobile ? '' : ` (<em>${modelName}</em>)`;
-        autolabelStatus.innerHTML = `<span class="status-radar-dot active" style="display:inline-block; vertical-align:middle; margin-right:6px;"></span>KI analysiert Bauteile${modelTag} · 00:00.0...`;
+        autolabelStatus.innerHTML = `<span class="status-radar-dot active" style="display:inline-block; vertical-align:middle; margin-right:6px;"></span>${aiAnalyzingBase}${modelTag} · 00:00.0...`;
     }
     if (statusDiv) {
-        statusDiv.innerText = isMobile ? 'KI analysiert Bauteile...' : `KI analysiert Bauteile mit ${modelName}...`;
+        statusDiv.innerText = isMobile ? `${aiAnalyzingBase}...` : `${aiAnalyzingBase} (${modelName})...`;
     }
 
     autoLabelTimerInterval = setInterval(() => {
@@ -1260,10 +1263,10 @@ function showAutoLabelLoading(modelName, provider) {
 
         if (autolabelStatus) {
             const modelTag = isMobile ? '' : ` (<em>${modelName}</em>)`;
-            autolabelStatus.innerHTML = `<span class="status-radar-dot active" style="display:inline-block; vertical-align:middle; margin-right:6px;"></span>KI analysiert Bauteile${modelTag} · ${timeStr}...`;
+            autolabelStatus.innerHTML = `<span class="status-radar-dot active" style="display:inline-block; vertical-align:middle; margin-right:6px;"></span>${aiAnalyzingBase}${modelTag} · ${timeStr}...`;
         }
         if (statusDiv) {
-            statusDiv.innerText = isMobile ? `KI analysiert Bauteile (${timeStr})...` : `KI analysiert Bauteile (${modelName} · ${timeStr})...`;
+            statusDiv.innerText = isMobile ? `${aiAnalyzingBase} (${timeStr})...` : `${aiAnalyzingBase} (${modelName} · ${timeStr})...`;
         }
     }, 100);
 }
@@ -1408,10 +1411,16 @@ if (runAutolabelBtn) {
                 updateBoxEditBar();
             }
 
-            stage0Summary.innerText = `Auto-Label: ${detectedBoxes.length} Bauteile erkannt (${data.latency_ms} ms)`;
-            autolabelStatus.innerText = (window.innerWidth <= 768)
-                ? `${detectedBoxes.length} Bauteile erkannt (${data.latency_ms} ms). Bitte kontrollieren und speichern!`
-                : `${detectedBoxes.length} Bauteile von ${data.model} erkannt (${data.latency_ms} ms). Bitte kontrollieren und speichern!`;
+            if (stage0Summary) {
+                stage0Summary.innerText = window.t
+                    ? window.t('canvas.autolabel_result', { count: detectedBoxes.length, ms: data.latency_ms })
+                    : `Auto-Label: ${detectedBoxes.length} Bauteile erkannt (${data.latency_ms} ms)`;
+            }
+            if (autolabelStatus) {
+                autolabelStatus.innerText = window.t
+                    ? window.t('canvas.autolabel_status_success', { count: detectedBoxes.length, ms: data.latency_ms })
+                    : `${detectedBoxes.length} Bauteile erkannt (${data.latency_ms} ms). Bitte kontrollieren und speichern!`;
+            }
 
             selectComponentBox(0, true);
             hideAutoLabelLoading(true);
@@ -1516,7 +1525,9 @@ if (saveDatasetBtn) {
 
             const resData = await response.json();
             if (datasetCounterBadge && resData.stats) {
-                datasetCounterBadge.innerText = `Datensatz: ${resData.stats.train_images} Train / ${resData.stats.val_images} Val (${resData.stats.total_annotations} Boxen)`;
+                datasetCounterBadge.innerText = typeof window.formatDatasetBadge === 'function'
+                    ? window.formatDatasetBadge(resData.stats.train_images, resData.stats.val_images, resData.stats.total_annotations)
+                    : `Datensatz: ${resData.stats.train_images} Train • ${resData.stats.val_images} Val (${resData.stats.total_annotations} Boxen)`;
             }
             autolabelStatus.innerText = `Gespeichert als ${resData.sample_id} (${resData.annotations_saved} Boxen)!`;
 

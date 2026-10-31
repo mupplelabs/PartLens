@@ -1442,7 +1442,9 @@ async function loadDatasetGallery(forceRefresh = false) {
         // Header Update
         const headerText = document.getElementById('header-dataset-text');
         if (headerText && data.stats) {
-            headerText.innerText = `Datensatz: ${data.stats.train_images} Train • ${data.stats.val_images} Val (${data.stats.total_annotations} Boxen)`;
+            headerText.innerText = typeof window.formatDatasetBadge === 'function'
+                ? window.formatDatasetBadge(data.stats.train_images, data.stats.val_images, data.stats.total_annotations)
+                : `Datensatz: ${data.stats.train_images} Train • ${data.stats.val_images} Val (${data.stats.total_annotations} Boxen)`;
         }
     } catch (err) {
         grid.innerHTML = `<div style="grid-column: 1 / -1; color: #fca5a5; padding: 24px; text-align: center;">Fehler beim Laden: ${err.message}</div>`;

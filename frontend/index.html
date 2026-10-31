@@ -73,7 +73,7 @@
         </nav>
 
         <div class="header-actions">
-            <div class="status-pill" id="dataset-counter-badge" title="Aktueller Stand der gespeicherten YOLO-Datensätze">
+            <div class="status-pill" id="dataset-counter-badge" title="Aktueller Stand der gespeicherten YOLO-Datensätze" data-i18n-title="header.dataset_title">
                 <span class="live-dot"></span>
                 <span id="header-dataset-text">Datensatz: 0 Bilder</span>
             </div>
@@ -345,14 +345,14 @@
                             </button>
                         </div>
                         <div class="popover-quick-classes">
-                            <button type="button" class="popover-class-btn" data-class="ic"><span class="class-dot" style="background: #3b82f6;"></span>IC (1)</button>
-                            <button type="button" class="popover-class-btn" data-class="resistor"><span class="class-dot" style="background: #f59e0b;"></span>Widerstand (2)</button>
-                            <button type="button" class="popover-class-btn" data-class="capacitor"><span class="class-dot" style="background: #8b5cf6;"></span>Kondensator (3)</button>
-                            <button type="button" class="popover-class-btn" data-class="transistor"><span class="class-dot" style="background: #10b981;"></span>Transistor (4)</button>
-                            <button type="button" class="popover-class-btn" data-class="diode"><span class="class-dot" style="background: #ec4899;"></span>Diode (5)</button>
-                            <button type="button" class="popover-class-btn" data-class="led"><span class="class-dot" style="background: #ef4444;"></span>LED (6)</button>
-                            <button type="button" class="popover-class-btn" data-class="connector"><span class="class-dot" style="background: #14b8a6;"></span>Stecker (7)</button>
-                            <button type="button" class="popover-class-btn" data-class="switch_button"><span class="class-dot" style="background: #a855f7;"></span>Schalter (8)</button>
+                            <button type="button" class="popover-class-btn" data-class="ic"><span class="class-dot" style="background: #3b82f6;"></span><span data-i18n="classes.ic_chip">IC</span> (1)</button>
+                            <button type="button" class="popover-class-btn" data-class="resistor"><span class="class-dot" style="background: #f59e0b;"></span><span data-i18n="classes.resistor_chip">Widerstand</span> (2)</button>
+                            <button type="button" class="popover-class-btn" data-class="capacitor"><span class="class-dot" style="background: #8b5cf6;"></span><span data-i18n="classes.capacitor_chip">Kondensator</span> (3)</button>
+                            <button type="button" class="popover-class-btn" data-class="transistor"><span class="class-dot" style="background: #10b981;"></span><span data-i18n="classes.transistor_chip">Transistor</span> (4)</button>
+                            <button type="button" class="popover-class-btn" data-class="diode"><span class="class-dot" style="background: #ec4899;"></span><span data-i18n="classes.diode_chip">Diode</span> (5)</button>
+                            <button type="button" class="popover-class-btn" data-class="led"><span class="class-dot" style="background: #ef4444;"></span><span data-i18n="classes.led_chip">LED</span> (6)</button>
+                            <button type="button" class="popover-class-btn" data-class="connector"><span class="class-dot" style="background: #14b8a6;"></span><span data-i18n="classes.connector_chip">Stecker</span> (7)</button>
+                            <button type="button" class="popover-class-btn" data-class="switch_button"><span class="class-dot" style="background: #a855f7;"></span><span data-i18n="classes.switch_button_chip">Schalter</span> (8)</button>
                         </div>
                         <div class="popover-input-row">
                             <select id="popover-class-select" class="popover-class-select"></select>
@@ -364,48 +364,48 @@
 
                     <!-- Klassen-Schnellauswahl Bar (1-Click & Keyboard Shortcuts 1-9) -->
                     <div class="class-palette-bar" id="class-quick-bar">
-                        <span style="font-size: 0.7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-right: 4px;">Klasse:</span>
+                        <span style="font-size: 0.7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-right: 4px;" data-i18n="studio.class_header">Klasse:</span>
                         <button class="class-quick-chip active" data-class="ic" style="color: #3b82f6;">
-                            <span class="class-dot"></span> IC <span style="opacity: 0.6; font-size: 0.68rem;">(1)</span>
+                            <span class="class-dot"></span> <span data-i18n="classes.ic_chip">IC</span> <span style="opacity: 0.6; font-size: 0.68rem;">(1)</span>
                         </button>
                         <button class="class-quick-chip" data-class="resistor" style="color: #f59e0b;">
-                            <span class="class-dot"></span> Widerstand <span style="opacity: 0.6; font-size: 0.68rem;">(2)</span>
+                            <span class="class-dot"></span> <span data-i18n="classes.resistor_chip">Widerstand</span> <span style="opacity: 0.6; font-size: 0.68rem;">(2)</span>
                         </button>
                         <button class="class-quick-chip" data-class="capacitor" style="color: #8b5cf6;">
-                            <span class="class-dot"></span> Kondensator <span style="opacity: 0.6; font-size: 0.68rem;">(3)</span>
+                            <span class="class-dot"></span> <span data-i18n="classes.capacitor_chip">Kondensator</span> <span style="opacity: 0.6; font-size: 0.68rem;">(3)</span>
                         </button>
                         <button class="class-quick-chip" data-class="transistor" style="color: #10b981;">
-                            <span class="class-dot"></span> Transistor <span style="opacity: 0.6; font-size: 0.68rem;">(4)</span>
+                            <span class="class-dot"></span> <span data-i18n="classes.transistor_chip">Transistor</span> <span style="opacity: 0.6; font-size: 0.68rem;">(4)</span>
                         </button>
                         <button class="class-quick-chip" data-class="diode" style="color: #ec4899;">
-                            <span class="class-dot"></span> Diode <span style="opacity: 0.6; font-size: 0.68rem;">(5)</span>
+                            <span class="class-dot"></span> <span data-i18n="classes.diode_chip">Diode</span> <span style="opacity: 0.6; font-size: 0.68rem;">(5)</span>
                         </button>
                         <button class="class-quick-chip" data-class="led" style="color: #ef4444;">
-                            <span class="class-dot"></span> LED <span style="opacity: 0.6; font-size: 0.68rem;">(6)</span>
+                            <span class="class-dot"></span> <span data-i18n="classes.led_chip">LED</span> <span style="opacity: 0.6; font-size: 0.68rem;">(6)</span>
                         </button>
                         <button class="class-quick-chip" data-class="connector" style="color: #14b8a6;">
-                            <span class="class-dot"></span> Stecker <span style="opacity: 0.6; font-size: 0.68rem;">(7)</span>
+                            <span class="class-dot"></span> <span data-i18n="classes.connector_chip">Stecker</span> <span style="opacity: 0.6; font-size: 0.68rem;">(7)</span>
                         </button>
                         <button class="class-quick-chip" data-class="switch_button" style="color: #a855f7;">
-                            <span class="class-dot"></span> Schalter <span style="opacity: 0.6; font-size: 0.68rem;">(8)</span>
+                            <span class="class-dot"></span> <span data-i18n="classes.switch_button_chip">Schalter</span> <span style="opacity: 0.6; font-size: 0.68rem;">(8)</span>
                         </button>
                         <button class="class-quick-chip" data-class="potentiometer" style="color: #d97706;">
-                            <span class="class-dot"></span> Poti <span style="opacity: 0.6; font-size: 0.68rem;">(9)</span>
+                            <span class="class-dot"></span> <span data-i18n="classes.potentiometer_chip">Poti</span> <span style="opacity: 0.6; font-size: 0.68rem;">(9)</span>
                         </button>
                         <button class="class-quick-chip" data-class="relay" style="color: #e11d48;">
-                            <span class="class-dot"></span> Relais
+                            <span class="class-dot"></span> <span data-i18n="classes.relay_chip">Relais</span>
                         </button>
                         <button class="class-quick-chip" data-class="display" style="color: #0ea5e9;">
-                            <span class="class-dot"></span> Display
+                            <span class="class-dot"></span> <span data-i18n="classes.display_chip">Display</span>
                         </button>
                         <button class="class-quick-chip" data-class="inductor" style="color: #06b6d4;">
-                            <span class="class-dot"></span> Spule
+                            <span class="class-dot"></span> <span data-i18n="classes.inductor_chip">Spule</span>
                         </button>
                         <button class="class-quick-chip" data-class="board" style="color: #6366f1;">
-                            <span class="class-dot"></span> Board
+                            <span class="class-dot"></span> <span data-i18n="classes.board_chip">Board</span>
                         </button>
                         <button class="class-quick-chip" data-class="other" style="color: #94a3b8;">
-                            <span class="class-dot"></span> Other
+                            <span class="class-dot"></span> <span data-i18n="classes.other_chip">Other</span>
                         </button>
                     </div>
 
@@ -413,11 +413,11 @@
                     <div class="canvas-bottom-bar">
                         <div id="dropzone" class="dropzone" style="margin: 0; padding: 6px 12px; font-size: 0.78rem; flex: 1; min-width: 200px;">
                             <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: -2px; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                            <strong>Bild hierher ziehen</strong> oder klicken zum Auswählen
+                            <strong data-i18n="canvas.dropzone_bold">Bild hierher ziehen</strong> <span data-i18n="canvas.dropzone_or">oder klicken zum Auswählen</span>
                             <input type="file" id="file-input" accept="image/*" style="display: none;" />
                         </div>
                         <select id="quick-sample-select" style="padding: 5px 9px; font-size: 0.78rem; width: auto; max-width: 185px; height: 32px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface-elevated); color: var(--text); cursor: pointer;" title="Vorhandene PCB-Testbilder laden">
-                            <option value="">Testbilder auswählen...</option>
+                            <option value="" data-i18n="canvas.samples_placeholder">Testbilder auswählen...</option>
                             <option value="/studies/F0526717-01.webp">1) CD4094BE (DIP-16)</option>
                             <option value="/studies/IMG_2221.jpg">2) ISD 1820PY (2× IC)</option>
                             <option value="/studies/resistor_4k7.png">3) 4,7 kΩ (horizontal)</option>
@@ -427,7 +427,7 @@
                             <option value="/studies/4xDIP14_teils_im_schatten.jpeg">7) 4× DIP-14 (Schatten)</option>
                             <option value="/studies/4xDIP14_zuviel_Licht.jpeg">8) 4× DIP-14 (starkes Licht)</option>
                         </select>
-                        <span id="stage0-summary" style="margin-left: 8px;">Bereit.</span>
+                        <span id="stage0-summary" style="margin-left: 8px;" data-i18n="canvas.status_ready">Bereit.</span>
                     </div>
                 </div>
 
@@ -1116,21 +1116,21 @@
          ===================================================================== -->
     <footer id="studio-status-bar" class="studio-status-bar" role="status" aria-live="polite">
         <div class="status-left">
-            <span id="status-live-indicator" class="status-radar-dot initializing" title="Status-Aktivität"></span>
-            <span id="status" class="status-text">Initialisiere Studio: Verbinde mit Backend...</span>
+            <span id="status-live-indicator" class="status-radar-dot initializing" title="Status-Aktivität" data-i18n-title="footer.status_activity"></span>
+            <span id="status" class="status-text" data-i18n="footer.initializing">Initialisiere Studio: Verbinde mit Backend...</span>
         </div>
         <div class="status-right" id="status-system-badges">
-            <span class="status-chip" id="chip-backend" title="Backend-Server Status">
-                <span class="chip-dot"></span>Backend: <span class="chip-val" id="chip-backend-val">Verbinde...</span>
+            <span class="status-chip" id="chip-backend" title="Backend-Server Status" data-i18n-title="footer.backend_title">
+                <span class="chip-dot"></span>Backend: <span class="chip-val" id="chip-backend-val" data-i18n="footer.connecting">Verbinde...</span>
             </span>
-            <span class="status-chip" id="chip-llm" title="Aktives KI-Modell für Auto-Labeling (Klick öffnet Einstellungen)" style="cursor: pointer;">
-                <span class="chip-dot"></span>LLM: <span class="chip-val" id="chip-llm-val">Prüfe...</span>
+            <span class="status-chip" id="chip-llm" title="Aktives KI-Modell für Auto-Labeling (Klick öffnet Einstellungen)" data-i18n-title="footer.llm_title" style="cursor: pointer;">
+                <span class="chip-dot"></span>LLM: <span class="chip-val" id="chip-llm-val" data-i18n="footer.checking">Prüfe...</span>
             </span>
-            <span class="status-chip" id="chip-ocr" title="Aktive optische Zeichenerkennungs-Engine (Klick öffnet Einstellungen)" style="cursor: pointer;">
-                <span class="chip-dot"></span>OCR: <span class="chip-val" id="chip-ocr-val">Prüfe...</span>
+            <span class="status-chip" id="chip-ocr" title="Aktive optische Zeichenerkennungs-Engine (Klick öffnet Einstellungen)" data-i18n-title="footer.ocr_title" style="cursor: pointer;">
+                <span class="chip-dot"></span>OCR: <span class="chip-val" id="chip-ocr-val" data-i18n="footer.checking">Prüfe...</span>
             </span>
-            <span class="status-chip standby" id="chip-clip" title="Lokales CLIP-Modell (Xenova) wird bei Bedarf on-demand geladen">
-                <span class="chip-dot"></span>CLIP: <span class="chip-val" id="chip-clip-val">Standby</span>
+            <span class="status-chip standby" id="chip-clip" title="Lokales CLIP-Modell (Xenova) wird bei Bedarf on-demand geladen" data-i18n-title="footer.clip_title">
+                <span class="chip-dot"></span>CLIP: <span class="chip-val" id="chip-clip-val" data-i18n="footer.standby">Standby</span>
             </span>
         </div>
     </footer>
@@ -1140,21 +1140,21 @@
          ===================================================================== -->
     <div class="mobile-dock">
         <div class="mobile-dock-inner">
-            <button id="mobile-photo-btn" class="dock-btn" type="button" title="Foto mit iPhone Kamera aufnehmen oder aus Galerie wählen">
+            <button id="mobile-photo-btn" class="dock-btn" type="button" title="Foto mit iPhone Kamera aufnehmen oder aus Galerie wählen" data-i18n-title="mobile.photo_title">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                <span>Foto</span>
+                <span data-i18n="mobile.photo">Foto</span>
             </button>
-            <button id="mobile-autolabel-btn" class="dock-btn primary" type="button" title="Auto-Label mit LLM ausführen">
+            <button id="mobile-autolabel-btn" class="dock-btn primary" type="button" title="Auto-Label mit LLM ausführen" data-i18n-title="mobile.autolabel_title">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-                <span>Auto-Label</span>
+                <span data-i18n="mobile.autolabel">Auto-Label</span>
             </button>
-            <button id="mobile-add-box-btn" class="dock-btn" type="button" title="Neue Box manuell zeichnen">
+            <button id="mobile-add-box-btn" class="dock-btn" type="button" title="Neue Box manuell zeichnen" data-i18n-title="mobile.box_title">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                <span>Box</span>
+                <span data-i18n="mobile.box">Box</span>
             </button>
-            <button id="mobile-save-btn" class="dock-btn save" type="button" title="Sample speichern">
+            <button id="mobile-save-btn" class="dock-btn save" type="button" title="Sample speichern" data-i18n-title="mobile.save_title">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                <span>Speichern</span>
+                <span data-i18n="mobile.save">Speichern</span>
             </button>
         </div>
         <!-- Verstecktes Datei-Input für iOS Kameraaufnahme & Mediathek-Auswahl -->

@@ -116,13 +116,10 @@ function setStudioToolsState(ready, reason = '') {
         } else {
             btn.classList.remove('tool-disabled');
             btn.removeAttribute('aria-disabled');
-            if (btn.id === 'run-autolabel-btn') btn.title = 'Erkennt Bauteile automatisch mittels Gemini oder lokalem Vision-LLM';
-            else if (btn.id === 'run-detect-btn') btn.title = 'Schneller lokaler Heuristik-Detektor (<10ms)';
-            else if (btn.id === 'rotate-image-btn') btn.title = 'Bild um 90° drehen (hilfreich bei Smartphone-Fotos)';
-            else if (btn.id === 'clear-boxes-btn') btn.title = 'Entfernt alle Bounding Boxes im aktuellen Bild';
-            else if (btn.id === 'run-ocr-btn') btn.title = 'Liest Teilenummern und Beschriftungen per OCR';
-            else if (btn.id === 'scan-resistor-btn') btn.title = 'Scannt Farbringe des Widerstands';
-            else if (btn.id === 'reclassify-btn') btn.title = 'Klassifiziert Bauteil mit Zero-Shot CLIP';
+            const i18nKey = btn.getAttribute('data-i18n-title');
+            if (i18nKey && window.t) {
+                btn.title = window.t(i18nKey);
+            }
         }
     });
 }
@@ -204,11 +201,14 @@ async function initStudioBackground() {
         if (serverData.stats) {
             sampleCount = (serverData.stats.train_images || 0) + (serverData.stats.val_images || 0);
             boxCount = serverData.stats.total_annotations || 0;
+            const badgeText = typeof window.formatDatasetBadge === 'function'
+                ? window.formatDatasetBadge(serverData.stats.train_images, serverData.stats.val_images, boxCount)
+                : `Datensatz: ${serverData.stats.train_images} Train • ${serverData.stats.val_images} Val (${boxCount} Boxen)`;
             const headerText = document.getElementById('header-dataset-text');
             if (headerText) {
-                headerText.innerText = `Datensatz: ${serverData.stats.train_images} Train • ${serverData.stats.val_images} Val (${boxCount} Boxen)`;
+                headerText.innerText = badgeText;
             } else if (datasetCounterBadge) {
-                datasetCounterBadge.innerText = `Datensatz: ${serverData.stats.train_images} Train • ${serverData.stats.val_images} Val (${boxCount} Boxen)`;
+                datasetCounterBadge.innerText = badgeText;
             }
         }
         updateOcrStatusChip();
@@ -252,9 +252,13 @@ async function initStudioBackground() {
 
     if (statusDiv) {
         if (serverData) {
-            statusDiv.innerText = `Studio einsatzbereit · Backend online (${sampleCount} Samples, ${boxCount} Boxen) · ${elapsed}ms`;
+            statusDiv.innerText = window.t
+                ? window.t('footer.studio_ready', { samples: sampleCount, boxes: boxCount, ms: elapsed })
+                : `Studio einsatzbereit · Backend online (${sampleCount} Samples, ${boxCount} Boxen) · ${elapsed}ms`;
         } else {
-            statusDiv.innerText = `Studio einsatzbereit (Offline-Modus: Detektor & Tools aktiv) · ${elapsed}ms`;
+            statusDiv.innerText = window.t
+                ? window.t('footer.studio_ready_offline', { ms: elapsed })
+                : `Studio einsatzbereit (Offline-Modus: Detektor & Tools aktiv) · ${elapsed}ms`;
         }
     }
 

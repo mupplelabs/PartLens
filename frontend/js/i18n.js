@@ -97,6 +97,16 @@
             }
         });
 
+        // Update document title
+        if (window.t) {
+            document.title = `${window.t('header.title')} – ${window.t('header.subtitle')}`;
+        }
+
+        // Re-render dataset badge if stats are cached
+        if (typeof window.renderDatasetStatsBadge === 'function') {
+            window.renderDatasetStatsBadge();
+        }
+
         // Update language button indicator
         const langIndicator = document.getElementById('lang-indicator');
         if (langIndicator) {
@@ -110,6 +120,30 @@
 
         // Notify dynamic modules
         window.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang: currentLang } }));
+    };
+
+    // Dataset Stats Badge Helper
+    let lastDatasetStats = null;
+    window.formatDatasetBadge = function(train, val, boxes) {
+        lastDatasetStats = { train, val, boxes };
+        if (window.t) {
+            return window.t('header.dataset_badge', { train, val, boxes });
+        }
+        return `Dataset: ${train} Train • ${val} Val (${boxes} Boxes)`;
+    };
+
+    window.renderDatasetStatsBadge = function() {
+        const headerText = document.getElementById('header-dataset-text');
+        const badge = document.getElementById('dataset-counter-badge');
+        if (!lastDatasetStats) {
+            const initialText = window.t ? window.t('header.dataset_status', { count: 0 }) : 'Dataset: 0 images';
+            if (headerText) headerText.innerText = initialText;
+            else if (badge) badge.innerText = initialText;
+            return;
+        }
+        const text = window.formatDatasetBadge(lastDatasetStats.train, lastDatasetStats.val, lastDatasetStats.boxes);
+        if (headerText) headerText.innerText = text;
+        else if (badge) badge.innerText = text;
     };
 
     // 6. Switch Language

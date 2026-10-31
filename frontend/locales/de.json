@@ -3,6 +3,8 @@
     "title": "PartLens",
     "subtitle": "Computer Vision Studio & Auto-Labeling für Elektronik",
     "dataset_status": "Datensatz: {count} Bilder",
+    "dataset_badge": "Datensatz: {train} Train • {val} Val ({boxes} Boxen)",
+    "dataset_title": "Aktueller Stand der gespeicherten YOLO-Datensätze",
     "gallery_btn": "Galerie",
     "import_btn": "Import",
     "export_btn": "Export",
@@ -47,7 +49,10 @@
     "dropzone_bold": "Bild hierher ziehen",
     "dropzone_or": "oder klicken zum Auswählen",
     "samples_placeholder": "Testbilder auswählen...",
-    "status_ready": "Bereit."
+    "status_ready": "Bereit.",
+    "ai_analyzing": "KI analysiert Bauteile",
+    "autolabel_result": "Auto-Label: {count} Bauteile erkannt ({ms} ms)",
+    "autolabel_status_success": "{count} Bauteile erkannt ({ms} ms). Bitte kontrollieren und speichern!"
   },
   "hud": {
     "opacity_title": "Box-Flächenfüllung Transparenz (Taste: O)",
@@ -68,6 +73,7 @@
     "hint_pan": "Pan"
   },
   "studio": {
+    "class_header": "Klasse:",
     "tab_objects": "Objekte",
     "tab_details": "Details",
     "tab_dataset": "Datensatz",
@@ -185,7 +191,21 @@
     "display": "Displays",
     "inductor": "Induktivitäten",
     "board": "Module / Platinen",
-    "other": "Sonstige"
+    "other": "Sonstige",
+    "ic_chip": "IC",
+    "resistor_chip": "Widerstand",
+    "capacitor_chip": "Kondensator",
+    "transistor_chip": "Transistor",
+    "diode_chip": "Diode",
+    "led_chip": "LED",
+    "connector_chip": "Stecker",
+    "switch_button_chip": "Schalter",
+    "potentiometer_chip": "Poti",
+    "relay_chip": "Relais",
+    "display_chip": "Display",
+    "inductor_chip": "Spule",
+    "board_chip": "Board",
+    "other_chip": "Other"
   },
   "gallery": {
     "title": "Dataset-Galerie",
@@ -212,9 +232,34 @@
     "split_train": "Train",
     "split_val": "Validierung",
     "split_test": "Test",
+    "split_all": "Alle",
     "batch_actions": "Stapelverarbeitung",
     "btn_delete_selected": "Auswahl löschen",
-    "items_selected": "{count} Bilder ausgewählt"
+    "items_selected": "{count} Bilder ausgewählt",
+    "loading": "Lade kuratierte Datensätze..."
+  },
+  "footer": {
+    "initializing": "Initialisiere Studio: Verbinde mit Backend...",
+    "connecting": "Verbinde...",
+    "checking": "Prüfe...",
+    "standby": "Standby",
+    "status_activity": "Status-Aktivität",
+    "backend_title": "Backend-Server Status",
+    "llm_title": "Aktives KI-Modell für Auto-Labeling (Klick öffnet Einstellungen)",
+    "ocr_title": "Aktive optische Zeichenerkennungs-Engine (Klick öffnet Einstellungen)",
+    "clip_title": "Lokales CLIP-Modell (Xenova) wird bei Bedarf on-demand geladen",
+    "studio_ready": "Studio einsatzbereit • Backend online ({samples} Samples, {boxes} Boxen) • {ms}ms",
+    "studio_ready_offline": "Studio einsatzbereit (Offline-Modus: Detektor & Tools aktiv) • {ms}ms"
+  },
+  "mobile": {
+    "photo": "Foto",
+    "photo_title": "Foto mit iPhone Kamera aufnehmen oder aus Galerie wählen",
+    "autolabel": "Auto-Label",
+    "autolabel_title": "Auto-Label mit KI-Modell ausführen",
+    "box": "Box",
+    "box_title": "Neue Box manuell zeichnen",
+    "save": "Speichern",
+    "save_title": "Sample speichern"
   },
   "import": {
     "title": "Bilder & Datensätze importieren",

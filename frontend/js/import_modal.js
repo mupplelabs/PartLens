@@ -389,13 +389,16 @@
         fetch('/api/dataset/stats')
             .then(r => r.json())
             .then(stats => {
+                const badgeText = typeof window.formatDatasetBadge === 'function'
+                    ? window.formatDatasetBadge(stats.train_images, stats.val_images, stats.total_annotations)
+                    : `Datensatz: ${stats.train_images} Train • ${stats.val_images} Val (${stats.total_annotations} Boxen)`;
                 const headerText = document.getElementById('header-dataset-text');
                 if (headerText) {
-                    headerText.innerText = `Datensatz: ${stats.train_images} Train • ${stats.val_images} Val (${stats.total_annotations} Boxen)`;
+                    headerText.innerText = badgeText;
                 } else {
                     const badge = document.getElementById('dataset-counter-badge');
                     if (badge) {
-                        badge.innerText = `Datensatz: ${stats.train_images} Train • ${stats.val_images} Val (${stats.total_annotations} Boxen)`;
+                        badge.innerText = badgeText;
                     }
                 }
             })

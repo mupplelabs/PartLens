@@ -493,7 +493,8 @@ if (quickSampleSelect) {
             sampleBtn.click();
         } else {
             if (previewImage.getAttribute('src') === val && previewImage.complete && previewImage.naturalWidth) {
-                resetStageZoomPan();
+                if (typeof fitImageToWorkspace === 'function') fitImageToWorkspace();
+                else resetStageZoomPan();
                 runStage0Detection();
             } else {
                 previewImage.src = val;

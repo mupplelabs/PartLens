@@ -227,10 +227,11 @@ tabUpload.addEventListener('click', () => {
     currentMode = 'upload';
     tabUpload.classList.add('active');
     tabWebcam.classList.remove('active');
-    uploadPanel.style.display = 'block';
+    uploadPanel.style.display = 'flex';
     webcamPanel.style.display = 'none';
     stopWebcam();
-    resetStageZoomPan();
+    if (typeof fitImageToWorkspace === 'function') fitImageToWorkspace();
+    else resetStageZoomPan();
     runStage0Detection();
 });
 
@@ -239,8 +240,9 @@ tabWebcam.addEventListener('click', async () => {
     tabWebcam.classList.add('active');
     tabUpload.classList.remove('active');
     uploadPanel.style.display = 'none';
-    webcamPanel.style.display = 'block';
-    resetStageZoomPan();
+    webcamPanel.style.display = 'flex';
+    if (typeof fitImageToWorkspace === 'function') fitImageToWorkspace();
+    else resetStageZoomPan();
     await startWebcam(cameraSelect.value || null);
 });
 
@@ -354,7 +356,8 @@ document.querySelectorAll('.sample-btn').forEach(btn => {
 });
 
 previewImage.addEventListener('load', async () => {
-    resetStageZoomPan();
+    if (typeof fitImageToWorkspace === 'function') fitImageToWorkspace();
+    else resetStageZoomPan();
     if (typeof suppressAutoStage0 !== 'undefined' && suppressAutoStage0) {
         if (typeof setStudioToolsState === 'function') {
             setStudioToolsState(true);

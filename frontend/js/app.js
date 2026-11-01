@@ -359,9 +359,18 @@ async function initStudioBackground() {
     }
 
     if (previewImage && previewImage.complete && previewImage.naturalWidth > 0) {
+        if (typeof fitImageToWorkspace === 'function') {
+            fitImageToWorkspace();
+        }
         if (typeof runStage0Detection === 'function') {
             runStage0Detection();
         }
+    } else if (previewImage) {
+        previewImage.addEventListener('load', () => {
+            if (typeof fitImageToWorkspace === 'function') {
+                fitImageToWorkspace();
+            }
+        }, { once: true });
     }
 
     // Fertig! Werkzeuge aktivieren & Bereit-Zustand melden
@@ -446,5 +455,11 @@ inspectorTabBtns.forEach(btn => {
 
 // Synchronize LLM configuration with server on startup
 if (typeof syncLlmSettingsWithServer === 'function') {
-syncLlmSettingsWithServer();
+    syncLlmSettingsWithServer();
+}
+
+// Initialer Workspace-Fit für zentrierte & formatfüllende Bild-Einpassung
+if (typeof fitImageToWorkspace === 'function') {
+    setTimeout(fitImageToWorkspace, 60);
+    setTimeout(fitImageToWorkspace, 300);
 }

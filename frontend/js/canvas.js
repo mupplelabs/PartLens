@@ -44,7 +44,51 @@ function fitImageToWorkspace() {
     stagePanX = 0;
     stagePanY = 0;
     isPanning = false;
+
+    const viewport = document.querySelector('.stage-viewport');
+    const { el: sourceEl, w: srcW, h: srcH, ready } = (typeof getActiveMediaSource === 'function') ? getActiveMediaSource() : { ready: false };
+
+    if (viewport && ready && srcW > 0 && srcH > 0) {
+        const vpRect = viewport.getBoundingClientRect();
+        const isMobile = window.innerWidth <= 768;
+        const padX = isMobile ? 12 : 24;
+        const padY = isMobile ? 12 : 24;
+        const availW = Math.max(100, (vpRect.width || viewport.clientWidth || 320) - padX);
+        const availH = Math.max(100, (vpRect.height || viewport.clientHeight || 240) - padY);
+
+        const fitScale = Math.min(availW / srcW, availH / srcH);
+        const fittedW = Math.max(40, Math.round(srcW * fitScale));
+        const fittedH = Math.max(40, Math.round(srcH * fitScale));
+
+        const activePanelId = (typeof currentMode !== 'undefined' && currentMode === 'webcam') ? '#webcam-panel' : '#upload-panel';
+        const wrap = document.querySelector(`${activePanelId} .image-stage-wrap`) || document.querySelector('.image-stage-wrap');
+        if (wrap) {
+            wrap.style.width = `${fittedW}px`;
+            wrap.style.height = `${fittedH}px`;
+            wrap.style.maxWidth = `${availW}px`;
+            wrap.style.maxHeight = `${availH}px`;
+        }
+
+        const activeImg = (typeof currentMode !== 'undefined' && currentMode === 'webcam') ? document.getElementById('webcam') : document.getElementById('preview-image');
+        if (activeImg) {
+            activeImg.style.width = '100%';
+            activeImg.style.height = '100%';
+            activeImg.style.maxWidth = '100%';
+            activeImg.style.maxHeight = '100%';
+            activeImg.style.objectFit = 'contain';
+        }
+
+        const activeOverlay = (typeof currentMode !== 'undefined' && currentMode === 'webcam') ? webcamBboxCanvas : bboxOverlayCanvas;
+        if (activeOverlay) {
+            activeOverlay.style.width = '100%';
+            activeOverlay.style.height = '100%';
+        }
+    }
+
     applyStageTransform();
+    if (typeof drawBboxOverlay === 'function') {
+        drawBboxOverlay();
+    }
 }
 
 function resetStageZoomPan() {
@@ -52,6 +96,17 @@ function resetStageZoomPan() {
 }
 window.fitImageToWorkspace = fitImageToWorkspace;
 window.resetStageZoomPan = resetStageZoomPan;
+
+// Automatisches Neu-Einpassen beim Resizen (z.B. iPhone Drehung oder DevTools Responsive Resizing)
+let resizeFitTimer = null;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeFitTimer);
+    resizeFitTimer = setTimeout(() => {
+        if (Math.abs(stageZoom - 1.0) < 0.05 && Math.abs(stagePanX) < 5 && Math.abs(stagePanY) < 5) {
+            fitImageToWorkspace();
+        }
+    }, 120);
+});
 
 function zoomAtPoint(deltaFactor, clientX, clientY) {
     const viewport = document.querySelector('.stage-viewport');
@@ -80,7 +135,7 @@ function bindOverlayCanvasInteractions(canvasEl) {
         if (e.pointerType === 'touch') {
             activeTouchPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
             if (activeTouchPointers.size === 2) {
-                isPanning = true;
+                isPanning = false;
                 const pts = Array.from(activeTouchPointers.values());
                 lastTouchDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
                 lastTouchCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
@@ -205,7 +260,7 @@ function bindOverlayCanvasInteractions(canvasEl) {
             }
         }
 
-        if (isPanning) {
+        if (isPanning && e.pointerType !== 'touch') {
             stagePanX = e.clientX - panStartX;
             stagePanY = e.clientY - panStartY;
             applyStageTransform();
@@ -502,6 +557,7 @@ if (stageViewportEl) {
         // Interaktive Steuerelemente (Buttons, Selects, Inputs, Toolbars) dürfen NICHT durch Pan abgefangen werden
         if (e.target && e.target.closest('button, select, input, label, a, #stage-zoom-bar, #autolabel-loading-overlay, #webcam-controls-bar, .webcam-controls-bar')) return;
         if (e.target && (e.target.tagName === 'CANVAS' || e.target.tagName === 'IMG' || e.target.tagName === 'VIDEO')) return;
+        if (e.pointerType === 'touch') return;
         if (e.button === 1 || isSpacePressed || isPanModeActive || (e.button === 0 && (e.target === stageViewportEl || e.target.id === 'upload-panel' || e.target.id === 'webcam-panel'))) {
             isPanning = true;
             panStartX = e.clientX - stagePanX;

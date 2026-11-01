@@ -708,15 +708,17 @@
         /* =====================================================================
            STUDIO INSPECTOR COLUMN (Right Side - CVAT / Roboflow Tabbed)
            ===================================================================== */
-        .studio-inspector {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            position: sticky;
-            top: 70px;
-            max-height: calc(100vh - 85px);
-            overflow-y: auto;
-            scrollbar-width: thin;
+        @media (min-width: 769px) {
+            .studio-inspector {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                position: sticky;
+                top: 70px;
+                max-height: calc(100vh - 85px);
+                overflow-y: auto;
+                scrollbar-width: thin;
+            }
         }
 
         /* Inspector Tab Navigation (CVAT / Roboflow Style) */

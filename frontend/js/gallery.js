@@ -38,6 +38,10 @@ function toggleSelectMode(force) {
     if (toggleBtn) {
         toggleBtn.classList.toggle('active', isSelectModeActive);
     }
+    const mobileDockSelect = document.getElementById('mobile-dock-select-btn');
+    if (mobileDockSelect) {
+        mobileDockSelect.classList.toggle('active', isSelectModeActive);
+    }
     if (toggleText) {
         toggleText.textContent = isSelectModeActive
             ? (window.t ? window.t('gallery.batch_cancel') : 'Done')
@@ -390,6 +394,30 @@ function renderGalleryClassFilters(samples) {
         });
         container.appendChild(pill);
     });
+
+    // Update Mobile Filter Trigger Button & Dock Button
+    const mobileTriggerBtn = document.getElementById('mobile-filter-trigger-btn');
+    const mobileTriggerLabel = document.getElementById('mobile-filter-trigger-label');
+    const mobileDockFilter = document.getElementById('mobile-dock-filter-btn');
+
+    if (mobileTriggerBtn && mobileTriggerLabel) {
+        if (currentGalleryClass === 'all') {
+            mobileTriggerLabel.textContent = window.t ? window.t('gallery.filter_btn') : 'Klassen: Alle';
+            mobileTriggerBtn.classList.remove('active');
+            mobileTriggerBtn.style.borderColor = '';
+            mobileTriggerBtn.style.color = '';
+        } else {
+            const count = classCounts[currentGalleryClass] || 0;
+            const color = getClassColor(currentGalleryClass);
+            mobileTriggerLabel.textContent = `${currentGalleryClass} (${count})`;
+            mobileTriggerBtn.classList.add('active');
+            mobileTriggerBtn.style.borderColor = color;
+            mobileTriggerBtn.style.color = color;
+        }
+    }
+    if (mobileDockFilter) {
+        mobileDockFilter.classList.toggle('primary', currentGalleryClass !== 'all');
+    }
 }
 
 let currentlySwipedElement = null;
@@ -1632,4 +1660,239 @@ window.addEventListener('languageChanged', () => {
         loadAnalyticsView();
     }
 });
+
+
+// =====================================================================
+// MOBILE GALLERY FILTER MODAL / BOTTOM SHEET
+// =====================================================================
+const galleryFilterModal = document.getElementById('gallery-filter-modal');
+const closeFilterModalBtn = document.getElementById('btn-close-gallery-filter');
+const resetFilterModalBtn = document.getElementById('btn-reset-gallery-filter');
+const applyFilterModalBtn = document.getElementById('btn-apply-gallery-filter');
+const mobileFilterTriggerBtn = document.getElementById('mobile-filter-trigger-btn');
+
+let tempModalSplit = currentGallerySplit;
+let tempModalClass = currentGalleryClass;
+
+function openGalleryFilterModal() {
+    if (!galleryFilterModal) return;
+    tempModalSplit = currentGallerySplit;
+    tempModalClass = currentGalleryClass;
+
+    // 1. Sync Split Buttons in Modal
+    const splitBtns = galleryFilterModal.querySelectorAll('.modal-split-btn');
+    splitBtns.forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-split') === tempModalSplit);
+    });
+
+    // 2. Render Modal Classes Grid
+    renderModalClassesGrid();
+
+    galleryFilterModal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeGalleryFilterModal() {
+    if (!galleryFilterModal) return;
+    galleryFilterModal.style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+function renderModalClassesGrid() {
+    const grid = document.getElementById('modal-classes-grid');
+    const badge = document.getElementById('modal-class-count-badge');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+
+    // Zähle Vorkommen jeder Klasse
+    const classCounts = {};
+    (cachedGallerySamples || []).forEach(s => {
+        (s.classes || []).forEach(c => {
+            const countInSample = (s.boxes || []).filter(b => b.label === c).length || 1;
+            classCounts[c] = (classCounts[c] || 0) + countInSample;
+        });
+    });
+
+    const classes = Object.keys(classCounts).sort();
+    if (badge) {
+        badge.textContent = `${classes.length} Klassen`;
+    }
+
+    // "Alle" Chip
+    const allChip = document.createElement('div');
+    allChip.className = `modal-class-chip ${tempModalClass === 'all' ? 'active' : ''}`;
+    const allLabel = window.t ? window.t('gallery.select_all') : 'Alle';
+    allChip.innerHTML = `
+        <div class="modal-class-chip-label">
+            <span class="modal-class-chip-dot" style="background: #38bdf8;"></span>
+            <span>${allLabel}</span>
+        </div>
+        <span class="badge-pill">${cachedGallerySamples ? cachedGallerySamples.length : 0}</span>
+    `;
+    allChip.addEventListener('click', () => {
+        tempModalClass = 'all';
+        grid.querySelectorAll('.modal-class-chip').forEach(c => c.classList.remove('active'));
+        allChip.classList.add('active');
+    });
+    grid.appendChild(allChip);
+
+    // Klassen Chips
+    classes.forEach(c => {
+        const chip = document.createElement('div');
+        chip.className = `modal-class-chip ${tempModalClass === c ? 'active' : ''}`;
+        const color = getClassColor(c);
+        chip.innerHTML = `
+            <div class="modal-class-chip-label">
+                <span class="modal-class-chip-dot" style="background: ${color};"></span>
+                <span>${c}</span>
+            </div>
+            <span class="badge-pill" style="border-color: ${color};">${classCounts[c]}</span>
+        `;
+        chip.addEventListener('click', () => {
+            tempModalClass = (tempModalClass === c) ? 'all' : c;
+            grid.querySelectorAll('.modal-class-chip').forEach(el => el.classList.remove('active'));
+            if (tempModalClass === c) {
+                chip.classList.add('active');
+            } else {
+                allChip.classList.add('active');
+            }
+        });
+        grid.appendChild(chip);
+    });
+}
+
+// Split Button Clicks in Modal
+if (galleryFilterModal) {
+    const splitBtns = galleryFilterModal.querySelectorAll('.modal-split-btn');
+    splitBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            splitBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            tempModalSplit = btn.getAttribute('data-split');
+        });
+    });
+}
+
+if (closeFilterModalBtn) closeFilterModalBtn.addEventListener('click', closeGalleryFilterModal);
+if (galleryFilterModal) {
+    galleryFilterModal.addEventListener('click', (e) => {
+        if (e.target === galleryFilterModal) closeGalleryFilterModal();
+    });
+}
+
+if (resetFilterModalBtn) {
+    resetFilterModalBtn.addEventListener('click', () => {
+        tempModalSplit = 'all';
+        tempModalClass = 'all';
+        currentGallerySplit = 'all';
+        currentGalleryClass = 'all';
+        document.querySelectorAll('.gallery-split-btn').forEach(b => {
+            b.classList.toggle('active', b.getAttribute('data-split') === 'all');
+        });
+        galleryCurrentPage = 1;
+        renderGalleryClassFilters(cachedGallerySamples);
+        renderFilteredGallery();
+        closeGalleryFilterModal();
+    });
+}
+
+if (applyFilterModalBtn) {
+    applyFilterModalBtn.addEventListener('click', () => {
+        currentGallerySplit = tempModalSplit;
+        currentGalleryClass = tempModalClass;
+        document.querySelectorAll('.gallery-split-btn').forEach(b => {
+            b.classList.toggle('active', b.getAttribute('data-split') === currentGallerySplit);
+        });
+        galleryCurrentPage = 1;
+        renderGalleryClassFilters(cachedGallerySamples);
+        renderFilteredGallery();
+        closeGalleryFilterModal();
+    });
+}
+
+if (mobileFilterTriggerBtn) {
+    mobileFilterTriggerBtn.addEventListener('click', openGalleryFilterModal);
+}
+
+window.openGalleryFilterModal = openGalleryFilterModal;
+window.closeGalleryFilterModal = closeGalleryFilterModal;
+
+
+// =====================================================================
+// PULL-TO-REFRESH IMPLEMENTATION (Mobile Swipe-Down)
+// =====================================================================
+(function initPullToRefresh() {
+    let touchStartY = 0;
+    let isPulling = false;
+    let isRefreshing = false;
+
+    const pullIndicator = document.getElementById('gallery-pull-indicator');
+    const pullText = pullIndicator?.querySelector('.pull-refresh-text');
+    const pullSpinner = pullIndicator?.querySelector('.pull-refresh-spinner');
+
+    if (!pullIndicator) return;
+
+    window.addEventListener('touchstart', (e) => {
+        if (!document.body.classList.contains('view-dataset-active')) return;
+        if (window.scrollY <= 2 && e.touches.length === 1 && !isRefreshing) {
+            touchStartY = e.touches[0].clientY;
+            isPulling = true;
+        } else {
+            isPulling = false;
+        }
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+        if (!isPulling || isRefreshing) return;
+        const currentY = e.touches[0].clientY;
+        const diff = currentY - touchStartY;
+        if (diff > 0 && window.scrollY <= 2) {
+            const pullDistance = Math.min(diff * 0.45, 65);
+            pullIndicator.style.height = `${pullDistance}px`;
+            pullIndicator.style.opacity = Math.min(pullDistance / 35, 1);
+            if (pullSpinner) {
+                pullSpinner.style.transform = `rotate(${pullDistance * 5}deg)`;
+            }
+            if (pullText) {
+                pullText.textContent = pullDistance >= 45
+                    ? (window.t ? window.t('mobile.pull_release') : 'Loslassen zum Aktualisieren...')
+                    : (window.t ? window.t('mobile.pull_down') : 'Nach unten ziehen zum Aktualisieren');
+            }
+        } else {
+            pullIndicator.style.height = '0px';
+        }
+    }, { passive: true });
+
+    window.addEventListener('touchend', async () => {
+        if (!isPulling || isRefreshing) return;
+        isPulling = false;
+        const currentHeight = parseFloat(pullIndicator.style.height || 0);
+        if (currentHeight >= 40) {
+            isRefreshing = true;
+            pullIndicator.classList.add('refreshing');
+            pullIndicator.style.height = '38px';
+            if (pullText) {
+                pullText.textContent = window.t ? window.t('mobile.pull_refreshing') : 'Aktualisiere...';
+            }
+            try {
+                await loadDatasetGallery(true);
+            } catch (err) {
+                console.error('Pull to refresh failed:', err);
+            } finally {
+                setTimeout(() => {
+                    pullIndicator.style.height = '0px';
+                    pullIndicator.style.opacity = '0';
+                    pullIndicator.classList.remove('refreshing');
+                    if (pullSpinner) pullSpinner.style.transform = '';
+                    isRefreshing = false;
+                }, 350);
+            }
+        } else {
+            pullIndicator.style.height = '0px';
+            pullIndicator.style.opacity = '0';
+        }
+    }, { passive: true });
+})();
+
 

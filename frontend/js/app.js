@@ -25,6 +25,9 @@ const navTabs = [
 
 function switchAppView(targetBtn) {
     document.body.classList.toggle('view-studio-active', targetBtn === navStudioBtn);
+    document.body.classList.toggle('view-dataset-active', targetBtn === navDatasetBtn);
+    document.body.classList.toggle('view-analytics-active', targetBtn === navAnalyticsBtn);
+    document.body.classList.toggle('view-settings-active', targetBtn === navSettingsBtn);
     navTabs.forEach(({ btn, view, onOpen }) => {
         if (btn === targetBtn) {
             btn?.classList.add('active');
@@ -88,6 +91,43 @@ if (mobileAddBoxBtn && addManualBoxBtn) {
 }
 if (mobileSaveBtn && saveDatasetBtn) {
     mobileSaveBtn.addEventListener('click', () => saveDatasetBtn.click());
+}
+
+// Mobile Dock Gallery Handlers
+const mobileDockImportBtn = document.getElementById('mobile-dock-import-btn');
+const mobileDockFilterBtn = document.getElementById('mobile-dock-filter-btn');
+const mobileDockSelectBtn = document.getElementById('mobile-dock-select-btn');
+const mobileDockExportBtn = document.getElementById('mobile-dock-export-btn');
+
+if (mobileDockImportBtn) {
+    mobileDockImportBtn.addEventListener('click', () => {
+        const importBtn = document.getElementById('open-import-modal-btn');
+        if (importBtn) importBtn.click();
+    });
+}
+
+if (mobileDockFilterBtn) {
+    mobileDockFilterBtn.addEventListener('click', () => {
+        if (typeof openGalleryFilterModal === 'function') {
+            openGalleryFilterModal();
+        }
+    });
+}
+
+if (mobileDockSelectBtn) {
+    mobileDockSelectBtn.addEventListener('click', () => {
+        const toggleBtn = document.getElementById('toggle-select-mode-btn');
+        if (toggleBtn) toggleBtn.click();
+        mobileDockSelectBtn.classList.toggle('active', document.body.classList.contains('dataset-select-mode-active'));
+    });
+}
+
+if (mobileDockExportBtn) {
+    mobileDockExportBtn.addEventListener('click', () => {
+        if (typeof openExportSheet === 'function') {
+            openExportSheet();
+        }
+    });
 }
 
 

@@ -18,12 +18,12 @@
         })();
     </script>
     <title>PartLens – Visual Part-DB & YOLO Studio</title>
-    <link rel="stylesheet" href="/frontend/css/base.css?v=2.5.0">
-    <link rel="stylesheet" href="/frontend/css/layout.css?v=2.5.0">
-    <link rel="stylesheet" href="/frontend/css/components.css?v=2.5.0">
-    <link rel="stylesheet" href="/frontend/css/studio.css?v=2.5.0">
-    <link rel="stylesheet" href="/frontend/css/gallery.css?v=2.5.0">
-    <link rel="stylesheet" href="/frontend/css/modals.css?v=2.5.0">
+    <link rel="stylesheet" href="/frontend/css/base.css?v=2.6.0">
+    <link rel="stylesheet" href="/frontend/css/layout.css?v=2.6.0">
+    <link rel="stylesheet" href="/frontend/css/components.css?v=2.6.0">
+    <link rel="stylesheet" href="/frontend/css/studio.css?v=2.6.0">
+    <link rel="stylesheet" href="/frontend/css/gallery.css?v=2.6.0">
+    <link rel="stylesheet" href="/frontend/css/modals.css?v=2.6.0">
 </head>
 <body class="view-studio-active">
 
@@ -781,6 +781,16 @@
              VIEW 2: DATENSATZ-GALERIE (Labellerr & Dataloop Style)
              ===================================================================== -->
         <section id="view-dataset" class="app-view">
+            <!-- Pull-to-Refresh Indicator (Mobile) -->
+            <div id="gallery-pull-indicator" class="pull-refresh-indicator">
+                <div class="pull-refresh-content">
+                    <svg class="pull-refresh-spinner" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                    </svg>
+                    <span class="pull-refresh-text" data-i18n="mobile.pull_down">Nach unten ziehen zum Aktualisieren</span>
+                </div>
+            </div>
+
             <!-- Header Row mit Suche, Kachel-Zoom & Aktionen (Labellerr Style) -->
             <div class="dataset-top-header">
                 <div class="dataset-title-block">
@@ -877,10 +887,16 @@
                     <button class="btn-filter-pill gallery-split-btn" data-split="val" type="button"><span class="chip-dot" style="width:7px; height:7px; border-radius:50%; background:#3b82f6; display:inline-block; margin-right:4px;"></span>Val</button>
                 </div>
 
-                <div class="filter-divider"></div>
+                <!-- Mobile Filter Trigger Button (nur auf Mobile sichtbar) -->
+                <button type="button" class="btn btn-tool mobile-filter-trigger-btn" id="mobile-filter-trigger-btn" title="Filter für Bauteilklassen öffnen" data-i18n-title="mobile.filter_title">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                    <span id="mobile-filter-trigger-label" data-i18n="gallery.filter_btn">Klassen: Alle</span>
+                </button>
 
-                <!-- Dynamische Klassen-Chips -->
-                <div class="filter-classes-scroll" id="gallery-classes-scroll">
+                <div class="filter-divider desktop-only-flex"></div>
+
+                <!-- Dynamische Klassen-Chips (Desktop) -->
+                <div class="filter-classes-scroll desktop-only-flex" id="gallery-classes-scroll">
                     <!-- Wird dynamisch mit klickbaren Klassen-Filter-Pills befüllt: z.B. [ic_dip (36)] [resistor (0)] -->
                 </div>
             </div>
@@ -1156,7 +1172,8 @@
          IPHONE 16 PRO MOBILE STICKY BOTTOM ACTION DOCK (Thumb Zone)
          ===================================================================== -->
     <div class="mobile-dock">
-        <div class="mobile-dock-inner">
+        <!-- Studio Mode Dock -->
+        <div class="mobile-dock-inner mobile-dock-studio">
             <button id="mobile-photo-btn" class="dock-btn" type="button" title="Foto mit iPhone Kamera aufnehmen oder aus Galerie wählen" data-i18n-title="mobile.photo_title">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                 <span data-i18n="mobile.photo">Foto</span>
@@ -1174,6 +1191,27 @@
                 <span data-i18n="mobile.save">Speichern</span>
             </button>
         </div>
+
+        <!-- Dataset Gallery Mode Dock -->
+        <div class="mobile-dock-inner mobile-dock-gallery" style="display: none;">
+            <button id="mobile-dock-import-btn" class="dock-btn" type="button" title="Datensatz importieren (Roboflow / Mendeley)" data-i18n-title="mobile.import_title">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span data-i18n="mobile.import">Import</span>
+            </button>
+            <button id="mobile-dock-filter-btn" class="dock-btn" type="button" title="Filter für Split und Bauteilklassen öffnen" data-i18n-title="mobile.filter_title">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                <span data-i18n="mobile.filter">Filter</span>
+            </button>
+            <button id="mobile-dock-select-btn" class="dock-btn" type="button" title="Mehrfachauswahl aktivieren / beenden" data-i18n-title="mobile.select_title">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                <span data-i18n="mobile.select">Auswahl</span>
+            </button>
+            <button id="mobile-dock-export-btn" class="dock-btn primary" type="button" title="Datensatz als ZIP herunterladen (YOLO / COCO)" data-i18n-title="mobile.export_title">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span data-i18n="mobile.export">Export</span>
+            </button>
+        </div>
+
         <!-- Verstecktes Datei-Input für iOS Kameraaufnahme & Mediathek-Auswahl -->
         <input type="file" id="camera-file-input" accept="image/*" style="display: none;" />
     </div>
@@ -1381,21 +1419,115 @@
         </div>
     </div>
 
+    <!-- =====================================================================
+         EXPORT ACTION SHEET / MODAL (Mobile & Desktop)
+         ===================================================================== -->
+    <div id="export-action-sheet" class="app-modal-overlay" style="display: none;">
+        <div class="app-modal-container export-sheet-container" style="max-width: 440px;">
+            <div class="app-modal-header">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <h3 class="modal-title" data-i18n="export.title">Format wählen</h3>
+                </div>
+                <button type="button" class="btn-modal-close" id="btn-close-export-sheet" aria-label="Schließen">✕</button>
+            </div>
+            <div class="app-modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0 0 4px 0;" data-i18n="export.sheet_desc">Wähle das gewünschte Format für den Download des annotierten Datensatzes:</p>
+                
+                <a href="/api/dataset/export-zip?format=yolo" download="component_dataset_yolo.zip" class="export-format-card" id="btn-export-yolo-card">
+                    <div class="export-format-icon">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    </div>
+                    <div class="export-format-details">
+                        <div class="export-format-title-row">
+                            <span class="export-format-name" data-i18n="export.yolo_title">YOLO Format</span>
+                            <span class="badge-pill accent">.ZIP</span>
+                        </div>
+                        <span class="export-format-desc" data-i18n="export.yolo_sub">Bilder, labels/*.txt, data.yaml</span>
+                    </div>
+                </a>
+
+                <a href="/api/dataset/export-zip?format=coco" download="component_dataset_coco.zip" class="export-format-card" id="btn-export-coco-card">
+                    <div class="export-format-icon">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+                    </div>
+                    <div class="export-format-details">
+                        <div class="export-format-title-row">
+                            <span class="export-format-name" data-i18n="export.coco_title">COCO Format</span>
+                            <span class="badge-pill accent">.ZIP</span>
+                        </div>
+                        <span class="export-format-desc" data-i18n="export.coco_sub">instances_train/val.json, Pixel BBoxes</span>
+                    </div>
+                </a>
+            </div>
+            <div class="app-modal-footer">
+                <button type="button" class="btn btn-secondary" id="btn-cancel-export-sheet" data-i18n="export.close_btn" style="width: 100%;">Schließen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         DATASET GALLERY FILTER MODAL / BOTTOM SHEET (Mobile & Quick Access)
+         ===================================================================== -->
+    <div id="gallery-filter-modal" class="app-modal-overlay" style="display: none;">
+        <div class="app-modal-container gallery-filter-modal-container" style="max-width: 480px;">
+            <div class="app-modal-header">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                    <h3 class="modal-title" data-i18n="gallery.filter_modal_title">Filter</h3>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button type="button" class="btn btn-tool" id="btn-reset-gallery-filter" style="font-size: 0.72rem; padding: 4px 8px;" data-i18n="gallery.filter_reset">Zurücksetzen</button>
+                    <button type="button" class="btn-modal-close" id="btn-close-gallery-filter" aria-label="Schließen">✕</button>
+                </div>
+            </div>
+            <div class="app-modal-body" style="padding: 14px; max-height: 65vh; overflow-y: auto;">
+                <!-- Split Filter -->
+                <div style="margin-bottom: 16px;">
+                    <div style="font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;" data-i18n="gallery.filter_split_title">
+                        Split-Bereich
+                    </div>
+                    <div class="modal-split-buttons" id="modal-split-group" style="display: flex; gap: 6px;">
+                        <button type="button" class="modal-split-btn active" data-split="all" data-i18n="gallery.split_all">Alle</button>
+                        <button type="button" class="modal-split-btn" data-split="train"><span class="chip-dot" style="width:7px; height:7px; border-radius:50%; background:#22c55e; display:inline-block; margin-right:4px;"></span>Train</button>
+                        <button type="button" class="modal-split-btn" data-split="val"><span class="chip-dot" style="width:7px; height:7px; border-radius:50%; background:#3b82f6; display:inline-block; margin-right:4px;"></span>Val</button>
+                    </div>
+                </div>
+
+                <!-- Klassen Filter -->
+                <div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;" data-i18n="gallery.filter_classes_title">
+                            Bauteil-Kategorie
+                        </span>
+                        <span id="modal-class-count-badge" class="badge-pill">0 Klassen</span>
+                    </div>
+                    <div id="modal-classes-grid" class="modal-classes-grid">
+                        <!-- Dynamisch befüllt mit Klassen-Chips -->
+                    </div>
+                </div>
+            </div>
+            <div class="app-modal-footer" style="padding: 10px 14px;">
+                <button type="button" class="btn btn-primary" id="btn-apply-gallery-filter" style="width: 100%; font-weight: 700;" data-i18n="gallery.filter_apply">Filter anwenden</button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- PartLens Modular Scripts -->
-    <script src="/frontend/js/i18n.js?v=2.5.0"></script>
-    <script src="/frontend/js/state.js?v=2.5.0"></script>
-    <script src="/frontend/js/api.js?v=2.5.0"></script>
-    <script src="/frontend/js/analysis.js?v=2.5.0"></script>
-    <script src="/frontend/js/resistor.js?v=2.5.0"></script>
-    <script src="/frontend/js/canvas.js?v=2.5.0"></script>
-    <script src="/frontend/js/boxes.js?v=2.5.0"></script>
-    <script src="/frontend/js/footprints.js?v=2.5.0"></script>
-    <script src="/frontend/js/autolabel.js?v=2.5.0"></script>
-    <script src="/frontend/js/gallery.js?v=2.5.0"></script>
-    <script src="/frontend/js/import_modal.js?v=2.5.0"></script>
-    <script src="/frontend/js/export.js?v=2.5.0"></script>
-    <script src="/frontend/js/webcam.js?v=2.5.0"></script>
-    <script src="/frontend/js/app.js?v=2.5.0"></script>
+    <script src="/frontend/js/i18n.js?v=2.6.0"></script>
+    <script src="/frontend/js/state.js?v=2.6.0"></script>
+    <script src="/frontend/js/api.js?v=2.6.0"></script>
+    <script src="/frontend/js/analysis.js?v=2.6.0"></script>
+    <script src="/frontend/js/resistor.js?v=2.6.0"></script>
+    <script src="/frontend/js/canvas.js?v=2.6.0"></script>
+    <script src="/frontend/js/boxes.js?v=2.6.0"></script>
+    <script src="/frontend/js/footprints.js?v=2.6.0"></script>
+    <script src="/frontend/js/autolabel.js?v=2.6.0"></script>
+    <script src="/frontend/js/gallery.js?v=2.6.0"></script>
+    <script src="/frontend/js/import_modal.js?v=2.6.0"></script>
+    <script src="/frontend/js/export.js?v=2.6.0"></script>
+    <script src="/frontend/js/webcam.js?v=2.6.0"></script>
+    <script src="/frontend/js/app.js?v=2.6.0"></script>
 </body>
 </html>

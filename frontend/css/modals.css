@@ -160,7 +160,7 @@
             overflow-y: auto;
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
-            background: #070b14;
+            background: var(--bg-editor);
         }
         .import-mapping-table {
             width: 100%;
@@ -170,8 +170,8 @@
         .import-mapping-table th {
             text-align: left;
             padding: 6px 10px;
-            background: rgba(255, 255, 255, 0.04);
-            color: var(--muted);
+            background: var(--surface-elevated);
+            color: var(--text-secondary);
             font-weight: 700;
             border-bottom: 1px solid var(--border);
             position: sticky;
@@ -180,16 +180,31 @@
         }
         .import-mapping-table td {
             padding: 6px 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text);
         }
         .import-mapping-select {
-            background: #0e1526;
+            background: var(--surface);
             border: 1px solid var(--border);
             color: var(--text);
-            padding: 3px 6px;
+            padding: 4px 8px;
             border-radius: var(--radius-sm);
             font-size: 0.75rem;
             width: 100%;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .import-mapping-select:focus {
+            border-color: var(--primary);
+        }
+        .import-source-badge {
+            font-size: 0.72rem;
+            padding: 2px 7px;
+            border-radius: 4px;
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            font-weight: 700;
+            white-space: nowrap;
         }
         .import-progress-bar-wrap {
             width: 100%;
@@ -209,7 +224,7 @@
             justify-content: center;
             gap: 24px;
             padding: 12px;
-            background: rgba(255, 255, 255, 0.03);
+            background: var(--surface-elevated);
             border-radius: var(--radius-md);
             border: 1px solid var(--border);
         }
@@ -448,5 +463,73 @@
         [data-theme="light"] #fp-picker-search:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.18);
+        }
+
+        /* Light Mode Overrides for Dataset Import Modal */
+        [data-theme="light"] .import-source-card {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+        [data-theme="light"] .import-source-card:hover {
+            border-color: #0284c7;
+            background: #f8fafc;
+        }
+        [data-theme="light"] .import-source-card.selected {
+            border-color: #0284c7;
+            background: #f0f9ff;
+            box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.22);
+        }
+        [data-theme="light"] .import-radio-card {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+        [data-theme="light"] .import-radio-card:hover {
+            border-color: #94a3b8;
+            background: #f8fafc;
+        }
+        [data-theme="light"] .import-radio-card.active {
+            border-color: #0284c7;
+            background: #f0f9ff;
+            box-shadow: 0 0 0 1px #0284c7;
+        }
+        [data-theme="light"] .import-mapping-table-scroll {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+        [data-theme="light"] .import-mapping-table th {
+            background: #f1f5f9;
+            color: #475569;
+            border-bottom-color: #cbd5e1;
+        }
+        [data-theme="light"] .import-mapping-table td {
+            border-bottom-color: #e2e8f0;
+            color: #1e293b;
+        }
+        [data-theme="light"] .import-mapping-select {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            color: #0f172a;
+        }
+        [data-theme="light"] .import-mapping-select:focus {
+            border-color: #0284c7;
+            box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.18);
+        }
+        [data-theme="light"] .import-progress-bar-wrap {
+            background: #e2e8f0;
+        }
+        [data-theme="light"] .import-stats-box {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+        [data-theme="light"] .import-stat-item .stat-num.accent {
+            color: #0284c7;
+        }
+        [data-theme="light"] #import-progress-status {
+            color: #0284c7;
+        }
+        [data-theme="light"] #import-sources-loading {
+            color: #0284c7;
         }
 

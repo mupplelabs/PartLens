@@ -61,7 +61,10 @@
     // Modal schließen
     function closeModal() {
         if (isImporting) {
-            if (!confirm('Der Import läuft im Hintergrund weiter. Möchten Sie dieses Fenster schließen?')) {
+            const confirmMsg = window.t
+                ? window.t('import.confirm_background_close')
+                : 'Der Import läuft im Hintergrund weiter. Möchten Sie dieses Fenster schließen?';
+            if (!confirm(confirmMsg)) {
                 return;
             }
         }
@@ -129,9 +132,12 @@
     function renderSourcesCards() {
         if (!sourcesGrid) return;
         if (availableSources.length === 0) {
+            const emptyMsg = window.t
+                ? window.t('import.no_sources_found')
+                : 'Keine Datensätze in external_datasets/ gefunden.';
             sourcesGrid.innerHTML = `
                 <div style="grid-column: 1 / -1; padding: 16px; text-align: center; color: var(--muted); font-size: 0.8rem;">
-                    Keine Datensätze in external_datasets/ gefunden.
+                    ${emptyMsg}
                 </div>
             `;
             if (startBtn) startBtn.disabled = true;
@@ -153,6 +159,10 @@
                 ? `<span style="font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: rgba(168, 85, 247, 0.18); color: #c084fc; font-weight: 800; border: 1px solid rgba(168, 85, 247, 0.35); text-transform: uppercase;">COCO</span>`
                 : `<span style="font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: rgba(16, 185, 129, 0.18); color: #34d399; font-weight: 800; border: 1px solid rgba(16, 185, 129, 0.35); text-transform: uppercase;">YOLO</span>`;
 
+            const imagesBadgeText = window.t
+                ? window.t('import.images_badge', { count: src.total_images })
+                : `${src.total_images} Bilder`;
+
             return `
                 <div class="import-source-card ${isSelected ? 'selected' : ''}" data-source-id="${src.id}">
                     <div class="import-source-header">
@@ -160,8 +170,8 @@
                             ${fmtBadge}
                             <span style="font-weight: 700; font-size: 0.84rem; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${src.name}</span>
                         </div>
-                        <span style="font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-weight: 700; white-space: nowrap;">
-                            ${src.total_images} Bilder
+                        <span class="import-source-badge">
+                            ${imagesBadgeText}
                         </span>
                     </div>
                     <div style="font-size: 0.7rem; color: var(--muted);">${splitText} · ${src.classes ? src.classes.length : 0} ${window.t ? window.t('import.classes_suffix') : 'Klassen'}</div>
@@ -278,7 +288,7 @@
 
             try {
                 startBtn.disabled = true;
-                if (footerHint) footerHint.innerText = 'Starte Import im Hintergrund...';
+                if (footerHint) footerHint.innerText = window.t ? window.t('import.starting_bg') : 'Starte Import im Hintergrund...';
 
                 const res = await fetch('/api/dataset/import/start', {
                     method: 'POST',
@@ -426,5 +436,13 @@
             })
             .catch(() => {});
     }
+
+    // Sofortige Neu-Übersetzung bei Sprachwechsel
+    window.addEventListener('languageChanged', () => {
+        if (availableSources && availableSources.length > 0) {
+            renderSourcesCards();
+            renderMappingTable();
+        }
+    });
 })();
 

@@ -383,6 +383,7 @@
   },
   "import": {
     "title": "Import Images & Datasets",
+    "subtitle": "Scan, map & integrate Mendeley & Roboflow datasets as YOLO samples",
     "step_source": "1. Select Data Source",
     "scan_dir": "Scanning directory...",
     "sources_loading": "Loading available sources from external_datasets/...",
@@ -423,7 +424,11 @@
     "importing_status": "Importing {dataset}{file}... {pct}%",
     "completed_status": "Import completed ({images} images, {boxes} boxes)",
     "aborted_status": "Import canceled ({images} images imported)",
-    "btn_background": "In Background"
+    "btn_background": "In Background",
+    "images_badge": "{count} Images",
+    "no_sources_found": "No datasets found in external_datasets/.",
+    "starting_bg": "Starting import in background...",
+    "confirm_background_close": "Import continues in the background. Do you want to close this window?"
   },
   "export": {
     "title": "Select Format",

@@ -32,6 +32,17 @@
             border-color: var(--border-hover);
             color: var(--text-bright);
         }
+        .btn-accent {
+            background: #0284c7;
+            border-color: #0284c7;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        .btn-accent:hover:not(:disabled) {
+            background: #0369a1;
+            border-color: #0369a1;
+            color: #ffffff;
+        }
 
         .btn-ocr {
             background: var(--purple);

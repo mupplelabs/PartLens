@@ -383,6 +383,7 @@
   },
   "import": {
     "title": "Bilder & Datensätze importieren",
+    "subtitle": "Mendeley- & Roboflow-Datensätze scannen, mappen & als YOLO-Samples integrieren",
     "step_source": "1. Datenquelle wählen",
     "scan_dir": "Scanne Verzeichnis...",
     "sources_loading": "Lade verfügbare Quellen aus external_datasets/...",
@@ -423,7 +424,11 @@
     "importing_status": "Importiere {dataset}{file}... {pct}%",
     "completed_status": "Import abgeschlossen ({images} Bilder, {boxes} Boxen)",
     "aborted_status": "Import abgebrochen ({images} Bilder übernommen)",
-    "btn_background": "Im Hintergrund"
+    "btn_background": "Im Hintergrund",
+    "images_badge": "{count} Bilder",
+    "no_sources_found": "Keine Datensätze in external_datasets/ gefunden.",
+    "starting_bg": "Starte Import im Hintergrund...",
+    "confirm_background_close": "Der Import läuft im Hintergrund weiter. Möchten Sie dieses Fenster schließen?"
   },
   "export": {
     "title": "Format wählen",

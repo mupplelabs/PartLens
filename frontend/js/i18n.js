@@ -26,7 +26,7 @@
     // 2. Load Translations for Language
     async function loadTranslations(lang) {
         try {
-            const res = await fetch(`/frontend/locales/${lang}.json?v=2.8.5`);
+            const res = await fetch(`/frontend/locales/${lang}.json?v=2.8.6`);
             if (res.ok) {
                 return await res.json();
             }

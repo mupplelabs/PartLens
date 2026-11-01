@@ -2,6 +2,7 @@ path: /Users/stephan/Documents/Antigravity/ComponentTracker/dataset
 train: images/train
 val: images/val
 
+nc: 20
 names:
   0: resistor
   1: capacitor
@@ -15,5 +16,11 @@ names:
   9: relay
   10: connector
   11: display
-  12: board
-  13: other
+  12: board_mcu_stick
+  13: board_mini_stamp
+  14: board_standard
+  15: board_module
+  16: oscillator
+  17: motor_actuator
+  18: speaker_buzzer
+  19: other

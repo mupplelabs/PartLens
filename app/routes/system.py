@@ -16,6 +16,14 @@ async def status():
         "llm_settings": llm_settings
     }
 
+@router.get("/classes")
+async def get_classes():
+    return {
+        "nc": len(CLASS_NAMES),
+        "classes": CLASS_NAMES,
+        "class_to_id": {name: idx for idx, name in enumerate(CLASS_NAMES)}
+    }
+
 @router.get("/health")
 async def health():
     return {"status": "healthy"}

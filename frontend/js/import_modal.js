@@ -31,7 +31,9 @@
     let targetClassesList = [
         'resistor', 'capacitor', 'inductor', 'diode', 'led', 
         'transistor', 'ic', 'potentiometer', 'switch_button', 
-        'relay', 'connector', 'display', 'board', 'other'
+        'relay', 'connector', 'display', 'board_mcu_stick',
+        'board_mini_stamp', 'board_standard', 'board_module',
+        'oscillator', 'motor_actuator', 'speaker_buzzer', 'other'
     ];
     let selectedSourceId = 'mendeley';
     let activeMappings = {}; // sourceId -> { rawClass: targetClass }

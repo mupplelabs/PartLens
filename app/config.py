@@ -30,8 +30,9 @@ FOOTPRINTS_CDN_FALLBACK = "https://cdn.jsdelivr.net/gh/Part-DB/kicad-footprint-i
 # Optional legacy Part-DB URL from environment (fallback if set)
 PARTDB_BASE_URL = os.environ.get("PARTDB_URL", "")
 
-# Standard 14 YOLO classes aligned with Part-DB
-CLASS_NAMES = [
+CLASSES_CONFIG_FILE = CONFIG_DIR / "classes.yaml"
+
+DEFAULT_CLASS_NAMES = [
     "resistor",         # 0
     "capacitor",        # 1
     "inductor",         # 2
@@ -44,10 +45,42 @@ CLASS_NAMES = [
     "relay",            # 9
     "connector",        # 10
     "display",          # 11
-    "board",            # 12
-    "other"             # 13
+    "board_mcu_stick",  # 12
+    "board_mini_stamp", # 13
+    "board_standard",   # 14
+    "board_module",     # 15
+    "oscillator",       # 16
+    "motor_actuator",   # 17
+    "speaker_buzzer",   # 18
+    "other"             # 19
 ]
+
+def load_class_names() -> list[str]:
+    """Laedt Klassennamen dynamisch aus config/classes.yaml oder liefert Standard-Klassen."""
+    if CLASSES_CONFIG_FILE.exists():
+        try:
+            import yaml
+            with open(CLASSES_CONFIG_FILE, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f)
+                if isinstance(data, dict) and "names" in data:
+                    names_data = data["names"]
+                    if isinstance(names_data, dict):
+                        sorted_items = sorted(names_data.items(), key=lambda x: int(x[0]))
+                        return [str(v).split("#")[0].strip() for _, v in sorted_items]
+                    elif isinstance(names_data, list):
+                        return [str(v).split("#")[0].strip() for v in names_data]
+        except Exception as e:
+            print(f"[Config] Fehler beim Laden von classes.yaml: {e}")
+    return list(DEFAULT_CLASS_NAMES)
+
+CLASS_NAMES = load_class_names()
 CLASS_TO_ID = {name: idx for idx, name in enumerate(CLASS_NAMES)}
+
+def reload_class_names() -> list[str]:
+    global CLASS_NAMES, CLASS_TO_ID
+    CLASS_NAMES = load_class_names()
+    CLASS_TO_ID = {name: idx for idx, name in enumerate(CLASS_NAMES)}
+    return CLASS_NAMES
 
 # Pydantic Schemas
 class DetectedComponent(BaseModel):

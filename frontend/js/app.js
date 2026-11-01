@@ -197,6 +197,9 @@ async function initStudioBackground() {
         if (serverData.classes) {
             knownDatasetClasses = serverData.classes;
             populateClassDropdown(knownDatasetClasses);
+            if (typeof renderClassQuickBar === 'function') {
+                renderClassQuickBar();
+            }
         }
         if (serverData.stats) {
             sampleCount = (serverData.stats.train_images || 0) + (serverData.stats.val_images || 0);

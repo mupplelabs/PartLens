@@ -1,0 +1,25 @@
+# PartLens Dataset & YOLO Taxonomy Configuration
+# Changes here are automatically loaded on server startup and reflected in the UI and dataset exports.
+
+nc: 20
+names:
+  0: resistor
+  1: capacitor
+  2: inductor
+  3: diode
+  4: led
+  5: transistor
+  6: ic
+  7: potentiometer
+  8: switch_button
+  9: relay
+  10: connector
+  11: display
+  12: board_mcu_stick     # Schmale DIP-Boards (Nano, ESP32 NodeMCU, Pico)
+  13: board_mini_stamp    # Ultrakompakte Stamps (ESP32-C3 SuperMini, D1 Mini)
+  14: board_standard      # Große Dev-Boards (Uno, Mega)
+  15: board_module        # Sensor-, Interface- und Treibermodule
+  16: oscillator          # Quarze, Taktgeber, Resonatoren
+  17: motor_actuator      # Servos, DC-Motoren, Schrittmotoren
+  18: speaker_buzzer      # Piezo-Buzzer, Mini-Lautsprecher, Signalgeber
+  19: other               # Sonstige unklassifizierte Bauteile

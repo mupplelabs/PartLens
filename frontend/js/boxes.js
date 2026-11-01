@@ -5,42 +5,69 @@
 // =====================================================================
 // KLASSEN-SCHNELLAUSWAHL BAR (1-Click & Keyboard 1-9)
 // =====================================================================
-const classQuickChips = document.querySelectorAll('.class-quick-chip');
-function setupClassQuickBar() {
-    classQuickChips.forEach(chip => {
+function renderClassQuickBar() {
+    const bar = document.getElementById('class-quick-bar');
+    if (!bar) return;
+    const headerText = window.t ? window.t('studio.class_header') : 'Klasse:';
+    const classes = (typeof knownDatasetClasses !== 'undefined' && Array.isArray(knownDatasetClasses)) ? knownDatasetClasses : [];
+
+    const selBox = (typeof getSelectedComponentBox === 'function') ? getSelectedComponentBox() : null;
+    const activeClass = selBox ? selBox.label : (typeof boxClassSelect !== 'undefined' && boxClassSelect && boxClassSelect.value ? boxClassSelect.value : 'ic');
+
+    let html = `<span style="font-size: 0.7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-right: 4px;" data-i18n="studio.class_header">${headerText}</span>`;
+
+    classes.forEach((c, idx) => {
+        const isActive = (c === activeClass);
+        const color = (typeof getClassColor === 'function') ? getClassColor(c) : '#3b82f6';
+        const shortcut = (idx < 9) ? `<span style="opacity: 0.6; font-size: 0.68rem;">(${idx + 1})</span>` : '';
+        const i18nKey = `classes.${c}_chip`;
+        const labelText = window.t ? window.t(i18nKey) : c;
+        html += `
+            <button class="class-quick-chip ${isActive ? 'active' : ''}" data-class="${c}" style="color: ${color};">
+                <span class="class-dot"></span> <span data-i18n="${i18nKey}">${labelText}</span> ${shortcut}
+            </button>
+        `;
+    });
+    bar.innerHTML = html;
+    bindClassQuickBarEvents();
+}
+window.renderClassQuickBar = renderClassQuickBar;
+
+function bindClassQuickBarEvents() {
+    const chips = document.querySelectorAll('.class-quick-chip');
+    chips.forEach(chip => {
         chip.addEventListener('click', () => {
             const chosenClass = chip.getAttribute('data-class');
             if (selectedBoxIndex >= 0 && selectedBoxIndex < detectedBoxes.length) {
                 applyClassToBox(selectedBoxIndex, chosenClass);
             } else {
-                // Wenn keine Box gewählt ist: Standard für neue Boxen setzen
-                if (boxClassSelect) boxClassSelect.value = chosenClass;
-                classQuickChips.forEach(c => c.classList.toggle('active', c === chip));
+                if (typeof boxClassSelect !== 'undefined' && boxClassSelect) boxClassSelect.value = chosenClass;
+                chips.forEach(c => c.classList.toggle('active', c === chip));
                 const statusEl = document.getElementById('autolabel-status');
                 if (statusEl) statusEl.innerText = `Standard-Klasse für neue Boxen auf '${chosenClass}' gesetzt.`;
             }
         });
     });
-
-    // Tastatur-Kürzel 1-9 zum sofortigen Ändern der Klasse der gewählten Box bzw. Vorbelegung
-    window.addEventListener('keydown', (e) => {
-        const isTyping = document.activeElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
-        if (isTyping) return;
-        const num = parseInt(e.key, 10);
-        if (num >= 1 && num <= 9) {
-            const chips = Array.from(classQuickChips);
-            if (chips[num - 1]) {
-                e.preventDefault();
-                chips[num - 1].click();
-            }
-        }
-    });
 }
-setupClassQuickBar();
+
+// Tastatur-Kürzel 1-9 zum sofortigen Ändern der Klasse der gewählten Box bzw. Vorbelegung
+window.addEventListener('keydown', (e) => {
+    const isTyping = document.activeElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
+    if (isTyping) return;
+    const num = parseInt(e.key, 10);
+    if (num >= 1 && num <= 9) {
+        const chips = Array.from(document.querySelectorAll('.class-quick-chip'));
+        if (chips[num - 1]) {
+            e.preventDefault();
+            chips[num - 1].click();
+        }
+    }
+});
 
 function updateQuickPaletteActiveState() {
-    const selBox = getSelectedComponentBox();
-    classQuickChips.forEach(chip => {
+    const selBox = (typeof getSelectedComponentBox === 'function') ? getSelectedComponentBox() : null;
+    const chips = document.querySelectorAll('.class-quick-chip');
+    chips.forEach(chip => {
         const c = chip.getAttribute('data-class');
         if (selBox && selBox.label === c) {
             chip.classList.add('active');
@@ -49,6 +76,8 @@ function updateQuickPaletteActiveState() {
         }
     });
 }
+
+renderClassQuickBar();
 
 // =====================================================================
 // CVAT / V7 STYLE OBJEKTE-LISTE (Inspector Tab 0)
@@ -235,6 +264,9 @@ if (popoverClassSelect) {
 
 window.addEventListener('languageChanged', () => {
     populatePopoverClassSelect();
+    if (typeof renderClassQuickBar === 'function') {
+        renderClassQuickBar();
+    }
     if (typeof renderObjectsList === 'function') {
         renderObjectsList();
     }

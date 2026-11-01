@@ -88,8 +88,22 @@ def normalize_label_to_yolo(label: str) -> str:
         return "connector"
     if any(k in lbl for k in ["display", "oled", "lcd", "screen", "segment"]):
         return "display"
+    if any(k in lbl for k in ["board_mcu", "mcu_stick", "nano", "nodemcu", "pico", "teensy", "pro_micro"]):
+        return "board_mcu_stick"
+    if any(k in lbl for k in ["board_mini", "mini_stamp", "stamp", "supermini", "d1_mini", "wemos"]):
+        return "board_mini_stamp"
+    if any(k in lbl for k in ["board_std", "board_standard", "uno", "mega", "due", "leonardo"]):
+        return "board_standard"
+    if any(k in lbl for k in ["board_mod", "board_module", "sensor_mod", "driver_mod", "breakout"]):
+        return "board_module"
+    if any(k in lbl for k in ["oscillator", "crystal", "quarz", "resonator"]):
+        return "oscillator"
+    if any(k in lbl for k in ["motor", "servo", "stepper", "actuator"]):
+        return "motor_actuator"
+    if any(k in lbl for k in ["buzzer", "speaker", "piezo", "beeper"]):
+        return "speaker_buzzer"
     if any(k in lbl for k in ["board", "arduino", "esp32", "module", "shield", "pcb"]):
-        return "board"
+        return "board_standard"
     return "other"
 
 def scan_full_dataset() -> tuple[list[dict], DatasetStatsResponse]:

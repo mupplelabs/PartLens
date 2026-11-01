@@ -1,0 +1,132 @@
+{
+  "id": "comp_1793488987_df0ac0",
+  "split": "train",
+  "created_at": 1793488987,
+  "box_count": 10,
+  "classes": [
+    "resistor"
+  ],
+  "tags": [],
+  "boxes": [
+    {
+      "class_id": 0,
+      "label": "resistor",
+      "xmin": 0.0527,
+      "ymin": 0.3691,
+      "xmax": 0.1123,
+      "ymax": 0.5498,
+      "confidence": 0.94,
+      "part_marking": null,
+      "footprint": null,
+      "ic_subgroup": null
+    },
+    {
+      "class_id": 0,
+      "label": "resistor",
+      "xmin": 0.1436,
+      "ymin": 0.3691,
+      "xmax": 0.2031,
+      "ymax": 0.5527,
+      "confidence": 0.94,
+      "part_marking": null,
+      "footprint": null,
+      "ic_subgroup": null
+    },
+    {
+      "class_id": 0,
+      "label": "resistor",
+      "xmin": 0.2373,
+      "ymin": 0.3721,
+      "xmax": 0.2969,
+      "ymax": 0.5527,
+      "confidence": 0.94,
+      "part_marking": null,
+      "footprint": null,
+      "ic_subgroup": null
+    },
+    {
+      "class_id": 0,
+      "label": "resistor",
+      "xmin": 0.3311,
+      "ymin": 0.3691,
+      "xmax": 0.3906,
+      "ymax": 0.5498,
+      "confidence": 0.94,
+      "part_marking": null,
+      "footprint": null,
+      "ic_subgroup": null
+    },
+    {
+      "class_id": 0,
+      "label": "resistor",
+      "xmin": 0.4248,
+      "ymin": 0.3691,
+      "xmax": 0.4814,
+      "ymax": 0.5527,
+      "confidence": 0.94,
+      "part_marking": null,
+      "footprint": null,
+      "ic_subgroup": null
+    },
+    {
+      "class_id": 0,
+      "label": "resistor",
+      "xmin": 0.5156,
+      "ymin": 0.3691,
+      "xmax": 0.5752,
+      "ymax": 0.5498,
+      "confidence": 0.94,
+      "part_marking": null,
+      "footprint": null,
+      "ic_subgroup": null
+    },
+    {
+      "class_id": 0,
+      "label": "resistor",
+      "xmin": 0.6094,
+      "ymin": 0.3691,
+      "xmax": 0.6689,
+      "ymax": 0.5498,
+      "confidence": 0.94,
+      "part_marking": null,
+      "footprint": null,
+      "ic_subgroup": null
+    },
+    {
+      "class_id": 0,
+      "label": "resistor",
+      "xmin": 0.7031,
+      "ymin": 0.3691,
+      "xmax": 0.7598,
+      "ymax": 0.5527,
+      "confidence": 0.94,
+      "part_marking": null,
+      "footprint": null,
+      "ic_subgroup": null
+    },
+    {
+      "class_id": 0,
+      "label": "resistor",
+      "xmin": 0.7939,
+      "ymin": 0.3691,
+      "xmax": 0.8535,
+      "ymax": 0.5527,
+      "confidence": 0.94,
+      "part_marking": null,
+      "footprint": null,
+      "ic_subgroup": null
+    },
+    {
+      "class_id": 0,
+      "label": "resistor",
+      "xmin": 0.8877,
+      "ymin": 0.3691,
+      "xmax": 0.9473,
+      "ymax": 0.5498,
+      "confidence": 0.94,
+      "part_marking": null,
+      "footprint": null,
+      "ic_subgroup": null
+    }
+  ]
+}

@@ -71,8 +71,22 @@ def guess_default_mapping(classes: list[str]) -> dict[str, str]:
             mapping[c] = "connector"
         elif any(k in cl for k in ["display", "screen", "oled", "lcd", "segment"]):
             mapping[c] = "display"
-        elif any(k in cl for k in ["board", "arduino", "esp32", "module", "driver", "sensor"]):
-            mapping[c] = "board"
+        elif any(k in cl for k in ["mcu_stick", "nano", "nodemcu", "pico", "teensy", "pro_micro"]):
+            mapping[c] = "board_mcu_stick"
+        elif any(k in cl for k in ["mini_stamp", "stamp", "supermini", "d1_mini", "d1 mini", "wemos"]):
+            mapping[c] = "board_mini_stamp"
+        elif any(k in cl for k in ["uno", "mega", "due", "leonardo"]):
+            mapping[c] = "board_standard"
+        elif any(k in cl for k in ["module", "modul", "sensor", "driver", "breakout", "shield"]):
+            mapping[c] = "board_module"
+        elif any(k in cl for k in ["oscillator", "crystal", "quarz", "resonator"]):
+            mapping[c] = "oscillator"
+        elif any(k in cl for k in ["motor", "servo", "stepper", "actuator"]):
+            mapping[c] = "motor_actuator"
+        elif any(k in cl for k in ["buzzer", "speaker", "piezo", "beeper", "sound"]):
+            mapping[c] = "speaker_buzzer"
+        elif any(k in cl for k in ["board", "arduino", "esp32", "pcb"]):
+            mapping[c] = "board_standard"
         else:
             mapping[c] = "other"
     return mapping

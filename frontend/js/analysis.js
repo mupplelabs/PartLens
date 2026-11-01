@@ -1600,7 +1600,7 @@ const HANDLE_CURSORS = {
     e:  'ew-resize'
 };
 
-// Klassen-Farb-Map für professionelle Semantic Bounding Boxes (14 English classes)
+// Klassen-Farb-Map für professionelle Semantic Bounding Boxes (20 classes)
 const CLASS_COLOR_MAP = {
     'resistor': '#f59e0b',
     'capacitor': '#8b5cf6',
@@ -1614,6 +1614,13 @@ const CLASS_COLOR_MAP = {
     'relay': '#e11d48',
     'connector': '#14b8a6',
     'display': '#0ea5e9',
+    'board_mcu_stick': '#6366f1',
+    'board_mini_stamp': '#818cf8',
+    'board_standard': '#4f46e5',
+    'board_module': '#0284c7',
+    'oscillator': '#eab308',
+    'motor_actuator': '#f97316',
+    'speaker_buzzer': '#84cc16',
     'board': '#6366f1',
     'other': '#94a3b8'
 };
@@ -1623,7 +1630,7 @@ function getClassColor(label) {
     const clean = label.toLowerCase().replace(/[^a-z0-9_]/g, '_');
     if (CLASS_COLOR_MAP[clean]) return CLASS_COLOR_MAP[clean];
     for (const [k, c] of Object.entries(CLASS_COLOR_MAP)) {
-        if (clean.includes(k) || k.includes(clean)) return c;
+        if (clean === k || clean.startsWith(k) || k.startsWith(clean)) return c;
     }
     if (clean.includes('transistor') || clean.includes('mosfet') || clean.includes('bjt')) return '#10b981';
     if (clean.includes('ic') || clean.includes('dip') || clean.includes('chip')) return '#3b82f6';
@@ -1631,7 +1638,13 @@ function getClassColor(label) {
     if (clean.includes('kondensator') || clean.includes('capacitor')) return '#8b5cf6';
     if (clean.includes('led')) return '#ef4444';
     if (clean.includes('diode')) return '#ec4899';
-    if (clean.includes('board') || clean.includes('arduino') || clean.includes('esp32')) return '#6366f1';
+    if (clean.includes('stick') || clean.includes('pico') || clean.includes('nano')) return '#6366f1';
+    if (clean.includes('stamp') || clean.includes('supermini') || clean.includes('d1_mini')) return '#818cf8';
+    if (clean.includes('module') || clean.includes('sensor')) return '#0284c7';
+    if (clean.includes('oscillator') || clean.includes('crystal') || clean.includes('quarz')) return '#eab308';
+    if (clean.includes('motor') || clean.includes('servo') || clean.includes('stepper')) return '#f97316';
+    if (clean.includes('buzzer') || clean.includes('speaker') || clean.includes('piezo')) return '#84cc16';
+    if (clean.includes('board') || clean.includes('arduino') || clean.includes('esp32')) return '#4f46e5';
     return '#94a3b8';
 }
 

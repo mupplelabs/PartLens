@@ -88,6 +88,12 @@ function renderObjectsList() {
     const listEl = document.getElementById('objects-items-list');
     if (countBadge) countBadge.innerText = detectedBoxes.length;
 
+    const mobileInfoBadge = document.getElementById('mobile-info-count-badge');
+    if (mobileInfoBadge) {
+        mobileInfoBadge.textContent = detectedBoxes.length;
+        mobileInfoBadge.style.display = detectedBoxes.length > 0 ? 'inline-flex' : 'none';
+    }
+
     if (!listEl || !emptyEl) return;
 
     if (detectedBoxes.length === 0) {

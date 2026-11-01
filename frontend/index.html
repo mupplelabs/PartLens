@@ -18,12 +18,12 @@
         })();
     </script>
     <title>PartLens – Visual Part-DB & YOLO Studio</title>
-    <link rel="stylesheet" href="/frontend/css/base.css?v=2.7.0">
-    <link rel="stylesheet" href="/frontend/css/layout.css?v=2.7.0">
-    <link rel="stylesheet" href="/frontend/css/components.css?v=2.7.0">
-    <link rel="stylesheet" href="/frontend/css/studio.css?v=2.7.0">
-    <link rel="stylesheet" href="/frontend/css/gallery.css?v=2.7.0">
-    <link rel="stylesheet" href="/frontend/css/modals.css?v=2.7.0">
+    <link rel="stylesheet" href="/frontend/css/base.css?v=2.8.0">
+    <link rel="stylesheet" href="/frontend/css/layout.css?v=2.8.0">
+    <link rel="stylesheet" href="/frontend/css/components.css?v=2.8.0">
+    <link rel="stylesheet" href="/frontend/css/studio.css?v=2.8.0">
+    <link rel="stylesheet" href="/frontend/css/gallery.css?v=2.8.0">
+    <link rel="stylesheet" href="/frontend/css/modals.css?v=2.8.0">
 </head>
 <body class="view-studio-active">
 
@@ -451,6 +451,14 @@
 
                 <!-- Rechte Spalte: Inspector & Datensatz Curation -->
                 <div class="studio-inspector">
+                    <!-- Mobile Sheet Drag Handle & Close Button (nur auf Mobile im Drawer sichtbar) -->
+                    <div class="sheet-drag-handle-bar" id="studio-sheet-drag-handle">
+                        <span class="sheet-drag-pill"></span>
+                        <button type="button" class="btn-sheet-close" id="btn-close-studio-sheet" title="Schließen" data-i18n-title="modal.close">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                    </div>
+
                     <!-- Inspector Tab Navigation (CVAT / Roboflow Style) -->
                     <div class="inspector-tabs-nav">
                         <button type="button" class="inspector-tab-btn active" data-tab="tab-objects">
@@ -760,6 +768,9 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Mobile Inspector Sheet Backdrop (schließt bei Tap den Drawer) -->
+                <div id="studio-inspector-backdrop" class="studio-sheet-backdrop" style="display: none;"></div>
 
                     <!-- Versteckte Elemente für Abwärtskompatibilität der bestehenden JS-Routinen -->
                     <div style="display: none;">
@@ -1188,6 +1199,13 @@
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
                 <span data-i18n="mobile.box">Box</span>
             </button>
+            <button id="mobile-info-btn" class="dock-btn" type="button" title="Bauteil-Details und Inspector öffnen" data-i18n-title="mobile.info_title">
+                <div style="position: relative; display: inline-flex;">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    <span id="mobile-info-count-badge" class="dock-badge" style="display: none;">0</span>
+                </div>
+                <span data-i18n="mobile.info">Info</span>
+            </button>
             <button id="mobile-save-btn" class="dock-btn save" type="button" title="Sample speichern" data-i18n-title="mobile.save_title">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                 <span data-i18n="mobile.save">Speichern</span>
@@ -1517,19 +1535,19 @@
 
 
     <!-- PartLens Modular Scripts -->
-    <script src="/frontend/js/i18n.js?v=2.7.0"></script>
-    <script src="/frontend/js/state.js?v=2.7.0"></script>
-    <script src="/frontend/js/api.js?v=2.7.0"></script>
-    <script src="/frontend/js/analysis.js?v=2.7.0"></script>
-    <script src="/frontend/js/resistor.js?v=2.7.0"></script>
-    <script src="/frontend/js/canvas.js?v=2.7.0"></script>
-    <script src="/frontend/js/boxes.js?v=2.7.0"></script>
-    <script src="/frontend/js/footprints.js?v=2.7.0"></script>
-    <script src="/frontend/js/autolabel.js?v=2.7.0"></script>
-    <script src="/frontend/js/gallery.js?v=2.7.0"></script>
-    <script src="/frontend/js/import_modal.js?v=2.7.0"></script>
-    <script src="/frontend/js/export.js?v=2.7.0"></script>
-    <script src="/frontend/js/webcam.js?v=2.7.0"></script>
-    <script src="/frontend/js/app.js?v=2.7.0"></script>
+    <script src="/frontend/js/i18n.js?v=2.8.0"></script>
+    <script src="/frontend/js/state.js?v=2.8.0"></script>
+    <script src="/frontend/js/api.js?v=2.8.0"></script>
+    <script src="/frontend/js/analysis.js?v=2.8.0"></script>
+    <script src="/frontend/js/resistor.js?v=2.8.0"></script>
+    <script src="/frontend/js/canvas.js?v=2.8.0"></script>
+    <script src="/frontend/js/boxes.js?v=2.8.0"></script>
+    <script src="/frontend/js/footprints.js?v=2.8.0"></script>
+    <script src="/frontend/js/autolabel.js?v=2.8.0"></script>
+    <script src="/frontend/js/gallery.js?v=2.8.0"></script>
+    <script src="/frontend/js/import_modal.js?v=2.8.0"></script>
+    <script src="/frontend/js/export.js?v=2.8.0"></script>
+    <script src="/frontend/js/webcam.js?v=2.8.0"></script>
+    <script src="/frontend/js/app.js?v=2.8.0"></script>
 </body>
 </html>

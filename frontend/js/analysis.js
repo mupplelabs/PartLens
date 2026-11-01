@@ -2003,6 +2003,13 @@ function selectComponentBox(idx, triggerDownstream = true) {
         updateQuickPaletteActiveState();
     }
 
+    // On Mobile: Wenn eine Box gewählt wird, öffne automatisch das Inspector Bottom Sheet (Details Tab)
+    if (idx >= 0 && idx < detectedBoxes.length && window.innerWidth <= 768 && typeof window.toggleStudioInspectorSheet === 'function') {
+        window.toggleStudioInspectorSheet(true);
+        const inspectTabBtn = document.querySelector('.inspector-tab-btn[data-tab="tab-inspect"]');
+        if (inspectTabBtn) inspectTabBtn.click();
+    }
+
     if (!triggerDownstream) return;
 
     if (detectedBoxes.length === 0 && selectedBoxIndex !== -2) {

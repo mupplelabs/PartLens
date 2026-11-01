@@ -398,6 +398,8 @@
     "autolabel_title": "Auto-Label mit KI-Modell ausführen",
     "box": "Box",
     "box_title": "Neue Box manuell zeichnen",
+    "info": "Info",
+    "info_title": "Bauteil-Details & Inspector öffnen",
     "save": "Speichern",
     "save_title": "Sample speichern",
     "import": "Import",

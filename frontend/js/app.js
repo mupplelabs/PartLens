@@ -24,6 +24,9 @@ const navTabs = [
 ];
 
 function switchAppView(targetBtn) {
+    if (typeof toggleStudioInspectorSheet === 'function') {
+        toggleStudioInspectorSheet(false);
+    }
     document.body.classList.toggle('view-studio-active', targetBtn === navStudioBtn);
     document.body.classList.toggle('view-dataset-active', targetBtn === navDatasetBtn);
     document.body.classList.toggle('view-analytics-active', targetBtn === navAnalyticsBtn);
@@ -73,8 +76,53 @@ if (cameraFileInput) {
     });
 }
 
+// Mobile Inspector Sheet Drawer Toggle (Option E)
+function toggleStudioInspectorSheet(open) {
+    const isCurrentlyOpen = document.body.classList.contains('studio-inspector-open');
+    const shouldOpen = open !== undefined ? open : !isCurrentlyOpen;
+    document.body.classList.toggle('studio-inspector-open', shouldOpen);
+    const backdrop = document.getElementById('studio-inspector-backdrop');
+    if (backdrop) backdrop.style.display = shouldOpen ? 'block' : 'none';
+    const mobileInfo = document.getElementById('mobile-info-btn');
+    if (mobileInfo) mobileInfo.classList.toggle('active', shouldOpen);
+}
+window.toggleStudioInspectorSheet = toggleStudioInspectorSheet;
+
+const mobileInfoBtn = document.getElementById('mobile-info-btn');
+if (mobileInfoBtn) {
+    mobileInfoBtn.addEventListener('click', () => toggleStudioInspectorSheet());
+}
+
+const btnCloseStudioSheet = document.getElementById('btn-close-studio-sheet');
+if (btnCloseStudioSheet) {
+    btnCloseStudioSheet.addEventListener('click', () => toggleStudioInspectorSheet(false));
+}
+
+const studioInspectorBackdrop = document.getElementById('studio-inspector-backdrop');
+if (studioInspectorBackdrop) {
+    studioInspectorBackdrop.addEventListener('click', () => toggleStudioInspectorSheet(false));
+}
+
+// Swipe down on sheet drag handle to close
+const studioSheetDragHandle = document.getElementById('studio-sheet-drag-handle');
+if (studioSheetDragHandle) {
+    let sheetTouchStartY = 0;
+    studioSheetDragHandle.addEventListener('touchstart', (e) => {
+        sheetTouchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    studioSheetDragHandle.addEventListener('touchmove', (e) => {
+        const dy = e.touches[0].clientY - sheetTouchStartY;
+        if (dy > 35) {
+            toggleStudioInspectorSheet(false);
+        }
+    }, { passive: true });
+}
+
 if (mobilePhotoBtn && cameraFileInput) {
-    mobilePhotoBtn.addEventListener('click', () => cameraFileInput.click());
+    mobilePhotoBtn.addEventListener('click', () => {
+        toggleStudioInspectorSheet(false);
+        cameraFileInput.click();
+    });
 }
 
 if (mobileAutolabelBtn) {
@@ -87,7 +135,10 @@ if (mobileAutolabelBtn) {
     });
 }
 if (mobileAddBoxBtn && addManualBoxBtn) {
-    mobileAddBoxBtn.addEventListener('click', () => addManualBoxBtn.click());
+    mobileAddBoxBtn.addEventListener('click', () => {
+        toggleStudioInspectorSheet(false);
+        addManualBoxBtn.click();
+    });
 }
 if (mobileSaveBtn && saveDatasetBtn) {
     mobileSaveBtn.addEventListener('click', () => saveDatasetBtn.click());

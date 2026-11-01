@@ -398,6 +398,8 @@
     "autolabel_title": "Run Auto-Label with AI model",
     "box": "Box",
     "box_title": "Draw new box manually",
+    "info": "Info",
+    "info_title": "Open component details & inspector",
     "save": "Save",
     "save_title": "Save sample",
     "import": "Import",

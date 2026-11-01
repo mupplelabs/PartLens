@@ -36,6 +36,9 @@ function switchAppView(targetBtn) {
             btn?.classList.add('active');
             view?.classList.add('active');
             if (onOpen) onOpen();
+            if (btn === navStudioBtn && typeof fitImageToWorkspace === 'function') {
+                setTimeout(fitImageToWorkspace, 30);
+            }
         } else {
             btn?.classList.remove('active');
             view?.classList.remove('active');
@@ -76,8 +79,28 @@ if (cameraFileInput) {
     });
 }
 
+// Synchronisiere DOM-Platzierung des Studio-Inspectors (Auf Mobile als Body-Child, um Clipping/Containing-Block zu verhindern)
+function syncInspectorDomPlacement() {
+    const isMobile = window.innerWidth <= 768;
+    const inspector = document.querySelector('.studio-inspector');
+    const studioGrid = document.querySelector('.studio-grid');
+    if (!inspector) return;
+    if (isMobile) {
+        if (inspector.parentElement !== document.body) {
+            document.body.appendChild(inspector);
+        }
+    } else {
+        if (studioGrid && inspector.parentElement !== studioGrid) {
+            studioGrid.appendChild(inspector);
+        }
+    }
+}
+window.addEventListener('resize', syncInspectorDomPlacement);
+syncInspectorDomPlacement();
+
 // Mobile Inspector Sheet Drawer Toggle (Option E)
 function toggleStudioInspectorSheet(open) {
+    syncInspectorDomPlacement();
     const isCurrentlyOpen = document.body.classList.contains('studio-inspector-open');
     const shouldOpen = open !== undefined ? open : !isCurrentlyOpen;
     document.body.classList.toggle('studio-inspector-open', shouldOpen);

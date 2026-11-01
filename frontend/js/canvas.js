@@ -15,6 +15,7 @@ let isSpacePressed = false;
 let isPanModeActive = false;
 const activeTouchPointers = new Map();
 let lastTouchDist = 0;
+let lastTouchCenter = null;
 
 function applyStageTransform() {
     const wraps = document.querySelectorAll('.image-stage-wrap');
@@ -38,13 +39,19 @@ function applyStageTransform() {
     }
 }
 
-function resetStageZoomPan() {
+function fitImageToWorkspace() {
     stageZoom = 1.0;
     stagePanX = 0;
     stagePanY = 0;
     isPanning = false;
     applyStageTransform();
 }
+
+function resetStageZoomPan() {
+    fitImageToWorkspace();
+}
+window.fitImageToWorkspace = fitImageToWorkspace;
+window.resetStageZoomPan = resetStageZoomPan;
 
 function zoomAtPoint(deltaFactor, clientX, clientY) {
     const viewport = document.querySelector('.stage-viewport');
@@ -76,8 +83,7 @@ function bindOverlayCanvasInteractions(canvasEl) {
                 isPanning = true;
                 const pts = Array.from(activeTouchPointers.values());
                 lastTouchDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-                panStartX = (pts[0].x + pts[1].x) / 2 - stagePanX;
-                panStartY = (pts[0].y + pts[1].y) / 2 - stagePanY;
+                lastTouchCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
                 applyStageTransform();
                 e.preventDefault();
                 return;
@@ -177,17 +183,22 @@ function bindOverlayCanvasInteractions(canvasEl) {
             if (activeTouchPointers.size === 2) {
                 const pts = Array.from(activeTouchPointers.values());
                 const currentDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-                const centerX = (pts[0].x + pts[1].x) / 2;
-                const centerY = (pts[0].y + pts[1].y) / 2;
+                const currentCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
 
-                if (lastTouchDist > 0 && Math.abs(currentDist - lastTouchDist) > 2) {
+                if (lastTouchCenter) {
+                    const dx = currentCenter.x - lastTouchCenter.x;
+                    const dy = currentCenter.y - lastTouchCenter.y;
+                    stagePanX += dx;
+                    stagePanY += dy;
+                }
+
+                if (lastTouchDist > 0 && Math.abs(currentDist - lastTouchDist) > 1) {
                     const factor = currentDist / lastTouchDist;
-                    zoomAtPoint(factor, centerX, centerY);
+                    zoomAtPoint(factor, currentCenter.x, currentCenter.y);
                 }
                 lastTouchDist = currentDist;
+                lastTouchCenter = currentCenter;
 
-                stagePanX = centerX - panStartX;
-                stagePanY = centerY - panStartY;
                 applyStageTransform();
                 e.preventDefault();
                 return;
@@ -325,6 +336,7 @@ function bindOverlayCanvasInteractions(canvasEl) {
             activeTouchPointers.delete(e.pointerId);
             if (activeTouchPointers.size < 2) {
                 lastTouchDist = 0;
+                lastTouchCenter = null;
             }
         }
 

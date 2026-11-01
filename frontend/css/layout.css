@@ -144,8 +144,8 @@
             display: block;
         }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(4px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
 
@@ -335,7 +335,13 @@
             body.view-dataset-active .mobile-dock-gallery {
                 display: flex !important;
             }
-            body.view-studio-active main.app-main,
+            body.view-studio-active main.app-main {
+                padding: 6px 6px calc(74px + env(safe-area-inset-bottom)) !important;
+                height: calc(100dvh - 54px) !important;
+                max-height: calc(100dvh - 54px) !important;
+                overflow: hidden !important;
+                box-sizing: border-box !important;
+            }
             body.view-dataset-active main.app-main {
                 padding: 8px 8px calc(80px + env(safe-area-inset-bottom)) !important;
             }
@@ -456,12 +462,38 @@
                 font-size: 0.72rem;
             }
 
-            /* Option E: Volle Canvas-Höhe für maximale Zeichen- und Zoomfläche */
-            .stage-viewport {
-                min-height: 380px !important;
-                height: calc(100vh - 165px) !important;
-                height: calc(100dvh - 165px) !important;
-                max-height: calc(100dvh - 165px) !important;
+            /* Studio Canvas Flex-Container auf Mobile (Füllt exakt den Raum zwischen Navbar und Dock) */
+            body.view-studio-active #view-studio {
+                height: 100% !important;
+                transform: none !important;
+                contain: none !important;
+                filter: none !important;
+                perspective: none !important;
+            }
+            body.view-studio-active .studio-grid {
+                height: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 0 !important;
+                transform: none !important;
+                contain: none !important;
+                filter: none !important;
+                perspective: none !important;
+            }
+            body.view-studio-active .studio-canvas-card {
+                height: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                border-radius: var(--radius-lg) !important;
+                border: 1px solid var(--border) !important;
+                overflow: hidden !important;
+            }
+            body.view-studio-active .stage-viewport {
+                flex: 1 1 auto !important;
+                min-height: 180px !important;
+                height: 100% !important;
+                max-height: none !important;
+                overflow: hidden !important;
             }
             /* Stage-HUD auf dem Smartphone komplett ausblenden (Zoom & Pan erfolgt nativ per 2-Finger-Gesten) */
             .stage-zoom-bar {
@@ -471,12 +503,11 @@
             .autolabel-pill-model-wrap {
                 display: none !important;
             }
-            .studio-canvas-card {
-                border-radius: var(--radius-lg) !important;
-                border: 1px solid var(--border) !important;
-            }
             .canvas-bottom-bar {
-                border-bottom: 1px solid var(--border) !important;
+                border-top: 1px solid var(--border) !important;
+                border-bottom: none !important;
+                background: var(--surface) !important;
+                flex-shrink: 0 !important;
             }
 
             /* Option E: Apple Photos Style Inspector Bottom Sheet Drawer */
@@ -487,24 +518,28 @@
                 right: 0 !important;
                 width: 100% !important;
                 max-width: 100% !important;
+                height: 68vh !important;
                 max-height: 72vh !important;
-                background: var(--surface-glass, rgba(22, 22, 26, 0.94)) !important;
-                backdrop-filter: blur(28px) !important;
-                -webkit-backdrop-filter: blur(28px) !important;
-                border-top: 1px solid var(--border) !important;
+                background: var(--surface-elevated, #18181b) !important;
+                border-top: 1px solid var(--border-hover, rgba(255, 255, 255, 0.15)) !important;
                 border-left: none !important;
                 border-right: none !important;
                 border-bottom: none !important;
                 border-top-left-radius: 22px !important;
                 border-top-right-radius: 22px !important;
-                box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5) !important;
-                z-index: 105 !important;
+                box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.65) !important;
+                z-index: 120 !important;
                 display: flex !important;
                 flex-direction: column !important;
                 transform: translateY(105%) !important;
-                transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1) !important;
+                transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
                 padding: 0 0 max(16px, env(safe-area-inset-bottom)) 0 !important;
                 overflow: hidden !important;
+            }
+            [data-theme="light"] .studio-inspector {
+                background: #ffffff !important;
+                border-top: 1px solid rgba(0, 0, 0, 0.12) !important;
+                box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15) !important;
             }
             body.studio-inspector-open .studio-inspector {
                 transform: translateY(0) !important;
@@ -555,9 +590,7 @@
                 right: 0 !important;
                 bottom: 0 !important;
                 background: rgba(0, 0, 0, 0.45) !important;
-                backdrop-filter: blur(4px) !important;
-                -webkit-backdrop-filter: blur(4px) !important;
-                z-index: 104 !important;
+                z-index: 110 !important;
                 transition: opacity 0.25s ease !important;
             }
 

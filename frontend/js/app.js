@@ -141,7 +141,10 @@ if (mobileAddBoxBtn && addManualBoxBtn) {
     });
 }
 if (mobileSaveBtn && saveDatasetBtn) {
-    mobileSaveBtn.addEventListener('click', () => saveDatasetBtn.click());
+    mobileSaveBtn.addEventListener('click', () => {
+        toggleStudioInspectorSheet(false);
+        saveDatasetBtn.click();
+    });
 }
 
 // Mobile Dock Gallery Handlers

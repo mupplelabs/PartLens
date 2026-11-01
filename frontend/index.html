@@ -18,12 +18,12 @@
         })();
     </script>
     <title>PartLens – Visual Part-DB & YOLO Studio</title>
-    <link rel="stylesheet" href="/frontend/css/base.css?v=2.8.3">
-    <link rel="stylesheet" href="/frontend/css/layout.css?v=2.8.3">
-    <link rel="stylesheet" href="/frontend/css/components.css?v=2.8.3">
-    <link rel="stylesheet" href="/frontend/css/studio.css?v=2.8.3">
-    <link rel="stylesheet" href="/frontend/css/gallery.css?v=2.8.3">
-    <link rel="stylesheet" href="/frontend/css/modals.css?v=2.8.3">
+    <link rel="stylesheet" href="/frontend/css/base.css?v=2.8.4">
+    <link rel="stylesheet" href="/frontend/css/layout.css?v=2.8.4">
+    <link rel="stylesheet" href="/frontend/css/components.css?v=2.8.4">
+    <link rel="stylesheet" href="/frontend/css/studio.css?v=2.8.4">
+    <link rel="stylesheet" href="/frontend/css/gallery.css?v=2.8.4">
+    <link rel="stylesheet" href="/frontend/css/modals.css?v=2.8.4">
 </head>
 <body class="view-studio-active">
 
@@ -208,7 +208,7 @@
                             </div>
                         </div>
 
-                        <div id="webcam-panel" style="width: 100%; height: 100%; display: none; align-items: center; justify-content: center; position: relative; overflow: hidden;">
+                        <div id="webcam-panel" class="webcam-panel" style="display: none;">
                             <div class="image-stage-wrap">
                                 <video id="webcam" autoplay playsinline muted></video>
                                 <canvas id="webcam-bbox-canvas"></canvas>
@@ -232,7 +232,7 @@
                                 </button>
                             </div>
 
-                            <div class="webcam-controls-bar" id="webcam-controls-bar" style="display: flex; gap: 8px; padding: 6px; background: rgba(0,0,0,0.7); width: 100%; justify-content: center; z-index: 22; position: relative; pointer-events: auto;">
+                            <div class="webcam-controls-bar" id="webcam-controls-bar">
                                 <select id="camera-select" style="max-width: 180px; padding: 4px; font-size: 0.75rem;"></select>
                                 <button id="toggle-webcam-btn" class="btn btn-primary" type="button" style="padding: 4px 8px; font-size: 0.75rem;" title="Stream anhalten / fortsetzen">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
@@ -1534,19 +1534,19 @@
 
 
     <!-- PartLens Modular Scripts -->
-    <script src="/frontend/js/i18n.js?v=2.8.3"></script>
-    <script src="/frontend/js/state.js?v=2.8.3"></script>
-    <script src="/frontend/js/api.js?v=2.8.3"></script>
-    <script src="/frontend/js/analysis.js?v=2.8.3"></script>
-    <script src="/frontend/js/resistor.js?v=2.8.3"></script>
-    <script src="/frontend/js/canvas.js?v=2.8.3"></script>
-    <script src="/frontend/js/boxes.js?v=2.8.3"></script>
-    <script src="/frontend/js/footprints.js?v=2.8.3"></script>
-    <script src="/frontend/js/autolabel.js?v=2.8.3"></script>
-    <script src="/frontend/js/gallery.js?v=2.8.3"></script>
-    <script src="/frontend/js/import_modal.js?v=2.8.3"></script>
-    <script src="/frontend/js/export.js?v=2.8.3"></script>
-    <script src="/frontend/js/webcam.js?v=2.8.3"></script>
-    <script src="/frontend/js/app.js?v=2.8.3"></script>
+    <script src="/frontend/js/i18n.js?v=2.8.4"></script>
+    <script src="/frontend/js/state.js?v=2.8.4"></script>
+    <script src="/frontend/js/api.js?v=2.8.4"></script>
+    <script src="/frontend/js/analysis.js?v=2.8.4"></script>
+    <script src="/frontend/js/resistor.js?v=2.8.4"></script>
+    <script src="/frontend/js/canvas.js?v=2.8.4"></script>
+    <script src="/frontend/js/boxes.js?v=2.8.4"></script>
+    <script src="/frontend/js/footprints.js?v=2.8.4"></script>
+    <script src="/frontend/js/autolabel.js?v=2.8.4"></script>
+    <script src="/frontend/js/gallery.js?v=2.8.4"></script>
+    <script src="/frontend/js/import_modal.js?v=2.8.4"></script>
+    <script src="/frontend/js/export.js?v=2.8.4"></script>
+    <script src="/frontend/js/webcam.js?v=2.8.4"></script>
+    <script src="/frontend/js/app.js?v=2.8.4"></script>
 </body>
 </html>

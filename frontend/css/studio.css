@@ -396,6 +396,43 @@
             object-fit: contain;
         }
 
+        /* Webcam Stage & Controls Bar */
+        #webcam-panel {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #webcam-panel .image-stage-wrap {
+            flex: 1 1 auto;
+            min-height: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: auto;
+        }
+
+        .webcam-controls-bar {
+            flex-shrink: 0;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 8px 14px;
+            background: var(--surface-glass, rgba(22, 22, 26, 0.85));
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border);
+            z-index: 22;
+            pointer-events: auto;
+        }
+
         #bbox-overlay-canvas, #webcam-bbox-canvas {
             position: absolute;
             top: 0;

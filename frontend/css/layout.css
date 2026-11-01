@@ -499,8 +499,7 @@
                 justify-content: center !important;
                 position: relative !important;
             }
-            body.view-studio-active #upload-panel,
-            body.view-studio-active #webcam-panel {
+            body.view-studio-active #upload-panel {
                 width: 100% !important;
                 height: 100% !important;
                 display: flex !important;
@@ -508,6 +507,24 @@
                 justify-content: center !important;
                 position: relative !important;
                 overflow: hidden !important;
+            }
+            body.view-studio-active #webcam-panel {
+                width: 100% !important;
+                height: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: flex-start !important;
+                position: relative !important;
+                overflow: hidden !important;
+            }
+            body.view-studio-active #webcam-panel .image-stage-wrap {
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                margin: auto !important;
             }
             body.view-studio-active .image-stage-wrap {
                 display: flex !important;

@@ -165,6 +165,9 @@ async function startWebcam(deviceId = null) {
         await video.play().catch(e => console.warn('video.play() abgewiesen:', e));
         webcamRunning = true;
         toggleWebcamBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg><span>Pause</span>';
+        if (typeof fitImageToWorkspace === 'function') {
+            fitImageToWorkspace();
+        }
 
         // Kamera-Auswahl Dropdown befüllen
         const activeTrack = currentStream?.getVideoTracks()?.[0];
@@ -306,7 +309,7 @@ if (captureWebcamBtn) {
         currentMode = 'upload';
         tabUpload.classList.add('active');
         tabWebcam.classList.remove('active');
-        uploadPanel.style.display = 'block';
+        uploadPanel.style.display = 'flex';
         webcamPanel.style.display = 'none';
 
         // 4. Foto als Hauptbild im Studio setzen (triggert onload -> Detektion & OCR)

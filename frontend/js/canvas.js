@@ -52,9 +52,12 @@ function fitImageToWorkspace() {
         const vpRect = viewport.getBoundingClientRect();
         const isMobile = window.innerWidth <= 768;
         const padX = isMobile ? 12 : 24;
-        const padY = isMobile ? 12 : 24;
+        const isWebcamMode = (typeof currentMode !== 'undefined' && currentMode === 'webcam');
+        const controlsBar = isWebcamMode ? document.getElementById('webcam-controls-bar') : null;
+        const controlsH = (controlsBar && controlsBar.offsetHeight > 0) ? controlsBar.offsetHeight : 0;
+
         const availW = Math.max(100, (vpRect.width || viewport.clientWidth || 320) - padX);
-        const availH = Math.max(100, (vpRect.height || viewport.clientHeight || 240) - padY);
+        const availH = Math.max(100, (vpRect.height || viewport.clientHeight || 240) - padY - controlsH);
 
         const fitScale = Math.min(availW / srcW, availH / srcH);
         const fittedW = Math.max(40, Math.round(srcW * fitScale));

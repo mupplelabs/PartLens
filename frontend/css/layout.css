@@ -426,48 +426,67 @@
             }
 
             /* -----------------------------------------------------------------
-               DATASET BROWSER MOBILE CLEANUP (No wrap & clean ergonomics)
+               DATASET BROWSER MOBILE CLEANUP (Compact Grid & Zero Waste)
                ----------------------------------------------------------------- */
             .dataset-top-header {
-                padding: 10px 12px !important;
-                gap: 10px !important;
-                margin-bottom: 8px !important;
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: stretch !important;
+                padding: 6px 10px !important;
+                gap: 6px 8px !important;
+                margin-bottom: 6px !important;
+                display: grid !important;
+                grid-template-columns: auto 1fr !important;
+                align-items: center !important;
             }
             .dataset-title-block {
+                grid-column: 1 / 2 !important;
+                grid-row: 1 / 2 !important;
                 display: flex !important;
                 flex-direction: row !important;
                 align-items: center !important;
-                justify-content: space-between !important;
-                gap: 8px !important;
+                gap: 6px !important;
+                min-width: 0 !important;
+            }
+            .dataset-title-block .badge-pill {
+                padding: 1px 6px !important;
+                font-size: 0.68rem !important;
             }
             .dataset-heading {
-                font-size: 1.1rem !important;
+                font-size: 0.95rem !important;
             }
             .dataset-subheading {
                 display: none !important; /* Entfernt überflüssigen Text-Ballast auf Mobile */
             }
             .gallery-search-wrap {
+                grid-column: 2 / 3 !important;
+                grid-row: 1 / 2 !important;
                 width: 100% !important;
                 max-width: none !important;
                 min-width: 0 !important;
+                margin: 0 !important;
             }
             .gallery-search-wrap input {
-                padding: 7px 12px !important;
-                font-size: 0.82rem !important;
+                height: 28px !important;
+                padding: 4px 8px !important;
+                font-size: 0.74rem !important;
+                border-radius: var(--radius-sm) !important;
             }
             .dataset-header-controls {
+                grid-column: 1 / -1 !important;
+                grid-row: 2 / 3 !important;
                 width: 100% !important;
                 display: flex !important;
                 align-items: center !important;
                 justify-content: space-between !important;
-                gap: 6px !important;
+                gap: 5px !important;
                 flex-wrap: nowrap !important;
                 overflow-x: auto !important;
                 -webkit-overflow-scrolling: touch !important;
                 scrollbar-width: none !important;
+                padding-top: 2px !important;
+            }
+            @media (max-width: 480px) {
+                #gallery-boxes-badge {
+                    display: none !important;
+                }
             }
             .dataset-header-controls::-webkit-scrollbar {
                 display: none !important;

@@ -43,7 +43,7 @@
         .dataset-heading {
             font-size: 1.25rem;
             font-weight: 800;
-            color: #fff;
+            color: var(--text-bright);
             margin: 0;
             letter-spacing: -0.01em;
             white-space: nowrap;
@@ -145,6 +145,47 @@
             background: rgba(56, 189, 248, 0.15);
             border-color: rgba(56, 189, 248, 0.35);
             color: #38bdf8;
+        }
+
+        /* Light Theme Anpassungen für Dataset Header */
+        [data-theme="light"] .dataset-heading {
+            color: #0f172a !important;
+        }
+        [data-theme="light"] .badge-pill {
+            background: #e2e8f0;
+            border-color: #cbd5e1;
+            color: #334155;
+        }
+        [data-theme="light"] .badge-pill.accent {
+            background: rgba(14, 165, 233, 0.12);
+            border-color: rgba(14, 165, 233, 0.35);
+            color: #0284c7;
+        }
+        [data-theme="light"] .gallery-search-wrap input {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            color: #0f172a;
+        }
+        [data-theme="light"] .gallery-search-wrap input:focus {
+            border-color: #0284c7;
+            box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+        }
+        [data-theme="light"] .dataset-view-switcher {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+        [data-theme="light"] .btn-view-mode {
+            color: #64748b;
+        }
+        [data-theme="light"] .btn-view-mode:hover {
+            color: #0f172a;
+            background: rgba(0, 0, 0, 0.04);
+        }
+        [data-theme="light"] .btn-view-mode.active {
+            background: #ffffff;
+            color: #0284c7;
+            border-color: rgba(2, 132, 199, 0.4);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
         }
 
         /* Filter-Bar mit Splits & Dynamischen Klassen-Chips */

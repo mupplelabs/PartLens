@@ -295,8 +295,9 @@
                 gap: 6px;
                 flex-shrink: 0;
             }
-            /* Ausladenden Text-Badge auf Mobile ausblenden, damit Export- und Theme-Button sichtbar bleiben */
-            #dataset-counter-badge {
+            /* Ausladenden Text-Badge und redundanten Export-Button auf Mobile ausblenden (lebt im mobilen Dock) */
+            #dataset-counter-badge,
+            header.studio-navbar .export-dropdown-wrap {
                 display: none !important;
             }
             #export-yolo-btn-top,
@@ -440,23 +441,30 @@
             }
 
             /* -----------------------------------------------------------------
-               DATASET BROWSER MOBILE CLEANUP (Compact Grid & Zero Waste)
+               DATASET BROWSER MOBILE CLEANUP (True Hybrid: Floating Capsule & Pill Bar)
                ----------------------------------------------------------------- */
+            /* Row 1: Schwebende Such-Kapsel (Titel + Anzahl + Suchfeld) */
             .dataset-top-header {
-                padding: 6px 10px !important;
-                gap: 6px 8px !important;
+                background: var(--surface-glass, rgba(30, 41, 59, 0.75)) !important;
+                backdrop-filter: blur(14px) !important;
+                -webkit-backdrop-filter: blur(14px) !important;
+                border: 1px solid var(--border) !important;
+                border-radius: var(--radius-full) !important;
+                padding: 4px 12px !important;
                 margin-bottom: 6px !important;
-                display: grid !important;
-                grid-template-columns: auto 1fr !important;
+                display: flex !important;
                 align-items: center !important;
+                justify-content: space-between !important;
+                gap: 8px !important;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
+                flex-wrap: nowrap !important;
             }
             .dataset-title-block {
-                grid-column: 1 / 2 !important;
-                grid-row: 1 / 2 !important;
                 display: flex !important;
                 flex-direction: row !important;
                 align-items: center !important;
                 gap: 6px !important;
+                flex-shrink: 0 !important;
                 min-width: 0 !important;
             }
             .dataset-title-block .badge-pill {
@@ -464,129 +472,143 @@
                 font-size: 0.68rem !important;
             }
             .dataset-heading {
-                font-size: 0.95rem !important;
+                font-size: 0.88rem !important;
+                font-weight: 800 !important;
             }
             .dataset-subheading {
-                display: none !important; /* Entfernt überflüssigen Text-Ballast auf Mobile */
+                display: none !important;
+            }
+            #gallery-boxes-badge {
+                display: none !important;
             }
             .gallery-search-wrap {
-                grid-column: 2 / 3 !important;
-                grid-row: 1 / 2 !important;
-                width: 100% !important;
+                flex: 1 1 auto !important;
+                width: auto !important;
                 max-width: none !important;
                 min-width: 0 !important;
                 margin: 0 !important;
             }
             .gallery-search-wrap input {
-                height: 28px !important;
-                padding: 4px 8px !important;
-                font-size: 0.74rem !important;
-                border-radius: var(--radius-sm) !important;
-            }
-            .dataset-header-controls {
-                grid-column: 1 / -1 !important;
-                grid-row: 2 / 3 !important;
                 width: 100% !important;
+                height: 28px !important;
+                background: transparent !important;
+                border: none !important;
+                padding: 2px 6px !important;
+                font-size: 0.75rem !important;
+                box-shadow: none !important;
+            }
+            .gallery-search-wrap input:focus {
+                box-shadow: none !important;
+                border: none !important;
+            }
+            /* Redundante Top-Controls auf Mobile ausblenden (leben im Thumb-Dock & Pull-to-Refresh) */
+            .dataset-header-controls {
+                display: none !important;
+            }
+
+            /* Row 2: Schwebende Pill-Toolbar (View Switcher [⊞ ▦ ☰] + [👁 Boxen] | [All • Train • Val]) */
+            .dataset-filter-bar {
+                background: var(--surface-glass, rgba(30, 41, 59, 0.75)) !important;
+                backdrop-filter: blur(14px) !important;
+                -webkit-backdrop-filter: blur(14px) !important;
+                border: 1px solid var(--border) !important;
+                border-radius: var(--radius-full) !important;
+                padding: 3px 8px !important;
+                margin-bottom: 8px !important;
                 display: flex !important;
                 align-items: center !important;
                 justify-content: space-between !important;
-                gap: 5px !important;
+                gap: 4px !important;
                 flex-wrap: nowrap !important;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
                 overflow-x: auto !important;
                 -webkit-overflow-scrolling: touch !important;
-                scrollbar-width: none !important;
-                padding-top: 2px !important;
             }
-            @media (max-width: 480px) {
-                #gallery-boxes-badge {
-                    display: none !important;
-                }
-            }
-            .dataset-header-controls::-webkit-scrollbar {
+            .dataset-filter-bar::-webkit-scrollbar {
                 display: none !important;
             }
-            .dataset-view-switcher {
+            .dataset-display-group {
+                display: flex !important;
+                align-items: center !important;
+                gap: 4px !important;
                 flex-shrink: 0 !important;
             }
+            .dataset-view-switcher {
+                display: inline-flex !important;
+                flex-shrink: 0 !important;
+                background: rgba(255, 255, 255, 0.04) !important;
+                border: 1px solid var(--border) !important;
+                border-radius: var(--radius-full) !important;
+                padding: 1px !important;
+                gap: 1px !important;
+            }
+            [data-theme="light"] .dataset-view-switcher {
+                background: rgba(0, 0, 0, 0.04) !important;
+            }
             .dataset-view-switcher .btn-view-mode {
-                padding: 5px 7px !important;
+                padding: 4px 6px !important;
+                border-radius: var(--radius-full) !important;
+                border: none !important;
             }
             .dataset-view-switcher .btn-view-mode span {
                 display: none !important;
             }
-            /* Im Hochformat auf Smartphones die detaillierte Tabelle ausblenden (im Querformat verfügbar) */
             @media (orientation: portrait) {
                 .btn-view-mode[data-view="detailed-list"] {
                     display: none !important;
                 }
             }
-            /* Action-Buttons in Datensatz-Header auf Mobile kompakt & icon-basiert halten */
-            .dataset-header-controls .btn-tool {
-                padding: 5px 8px !important;
-                font-size: 0.74rem !important;
-                flex-shrink: 0 !important;
-                min-height: 32px !important;
-            }
-            .dataset-header-controls .btn-tool span {
-                display: none !important;
-            }
-            /* Nur beim Boxen- und Auswahl-Toggle lassen wir die Beschriftung sichtbar */
-            #toggle-gallery-boxes-btn span,
-            #toggle-select-mode-btn span {
-                display: inline !important;
+            #toggle-gallery-boxes-btn {
+                padding: 4px 8px !important;
                 font-size: 0.72rem !important;
+                border-radius: var(--radius-full) !important;
+                min-height: 26px !important;
+                height: 26px !important;
+                flex-shrink: 0 !important;
             }
-            /* Auf Mobile: Redundante Buttons aus dem Header ausblenden (da sie nun im Sticky Bottom Dock sitzen) */
-            .dataset-header-controls #refresh-gallery-btn,
-            .dataset-header-controls #open-import-modal-btn,
-            .dataset-header-controls .export-dropdown-wrap {
-                display: none !important;
-            }
-
-            .dataset-filter-bar {
-                padding: 6px 10px !important;
-                margin-bottom: 10px !important;
-                gap: 8px !important;
-                flex-wrap: nowrap !important;
-                overflow-x: auto !important;
-                -webkit-overflow-scrolling: touch !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: space-between !important;
+            #toggle-gallery-boxes-btn span {
+                display: inline !important;
+                font-size: 0.7rem !important;
             }
             .filter-split-group {
+                display: flex !important;
+                align-items: center !important;
+                gap: 2px !important;
                 flex-shrink: 0 !important;
             }
             .filter-split-group .filter-label {
                 display: none !important;
             }
+            .filter-split-group .btn-filter-pill {
+                padding: 3px 7px !important;
+                font-size: 0.7rem !important;
+                border-radius: var(--radius-full) !important;
+            }
             .desktop-only-flex {
                 display: none !important;
             }
             .mobile-filter-trigger-btn {
-                display: inline-flex !important;
-                align-items: center;
-                gap: 5px;
-                padding: 4px 10px !important;
-                font-size: 0.74rem !important;
-                font-weight: 700 !important;
-                border-radius: var(--radius-full) !important;
-                background: var(--surface-elevated);
-                border: 1px solid var(--border);
-                color: var(--text);
-                white-space: nowrap;
-                flex-shrink: 0;
-                cursor: pointer;
+                display: none !important;
             }
-            .mobile-filter-trigger-btn.active {
-                background: rgba(56, 189, 248, 0.15) !important;
-                border-color: #38bdf8 !important;
-                color: #38bdf8 !important;
+
+            /* Indikator-Dot auf dem Filter-Button im mobilen Dock bei aktivem Filter */
+            #mobile-dock-filter-btn {
+                position: relative;
             }
-            [data-theme="light"] .mobile-filter-trigger-btn.active {
-                background: rgba(14, 165, 233, 0.12) !important;
-                border-color: #0284c7 !important;
-                color: #0284c7 !important;
+            #mobile-dock-filter-btn.active-filter::after {
+                content: '';
+                position: absolute;
+                top: 7px;
+                right: calc(50% - 13px);
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: #38bdf8;
+                box-shadow: 0 0 6px #38bdf8;
+            }
+            [data-theme="light"] #mobile-dock-filter-btn.active-filter::after {
+                background: #0284c7;
+                box-shadow: 0 0 6px #0284c7;
             }
 
             /* Datensatz-Galerie Kacheln auf Mobile */

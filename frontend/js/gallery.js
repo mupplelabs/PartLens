@@ -266,6 +266,7 @@ gallerySplitBtns.forEach(btn => {
         btn.classList.add('active');
         currentGallerySplit = btn.getAttribute('data-split');
         galleryCurrentPage = 1;
+        renderGalleryClassFilters(cachedGallerySamples);
         renderFilteredGallery();
     });
 });
@@ -416,7 +417,9 @@ function renderGalleryClassFilters(samples) {
         }
     }
     if (mobileDockFilter) {
-        mobileDockFilter.classList.toggle('primary', currentGalleryClass !== 'all');
+        const isFiltered = (currentGalleryClass !== 'all') || (currentGallerySplit !== 'all');
+        mobileDockFilter.classList.toggle('active-filter', isFiltered);
+        mobileDockFilter.classList.toggle('primary', isFiltered);
     }
 }
 

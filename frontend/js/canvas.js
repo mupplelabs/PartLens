@@ -51,13 +51,17 @@ function fitImageToWorkspace() {
     if (viewport && ready && srcW > 0 && srcH > 0) {
         const vpRect = viewport.getBoundingClientRect();
         const isMobile = window.innerWidth <= 768;
-        const padX = isMobile ? 12 : 24;
+        const padX = isMobile ? 8 : 24;
+        const padY = isMobile ? 8 : 24;
         const isWebcamMode = (typeof currentMode !== 'undefined' && currentMode === 'webcam');
         const controlsBar = isWebcamMode ? document.getElementById('webcam-controls-bar') : null;
         const controlsH = (controlsBar && controlsBar.offsetHeight > 0) ? controlsBar.offsetHeight : 0;
 
-        const availW = Math.max(100, (vpRect.width || viewport.clientWidth || 320) - padX);
-        const availH = Math.max(100, (vpRect.height || viewport.clientHeight || 240) - padY - controlsH);
+        const vpW = (vpRect && vpRect.width > 0) ? vpRect.width : (viewport.clientWidth || window.innerWidth);
+        const vpH = (vpRect && vpRect.height > 0) ? vpRect.height : (viewport.clientHeight || Math.round(window.innerHeight * 0.5));
+
+        const availW = Math.max(60, Math.floor(vpW - padX));
+        const availH = Math.max(60, Math.floor(vpH - padY - controlsH));
 
         const fitScale = Math.min(availW / srcW, availH / srcH);
         const fittedW = Math.max(40, Math.round(srcW * fitScale));
@@ -100,15 +104,17 @@ function resetStageZoomPan() {
 window.fitImageToWorkspace = fitImageToWorkspace;
 window.resetStageZoomPan = resetStageZoomPan;
 
-// Automatisches Neu-Einpassen beim Resizen (z.B. iPhone Drehung oder DevTools Responsive Resizing)
+// Automatisches Neu-Einpassen beim Resizen und Drehen (z.B. iPhone Drehung oder DevTools Responsive Resizing)
 let resizeFitTimer = null;
-window.addEventListener('resize', () => {
+function handleStageResize() {
     clearTimeout(resizeFitTimer);
     resizeFitTimer = setTimeout(() => {
-        if (Math.abs(stageZoom - 1.0) < 0.05 && Math.abs(stagePanX) < 5 && Math.abs(stagePanY) < 5) {
-            fitImageToWorkspace();
-        }
-    }, 120);
+        fitImageToWorkspace();
+    }, 100);
+}
+window.addEventListener('resize', handleStageResize);
+window.addEventListener('orientationchange', () => {
+    setTimeout(fitImageToWorkspace, 180);
 });
 
 function zoomAtPoint(deltaFactor, clientX, clientY) {

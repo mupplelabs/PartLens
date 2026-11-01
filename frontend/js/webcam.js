@@ -354,6 +354,9 @@ document.querySelectorAll('.sample-btn').forEach(btn => {
             runStage0Detection();
         } else {
             previewImage.src = targetSrc;
+            if (previewImage.complete && previewImage.naturalWidth) {
+                resetStageZoomPan();
+            }
         }
     });
 });

@@ -498,6 +498,9 @@ if (quickSampleSelect) {
                 runStage0Detection();
             } else {
                 previewImage.src = val;
+                if (previewImage.complete && previewImage.naturalWidth) {
+                    resetStageZoomPan();
+                }
             }
         }
     });

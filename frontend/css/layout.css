@@ -465,6 +465,9 @@
             /* Studio Canvas Flex-Container auf Mobile (Füllt exakt den Raum zwischen Navbar und Dock) */
             body.view-studio-active #view-studio {
                 height: 100% !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
                 transform: none !important;
                 contain: none !important;
                 filter: none !important;
@@ -472,6 +475,9 @@
             }
             body.view-studio-active .studio-grid {
                 height: 100% !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
                 display: flex !important;
                 flex-direction: column !important;
                 gap: 0 !important;
@@ -482,6 +488,9 @@
             }
             body.view-studio-active .studio-canvas-card {
                 height: 100% !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
                 display: flex !important;
                 flex-direction: column !important;
                 border-radius: var(--radius-lg) !important;
@@ -492,6 +501,9 @@
                 flex: 1 1 auto !important;
                 min-height: 0 !important;
                 height: 100% !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
                 max-height: none !important;
                 overflow: hidden !important;
                 display: flex !important;
@@ -502,6 +514,8 @@
             body.view-studio-active #upload-panel {
                 width: 100% !important;
                 height: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
@@ -511,6 +525,8 @@
             body.view-studio-active #webcam-panel {
                 width: 100% !important;
                 height: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
                 display: flex !important;
                 flex-direction: column !important;
                 align-items: center !important;

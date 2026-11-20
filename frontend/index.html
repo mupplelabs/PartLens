@@ -18,12 +18,12 @@
         })();
     </script>
     <title>PartLens – Visual Part-DB & YOLO Studio</title>
-    <link rel="stylesheet" href="/frontend/css/base.css?v=2.8.6">
-    <link rel="stylesheet" href="/frontend/css/layout.css?v=2.8.6">
-    <link rel="stylesheet" href="/frontend/css/components.css?v=2.8.6">
-    <link rel="stylesheet" href="/frontend/css/studio.css?v=2.8.6">
-    <link rel="stylesheet" href="/frontend/css/gallery.css?v=2.8.6">
-    <link rel="stylesheet" href="/frontend/css/modals.css?v=2.8.6">
+    <link rel="stylesheet" href="/frontend/css/base.css?v=2.9.0">
+    <link rel="stylesheet" href="/frontend/css/layout.css?v=2.9.0">
+    <link rel="stylesheet" href="/frontend/css/components.css?v=2.9.0">
+    <link rel="stylesheet" href="/frontend/css/studio.css?v=2.9.0">
+    <link rel="stylesheet" href="/frontend/css/gallery.css?v=2.9.0">
+    <link rel="stylesheet" href="/frontend/css/modals.css?v=2.9.0">
 </head>
 <body class="view-studio-active">
 
@@ -73,6 +73,10 @@
         </nav>
 
         <div class="header-actions">
+            <button id="inbox-counter-badge" class="status-pill inbox-badge" type="button" style="display: none; cursor: pointer; border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.12); color: var(--amber);" title="Bilder zur Überprüfung (Review-Queue)" data-i18n-title="header.inbox_title">
+                <span class="inbox-dot" style="width: 7px; height: 7px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 6px var(--amber);"></span>
+                <span id="header-inbox-text">Inbox: 0</span>
+            </button>
             <div class="status-pill" id="dataset-counter-badge" title="Aktueller Stand der gespeicherten YOLO-Datensätze" data-i18n-title="header.dataset_title">
                 <span class="live-dot"></span>
                 <span id="header-dataset-text" data-i18n="header.dataset_initial">Datensatz: 0 Bilder</span>
@@ -232,7 +236,7 @@
                                 </button>
                             </div>
 
-                            <div class="webcam-controls-bar" id="webcam-controls-bar">
+                            <div class="webcam-controls-bar" id="webcam-controls-bar" style="display: none;">
                                 <select id="camera-select" style="max-width: 180px; padding: 4px; font-size: 0.75rem;"></select>
                                 <button id="toggle-webcam-btn" class="btn btn-primary" type="button" style="padding: 4px 8px; font-size: 0.75rem;" title="Stream anhalten / fortsetzen">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
@@ -753,11 +757,20 @@
                                     <span class="chip-dot" style="width:7px; height:7px; border-radius:50%; background:#3b82f6; display:inline-block; margin-right:5px;"></span><span data-i18n="curation.val_label">Val (20%)</span>
                                 </button>
                             </div>
+                            <div id="split-recommendation-hint" style="display: none; font-size: 0.72rem; color: var(--amber); margin-top: 5px; padding: 4px 8px; background: rgba(245, 158, 11, 0.1); border-radius: 4px; border: 1px solid rgba(245, 158, 11, 0.25); cursor: pointer;" title="Klicken, um den empfohlenen Split zu übernehmen">
+                                <span id="split-recommendation-text"></span>
+                            </div>
                             <select id="dataset-split" style="display: none;">
                                 <option value="train" selected>train</option>
                                 <option value="val">val</option>
                             </select>
                         </div>
+
+                        <!-- Review Queue: Approve Button -->
+                        <button id="approve-sample-btn" class="btn btn-tool-accent" type="button" style="display: none; width: 100%; margin-bottom: 8px; padding: 9px 12px; font-weight: 700; font-size: 0.82rem; justify-content: center; gap: 6px;" title="Als geprüft freigeben und nächstes Sample laden (Cmd+Enter)">
+                            <svg class="tool-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span id="approve-btn-text">Freigeben &amp; Weiter</span>
+                        </button>
 
                         <button id="save-dataset-btn" class="btn-save-dataset" type="button">
                             <svg class="tool-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
@@ -894,6 +907,10 @@
                     <button class="btn-filter-pill active gallery-split-btn" data-split="all" type="button" data-i18n="gallery.split_all">Alle</button>
                     <button class="btn-filter-pill gallery-split-btn" data-split="train" type="button"><span class="chip-dot" style="width:7px; height:7px; border-radius:50%; background:#22c55e; display:inline-block; margin-right:4px;"></span>Train</button>
                     <button class="btn-filter-pill gallery-split-btn" data-split="val" type="button"><span class="chip-dot" style="width:7px; height:7px; border-radius:50%; background:#3b82f6; display:inline-block; margin-right:4px;"></span>Val</button>
+                    <button id="gallery-unreviewed-btn" class="btn-filter-pill" type="button" style="display: none; border-color: rgba(245, 158, 11, 0.4); color: var(--amber);" title="Nur ungesichtete Bilder anzeigen">
+                        <span class="chip-dot" style="width:7px; height:7px; border-radius:50%; background:var(--amber); display:inline-block; margin-right:4px;"></span>
+                        <span id="gallery-unreviewed-btn-text">Inbox (0)</span>
+                    </button>
                 </div>
 
                 <!-- Mobile Filter Trigger Button (nur auf Mobile sichtbar) -->
@@ -1204,6 +1221,10 @@
                     <span id="mobile-info-count-badge" class="dock-badge" style="display: none;">0</span>
                 </div>
                 <span data-i18n="mobile.info">Info</span>
+            </button>
+            <button id="mobile-approve-btn" class="dock-btn" type="button" style="display: none; border-color: rgba(245, 158, 11, 0.5); color: var(--amber);" title="Sample freigeben und weiter" data-i18n-title="mobile.approve_title">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span data-i18n="mobile.approve">Prüfen</span>
             </button>
             <button id="mobile-save-btn" class="dock-btn save" type="button" title="Sample speichern" data-i18n-title="mobile.save_title">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
@@ -1534,19 +1555,19 @@
 
 
     <!-- PartLens Modular Scripts -->
-    <script src="/frontend/js/i18n.js?v=2.8.6"></script>
-    <script src="/frontend/js/state.js?v=2.8.6"></script>
-    <script src="/frontend/js/api.js?v=2.8.6"></script>
-    <script src="/frontend/js/analysis.js?v=2.8.6"></script>
-    <script src="/frontend/js/resistor.js?v=2.8.6"></script>
-    <script src="/frontend/js/canvas.js?v=2.8.6"></script>
-    <script src="/frontend/js/boxes.js?v=2.8.6"></script>
-    <script src="/frontend/js/footprints.js?v=2.8.6"></script>
-    <script src="/frontend/js/autolabel.js?v=2.8.6"></script>
-    <script src="/frontend/js/gallery.js?v=2.8.6"></script>
-    <script src="/frontend/js/import_modal.js?v=2.8.6"></script>
-    <script src="/frontend/js/export.js?v=2.8.6"></script>
-    <script src="/frontend/js/webcam.js?v=2.8.6"></script>
-    <script src="/frontend/js/app.js?v=2.8.6"></script>
+    <script src="/frontend/js/i18n.js?v=2.9.0"></script>
+    <script src="/frontend/js/state.js?v=2.9.0"></script>
+    <script src="/frontend/js/api.js?v=2.9.0"></script>
+    <script src="/frontend/js/analysis.js?v=2.9.0"></script>
+    <script src="/frontend/js/resistor.js?v=2.9.0"></script>
+    <script src="/frontend/js/canvas.js?v=2.9.0"></script>
+    <script src="/frontend/js/boxes.js?v=2.9.0"></script>
+    <script src="/frontend/js/footprints.js?v=2.9.0"></script>
+    <script src="/frontend/js/autolabel.js?v=2.9.0"></script>
+    <script src="/frontend/js/gallery.js?v=2.9.0"></script>
+    <script src="/frontend/js/import_modal.js?v=2.9.0"></script>
+    <script src="/frontend/js/export.js?v=2.9.0"></script>
+    <script src="/frontend/js/webcam.js?v=2.9.0"></script>
+    <script src="/frontend/js/app.js?v=2.9.0"></script>
 </body>
 </html>

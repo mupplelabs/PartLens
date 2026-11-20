@@ -11,7 +11,9 @@
     "webcam_btn": "Camera",
     "theme_title": "Switch Dark / Light Mode",
     "lang_title": "Switch Language (DE / EN)",
-    "dataset_initial": "Dataset: 0 images"
+    "dataset_initial": "Dataset: 0 images",
+    "inbox_title": "Images for review (Review Queue)",
+    "inbox_text": "Inbox: {count}"
   },
   "nav": {
     "studio": "Studio",
@@ -402,6 +404,8 @@
     "info_title": "Open component details & inspector",
     "save": "Save",
     "save_title": "Save sample",
+    "approve": "Review",
+    "approve_title": "Approve sample and proceed",
     "import": "Import",
     "import_title": "Import dataset (Roboflow / Mendeley)",
     "filter": "Filter",

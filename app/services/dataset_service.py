@@ -208,12 +208,14 @@ def scan_full_dataset() -> tuple[list[dict], DatasetStatsResponse]:
                 "size_bytes": size_bytes
             })
 
+    unreviewed_count = sum(1 for smp in samples if any("needs-review" in str(t).lower() for t in smp.get("tags", [])))
     stats = DatasetStatsResponse(
         train_images=train_count,
         val_images=val_count,
         total_annotations=total_boxes,
         class_counts=counts,
-        classes=CLASS_NAMES
+        classes=CLASS_NAMES,
+        unreviewed_count=unreviewed_count
     )
     return samples, stats
 
@@ -432,6 +434,8 @@ def save_sample(req: SaveSampleRequest) -> dict:
             _cached_stats.total_annotations += len(sample_boxes)
             for cname in classes_in_sample:
                 _cached_stats.class_counts[cname] = _cached_stats.class_counts.get(cname, 0) + 1
+            if any("needs-review" in str(t).lower() for t in all_tags):
+                _cached_stats.unreviewed_count += 1
         save_dataset_index_async()
 
     return {
@@ -541,6 +545,8 @@ def delete_sample(split: str, sample_id: str) -> dict:
                     cname = b.get("label", "other")
                     if cname in _cached_stats.class_counts:
                         _cached_stats.class_counts[cname] = max(0, _cached_stats.class_counts[cname] - 1)
+                if any("needs-review" in str(t).lower() for t in removed.get("tags", [])):
+                    _cached_stats.unreviewed_count = max(0, _cached_stats.unreviewed_count - 1)
             save_dataset_index_async()
 
     return {"success": True, "deleted_id": sample_id, "stats": get_stats()}
@@ -581,7 +587,91 @@ def delete_samples_bulk(items: list[dict]) -> dict:
                         cname = b.get("label", "other")
                         if cname in _cached_stats.class_counts:
                             _cached_stats.class_counts[cname] = max(0, _cached_stats.class_counts[cname] - 1)
+                    if any("needs-review" in str(t).lower() for t in removed.get("tags", [])):
+                        _cached_stats.unreviewed_count = max(0, _cached_stats.unreviewed_count - 1)
 
     if _cached_samples_data is not None:
         save_dataset_index_async()
     return {"success": True, "deleted_count": len(deleted_ids), "deleted_ids": deleted_ids, "stats": get_stats()}
+
+def approve_sample(split: str, sample_id: str) -> dict:
+    global _cached_samples_data, _cached_stats
+    clean_id = sample_id.replace(".jpg", "").replace(".jpeg", "").replace(".png", "").replace(".webp", "")
+    meta_path = DATASET_DIR / "metadata" / split / f"{clean_id}.json"
+    if not meta_path.exists():
+        raise FileNotFoundError(f"Metadaten für {clean_id} in Split '{split}' nicht gefunden.")
+
+    meta_raw = json.loads(meta_path.read_text(encoding="utf-8"))
+    tags = set(meta_raw.get("tags", []))
+    was_unreviewed = any("needs-review" in str(t).lower() for t in tags)
+
+    tags = {t for t in tags if "needs-review" not in str(t).lower()}
+    tags.add("verified")
+    meta_raw["tags"] = sorted(list(tags))
+    meta_raw["reviewed_at"] = int(time.time())
+
+    meta_path.write_text(json.dumps(meta_raw, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    if _cached_samples_data is not None:
+        for s in _cached_samples_data:
+            if s.get("id") == clean_id and s.get("split") == split:
+                s["tags"] = meta_raw["tags"]
+                break
+
+    if was_unreviewed and _cached_stats is not None:
+        _cached_stats.unreviewed_count = max(0, _cached_stats.unreviewed_count - 1)
+
+    save_dataset_index_async()
+    return {
+        "success": True,
+        "sample_id": clean_id,
+        "split": split,
+        "tags": meta_raw["tags"],
+        "unreviewed_count": _cached_stats.unreviewed_count if _cached_stats else 0
+    }
+
+def recommend_split(classes: list[str], part_markings: Optional[list[str]] = None) -> tuple[str, str]:
+    """
+    Intelligente Train vs. Val Empfehlung:
+    1. Data-Leakage Schutz: Wenn ein konkretes part_marking bereits existiert, gleichen Split nutzen.
+    2. Klassen-Balancierung: 80% Train, 20% Val Ziel. Falls eine erkannte Klasse in Val unterrepräsentiert ist (< 18%), Val empfehlen.
+    """
+    global _cached_samples_data, _cached_stats
+    samples = _cached_samples_data or []
+
+    clean_markings = [m.strip().upper() for m in (part_markings or []) if m and len(m.strip()) >= 3]
+    if clean_markings and samples:
+        for s in samples:
+            s_split = s.get("split", "train")
+            s_tags = [str(t).upper() for t in s.get("tags", [])]
+            for m in clean_markings:
+                if any(m in t for t in s_tags):
+                    return s_split, f"Part-Marking '{m}' existiert bereits in {s_split} (Leakage-Schutz)"
+
+    stats = get_stats()
+    val_ratio = stats.val_images / max(1, stats.train_images + stats.val_images)
+    if val_ratio < 0.15:
+        return "val", f"Validation-Split allgemein unterrepräsentiert ({val_ratio * 100:.1f}%)"
+
+    if classes and samples:
+        class_val_counts = {}
+        class_train_counts = {}
+        for s in samples:
+            s_split = s.get("split", "train")
+            for c in s.get("classes", []):
+                if s_split == "val":
+                    class_val_counts[c] = class_val_counts.get(c, 0) + 1
+                else:
+                    class_train_counts[c] = class_train_counts.get(c, 0) + 1
+
+        for c in classes:
+            norm_c = normalize_label_to_yolo(c)
+            t_cnt = class_train_counts.get(norm_c, 0)
+            v_cnt = class_val_counts.get(norm_c, 0)
+            total_c = t_cnt + v_cnt
+            if total_c >= 2:
+                c_val_ratio = v_cnt / total_c
+                if c_val_ratio < 0.18:
+                    return "val", f"Klasse '{norm_c}' in Val unterrepräsentiert ({c_val_ratio * 100:.0f}%)"
+
+    return "train", "Standard 80:20 Train-Allokation"

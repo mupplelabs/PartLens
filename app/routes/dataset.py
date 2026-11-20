@@ -19,7 +19,9 @@ from app.services.dataset_service import (
     save_sample,
     update_sample_boxes,
     delete_sample,
-    delete_samples_bulk
+    delete_samples_bulk,
+    approve_sample,
+    recommend_split
 )
 from app.services.coco import build_coco_instances
 
@@ -178,16 +180,50 @@ async def get_thumbnail(split: str, sample_id: str):
     )
     return Response(content=svg_fallback, media_type="image/svg+xml")
 
+@router.post("/sample/{split}/{sample_id}/approve")
+@router.post("/samples/{split}/{sample_id}/approve")
+async def approve_sample_endpoint(split: str, sample_id: str):
+    try:
+        return approve_sample(split, sample_id)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/recommend-split")
+async def recommend_split_endpoint(
+    classes: Optional[str] = Query(None, description="Kommagetrennte Liste von Klassen"),
+    part_markings: Optional[str] = Query(None, description="Kommagetrennte Liste von Part-Markings")
+):
+    class_list = [c.strip() for c in classes.split(",")] if classes else []
+    marking_list = [m.strip() for m in part_markings.split(",")] if part_markings else []
+    suggested_split, reason = recommend_split(class_list, marking_list)
+    return {
+        "suggested_split": suggested_split,
+        "reason": reason
+    }
+
 @router.get("/export-coco")
-async def export_dataset_coco():
-    return await export_dataset_zip(format="coco")
+async def export_dataset_coco(exclude_unreviewed: bool = Query(True)):
+    return await export_dataset_zip(format="coco", exclude_unreviewed=exclude_unreviewed)
 
 @router.get("/export-zip")
-async def export_dataset_zip(format: str = "yolo"):
+async def export_dataset_zip(format: str = "yolo", exclude_unreviewed: bool = Query(True)):
     zip_buffer = io.BytesIO()
+
+    unreviewed_ids = set()
+    if exclude_unreviewed:
+        all_samples = get_samples(limit=100000).get("samples", [])
+        unreviewed_ids = {
+            s["id"] for s in all_samples
+            if any("needs-review" in str(t).lower() for t in s.get("tags", []))
+        }
 
     if format.lower() == "coco":
         samples_data = get_samples(limit=100000).get("samples", [])
+        if exclude_unreviewed:
+            samples_data = [s for s in samples_data if s["id"] not in unreviewed_ids]
+
         train_coco = build_coco_instances("train", samples_data)
         val_coco = build_coco_instances("val", samples_data)
 
@@ -200,6 +236,9 @@ async def export_dataset_zip(format: str = "yolo"):
                 if sp_img_dir.exists():
                     for p in sp_img_dir.glob("*.*"):
                         if p.is_file():
+                            clean_stem = p.stem
+                            if exclude_unreviewed and clean_stem in unreviewed_ids:
+                                continue
                             zf.write(p, arcname=f"images/{sp}/{p.name}")
 
         zip_buffer.seek(0)
@@ -212,6 +251,8 @@ async def export_dataset_zip(format: str = "yolo"):
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
             for p in DATASET_DIR.rglob("*"):
                 if p.is_file():
+                    if exclude_unreviewed and p.stem in unreviewed_ids:
+                        continue
                     rel = p.relative_to(DATASET_DIR)
                     zf.write(p, arcname=str(rel))
         zip_buffer.seek(0)

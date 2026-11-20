@@ -260,8 +260,40 @@ function initGalleryViewSwitcher() {
 initGalleryViewSwitcher();
 
 const gallerySplitBtns = document.querySelectorAll('.gallery-split-btn');
+let currentGalleryFilterTag = null; // null oder 'needs-review'
+
+const galleryUnreviewedBtn = document.getElementById('gallery-unreviewed-btn');
+if (galleryUnreviewedBtn) {
+    galleryUnreviewedBtn.addEventListener('click', () => {
+        if (currentGalleryFilterTag === 'needs-review') {
+            currentGalleryFilterTag = null;
+            galleryUnreviewedBtn.classList.remove('active');
+            gallerySplitBtns.forEach(b => {
+                if (b.getAttribute('data-split') === currentGallerySplit) b.classList.add('active');
+            });
+        } else {
+            currentGalleryFilterTag = 'needs-review';
+            gallerySplitBtns.forEach(b => b.classList.remove('active'));
+            galleryUnreviewedBtn.classList.add('active');
+        }
+        galleryCurrentPage = 1;
+        renderFilteredGallery();
+    });
+}
+
+function filterGalleryByUnreviewed() {
+    currentGalleryFilterTag = 'needs-review';
+    gallerySplitBtns.forEach(b => b.classList.remove('active'));
+    if (galleryUnreviewedBtn) galleryUnreviewedBtn.classList.add('active');
+    galleryCurrentPage = 1;
+    renderFilteredGallery();
+}
+window.filterGalleryByUnreviewed = filterGalleryByUnreviewed;
+
 gallerySplitBtns.forEach(btn => {
     btn.addEventListener('click', () => {
+        currentGalleryFilterTag = null;
+        if (galleryUnreviewedBtn) galleryUnreviewedBtn.classList.remove('active');
         gallerySplitBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentGallerySplit = btn.getAttribute('data-split');
@@ -1317,6 +1349,11 @@ function renderFilteredGallery() {
         filtered = filtered.filter(s => s.split === currentGallerySplit);
     }
 
+    // 1.1 Tag-Filter (z.B. Inbox / needs-review)
+    if (currentGalleryFilterTag) {
+        filtered = filtered.filter(s => s.tags && s.tags.includes(currentGalleryFilterTag));
+    }
+
     // 2. Klassenfilter
     if (currentGalleryClass !== 'all') {
         filtered = filtered.filter(s => s.classes && s.classes.includes(currentGalleryClass));
@@ -1559,6 +1596,20 @@ async function openSampleInStudio(split, sampleId) {
             if (statusDiv) statusDiv.innerText = window.t
                 ? window.t('gallery.status_loaded_in_studio', { id: sampleId, count: detectedBoxes.length })
                 : `Sample ${sampleId} im Studio geladen (${detectedBoxes.length} Boxen).`;
+            // Aktives Sample für Review / Freigabe markieren
+            const isUnreviewed = (data.tags || []).includes('needs-review');
+            window.currentActiveSample = {
+                split,
+                id: sampleId,
+                tags: data.tags || [],
+                isUnreviewed
+            };
+
+            const approveBtn = document.getElementById('approve-sample-btn');
+            const mobileApproveBtn = document.getElementById('mobile-approve-btn');
+            if (approveBtn) approveBtn.style.display = isUnreviewed ? 'inline-flex' : 'none';
+            if (mobileApproveBtn) mobileApproveBtn.style.display = isUnreviewed ? 'inline-flex' : 'none';
+
             selectComponentBox(0, true);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
@@ -1566,6 +1617,83 @@ async function openSampleInStudio(split, sampleId) {
         alert(window.t ? window.t('gallery.open_error', { error: err.message }) : `Fehler beim Öffnen: ${err.message}`);
     }
 }
+
+// Review-Queue: Freigeben eines unüberprüften Bildes & nächstes Sample laden
+async function approveCurrentSample() {
+    if (!window.currentActiveSample || !window.currentActiveSample.isUnreviewed) return;
+    const { split, id } = window.currentActiveSample;
+    const approveBtn = document.getElementById('approve-sample-btn');
+    const mobileApproveBtn = document.getElementById('mobile-approve-btn');
+
+    try {
+        if (approveBtn) approveBtn.disabled = true;
+        if (mobileApproveBtn) mobileApproveBtn.disabled = true;
+
+        if (statusDiv) statusDiv.innerText = `Freigabe für Sample ${id}...`;
+        await CTApi.approveDatasetSample(split, id);
+
+        // Tags im In-Memory Datensatz aktualisieren
+        const cachedItem = cachedGallerySamples.find(s => s.id === id && s.split === split);
+        if (cachedItem) {
+            cachedItem.tags = (cachedItem.tags || []).filter(t => t !== 'needs-review');
+            cachedItem.tags.push('verified');
+        }
+
+        window.currentActiveSample.tags = (window.currentActiveSample.tags || []).filter(t => t !== 'needs-review');
+        window.currentActiveSample.tags.push('verified');
+        window.currentActiveSample.isUnreviewed = false;
+
+        if (approveBtn) {
+            approveBtn.style.display = 'none';
+            approveBtn.disabled = false;
+        }
+        if (mobileApproveBtn) {
+            mobileApproveBtn.style.display = 'none';
+            mobileApproveBtn.disabled = false;
+        }
+
+        // Verbleibende unüberprüfte Bilder ermitteln
+        const unreviewedRemaining = cachedGallerySamples.filter(s => (s.tags || []).includes('needs-review'));
+        if (typeof updateInboxBadge === 'function') {
+            updateInboxBadge(unreviewedRemaining.length);
+        }
+
+        // Automatisch nächstes Sample zur Überprüfung laden
+        if (unreviewedRemaining.length > 0) {
+            const nextSample = unreviewedRemaining[0];
+            if (statusDiv) statusDiv.innerText = `Sample ${id} freigegeben. Lade nächstes unüberprüftes Bild...`;
+            await openSampleInStudio(nextSample.split, nextSample.id);
+        } else {
+            if (statusDiv) statusDiv.innerText = `Sample ${id} freigegeben. Alle Bilder in der Queue wurden geprüft!`;
+        }
+    } catch (err) {
+        console.error('Fehler bei Freigabe:', err);
+        alert(`Fehler bei der Freigabe von ${id}: ${err.message}`);
+        if (approveBtn) approveBtn.disabled = false;
+        if (mobileApproveBtn) mobileApproveBtn.disabled = false;
+    }
+}
+window.approveCurrentSample = approveCurrentSample;
+
+// Listener für Approve Buttons
+const approveBtnEl = document.getElementById('approve-sample-btn');
+if (approveBtnEl) {
+    approveBtnEl.addEventListener('click', approveCurrentSample);
+}
+const mobileApproveBtnEl = document.getElementById('mobile-approve-btn');
+if (mobileApproveBtnEl) {
+    mobileApproveBtnEl.addEventListener('click', approveCurrentSample);
+}
+
+// Shortcut: Cmd+Enter oder Ctrl+Enter zur schnellen Freigabe
+window.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        if (window.currentActiveSample && window.currentActiveSample.isUnreviewed) {
+            e.preventDefault();
+            approveCurrentSample();
+        }
+    }
+});
 
 // =====================================================================
 // CURATION ANALYTICS (ClearML Style)

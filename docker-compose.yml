@@ -25,3 +25,22 @@ services:
     extra_hosts:
       # Allows container to reach local LLM engines (Ollama, LM Studio) running on the host
       - "host.docker.internal:host-gateway"
+
+  partlens-ingestion:
+    build:
+      context: ./ingestion
+      dockerfile: Dockerfile
+    container_name: partlens-ingestion
+    restart: unless-stopped
+    depends_on:
+      - component-tracker
+    environment:
+      - PYTHONUNBUFFERED=1
+      - API_BASE_URL=http://component-tracker:8000
+      - WATCH_DIR=/watch
+      - INGESTION_QUIET_PERIOD_SEC=${INGESTION_QUIET_PERIOD_SEC:-300}
+      - INGESTION_MAX_WAIT_SEC=${INGESTION_MAX_WAIT_SEC:-900}
+      - FILE_STABILITY_DELAY_SEC=${FILE_STABILITY_DELAY_SEC:-10}
+      - DEFAULT_TAGS=needs-review,watch-import
+    volumes:
+      - ./watch:/watch

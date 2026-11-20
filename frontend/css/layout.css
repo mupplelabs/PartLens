@@ -523,9 +523,11 @@
                 overflow: hidden !important;
             }
             /* Auf Smartphones Webcam-Panel & Steuerung komplett ausblenden (Mobile nutzt native Kamera über Foto-Button) */
-            body.view-studio-active #webcam-panel,
-            body.view-studio-active .webcam-controls-bar,
-            body.view-studio-active #webcam-fallback-card {
+            #webcam-panel,
+            .webcam-controls-bar,
+            #webcam-fallback-card,
+            .mode-tabs,
+            #tab-webcam {
                 display: none !important;
             }
             body.view-studio-active .image-stage-wrap {

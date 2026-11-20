@@ -330,6 +330,7 @@ async function initStudioBackground() {
             } else if (datasetCounterBadge) {
                 datasetCounterBadge.innerText = badgeText;
             }
+            updateInboxBadge(serverData.stats.unreviewed_count || 0);
         }
         updateOcrStatusChip();
         updateLlmStatusChip();
@@ -462,4 +463,45 @@ if (typeof syncLlmSettingsWithServer === 'function') {
 if (typeof fitImageToWorkspace === 'function') {
     setTimeout(fitImageToWorkspace, 60);
     setTimeout(fitImageToWorkspace, 300);
+}
+
+// =====================================================================
+// INBOX & REVIEW QUEUE BADGE
+// =====================================================================
+function updateInboxBadge(unreviewedCount = 0) {
+    const inboxBadge = document.getElementById('inbox-counter-badge');
+    const headerInboxText = document.getElementById('header-inbox-text');
+    const galleryUnreviewedBtn = document.getElementById('gallery-unreviewed-btn');
+    const galleryUnreviewedText = document.getElementById('gallery-unreviewed-btn-text');
+
+    if (inboxBadge) {
+        if (unreviewedCount > 0) {
+            inboxBadge.style.display = 'inline-flex';
+            if (headerInboxText) headerInboxText.innerText = `Inbox: ${unreviewedCount}`;
+        } else {
+            inboxBadge.style.display = 'none';
+        }
+    }
+
+    if (galleryUnreviewedBtn) {
+        if (unreviewedCount > 0) {
+            galleryUnreviewedBtn.style.display = 'inline-flex';
+            if (galleryUnreviewedText) galleryUnreviewedText.innerText = `Inbox (${unreviewedCount})`;
+        } else {
+            galleryUnreviewedBtn.style.display = 'none';
+        }
+    }
+}
+window.updateInboxBadge = updateInboxBadge;
+
+const inboxCounterBadge = document.getElementById('inbox-counter-badge');
+if (inboxCounterBadge) {
+    inboxCounterBadge.addEventListener('click', () => {
+        if (typeof switchAppView === 'function' && navDatasetBtn) {
+            switchAppView(navDatasetBtn);
+            if (typeof filterGalleryByUnreviewed === 'function') {
+                filterGalleryByUnreviewed();
+            }
+        }
+    });
 }

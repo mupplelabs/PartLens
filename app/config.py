@@ -114,6 +114,8 @@ class AutoLabelResponse(BaseModel):
     provider: str
     model: str
     latency_ms: int
+    suggested_split: Optional[str] = "train"
+    suggested_split_reason: Optional[str] = None
 
 class SaveSampleRequest(BaseModel):
     image_base64: str
@@ -128,6 +130,7 @@ class DatasetStatsResponse(BaseModel):
     total_annotations: int
     class_counts: dict[str, int]
     classes: list[str]
+    unreviewed_count: int = 0
 
 class LLMSettingsUpdate(BaseModel):
     gemini_api_key: Optional[str] = None

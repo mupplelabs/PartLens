@@ -89,7 +89,6 @@ if FRONTEND_DIR.exists():
 
 # Standard-Routen fuer das Web-Frontend
 @app.get("/")
-@app.get("/v2")
 async def serve_index():
     no_cache_headers = {"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"}
     index_file = FRONTEND_DIR / "index.html"

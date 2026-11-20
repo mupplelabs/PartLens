@@ -1431,6 +1431,25 @@ if (runAutolabelBtn) {
             }
 
             selectComponentBox(0, true);
+
+            // Automatische Split-Empfehlung (Train vs. Val) anwenden & anzeigen
+            if (data.suggested_split) {
+                const targetSplit = data.suggested_split;
+                if (typeof datasetSplit !== 'undefined' && datasetSplit) datasetSplit.value = targetSplit;
+                if (typeof splitPillBtns !== 'undefined' && splitPillBtns) {
+                    splitPillBtns.forEach(b => {
+                        b.classList.toggle('active', b.getAttribute('data-split') === targetSplit);
+                    });
+                }
+                const hintEl = document.getElementById('split-recommendation-hint');
+                const textEl = document.getElementById('split-recommendation-text');
+                if (hintEl && textEl) {
+                    const reason = data.suggested_split_reason || (targetSplit === 'val' ? '20% Val-Balancing' : 'Train Split');
+                    textEl.innerText = `Empfehlung: ${targetSplit.toUpperCase()} (${reason})`;
+                    hintEl.style.display = 'block';
+                }
+            }
+
             hideAutoLabelLoading(true);
         } catch (err) {
             if (err.name === 'AbortError') {

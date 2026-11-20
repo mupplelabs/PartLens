@@ -48,6 +48,7 @@ cache/
 
 # Local Environment Variables & Secrets
 .env
+watch/
 .env.local
 .env.*.local
 config/llm_config.json

@@ -66,6 +66,23 @@ async saveDatasetSample(payload) {
     });
 },
 
+async approveDatasetSample(split, sampleId) {
+    const res = await fetch(`/api/dataset/sample/${encodeURIComponent(split)}/${encodeURIComponent(sampleId)}/approve`, {
+        method: 'POST'
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+},
+
+async recommendSplit(classes = [], partMarkings = []) {
+    const q = new URLSearchParams();
+    if (classes.length) q.set('classes', classes.join(','));
+    if (partMarkings.length) q.set('part_markings', partMarkings.join(','));
+    const res = await fetch(`/api/dataset/recommend-split?${q.toString()}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+},
+
 async getFootprints(query = '', category = '') {
 const q = new URLSearchParams();
 if (query) q.set('q', query);

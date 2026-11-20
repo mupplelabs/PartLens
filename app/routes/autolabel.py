@@ -6,7 +6,7 @@ from app.services.llm_service import (
     query_local_models,
     query_gemini_models
 )
-from app.services.dataset_service import save_sample
+from app.services.dataset_service import save_sample, recommend_split
 
 router = APIRouter(prefix="/api", tags=["autolabel"])
 
@@ -14,7 +14,13 @@ router = APIRouter(prefix="/api", tags=["autolabel"])
 @router.post("/autolabel", response_model=AutoLabelResponse)
 async def autolabel_endpoint(req: AutoLabelRequest):
     try:
-        return await run_autolabel_inference(req)
+        resp = await run_autolabel_inference(req)
+        classes = [c.label for c in resp.components]
+        part_markings = [c.part_marking for c in resp.components if c.part_marking]
+        suggested_split, reason = recommend_split(classes, part_markings)
+        resp.suggested_split = suggested_split
+        resp.suggested_split_reason = reason
+        return resp
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

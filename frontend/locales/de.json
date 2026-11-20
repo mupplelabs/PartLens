@@ -11,7 +11,9 @@
     "webcam_btn": "Kamera",
     "theme_title": "Dark / Light Mode wechseln",
     "lang_title": "Sprache wechseln (DE / EN)",
-    "dataset_initial": "Datensatz: 0 Bilder"
+    "dataset_initial": "Datensatz: 0 Bilder",
+    "inbox_title": "Bilder zur Überprüfung (Review-Queue)",
+    "inbox_text": "Inbox: {count}"
   },
   "nav": {
     "studio": "Studio",
@@ -402,6 +404,8 @@
     "info_title": "Bauteil-Details & Inspector öffnen",
     "save": "Speichern",
     "save_title": "Sample speichern",
+    "approve": "Prüfen",
+    "approve_title": "Sample freigeben und weiter",
     "import": "Import",
     "import_title": "Datensatz importieren (Roboflow / Mendeley)",
     "filter": "Filter",

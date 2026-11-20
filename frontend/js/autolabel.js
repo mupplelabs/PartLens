@@ -1179,10 +1179,14 @@ async function fetchDatasetStatus() {
                     ? window.formatDatasetBadge(data.stats.train_images, data.stats.val_images, data.stats.total_annotations)
                     : `Datensatz: ${data.stats.train_images} Train • ${data.stats.val_images} Val (${data.stats.total_annotations} Boxen)`;
             }
-            const backendVal = document.getElementById('chip-backend-val');
-            const backendChip = document.getElementById('chip-backend');
-            if (backendVal) backendVal.innerText = 'Online';
-            if (backendChip) backendChip.classList.remove('warning');
+            if (typeof setBackendStatus === 'function') {
+                setBackendStatus(true);
+            } else {
+                const backendVal = document.getElementById('chip-backend-val');
+                const backendChip = document.getElementById('chip-backend');
+                if (backendVal) backendVal.innerText = 'Online';
+                if (backendChip) backendChip.classList.remove('warning');
+            }
 
             updateOcrStatusChip();
             updateLlmStatusChip();
@@ -1194,10 +1198,14 @@ async function fetchDatasetStatus() {
         }
     } catch (err) {
         console.warn('Backend status noch nicht erreichbar:', err);
-        const backendVal = document.getElementById('chip-backend-val');
-        const backendChip = document.getElementById('chip-backend');
-        if (backendVal) backendVal.innerText = 'Offline';
-        if (backendChip) backendChip.classList.add('warning');
+        if (typeof setBackendStatus === 'function') {
+            setBackendStatus(false);
+        } else {
+            const backendVal = document.getElementById('chip-backend-val');
+            const backendChip = document.getElementById('chip-backend');
+            if (backendVal) backendVal.innerText = 'Offline';
+            if (backendChip) backendChip.classList.add('warning');
+        }
     }
     return null;
 }
@@ -1247,8 +1255,11 @@ function showAutoLabelLoading(modelName, provider) {
         const modelTag = isMobile ? '' : ` (<em>${modelName}</em>)`;
         autolabelStatus.innerHTML = `<span class="status-radar-dot active" style="display:inline-block; vertical-align:middle; margin-right:6px;"></span>${aiAnalyzingBase}${modelTag} · 00:00.0...`;
     }
-    if (statusDiv) {
-        statusDiv.innerText = isMobile ? `${aiAnalyzingBase}...` : `${aiAnalyzingBase} (${modelName})...`;
+    const initialStatusText = isMobile ? `${aiAnalyzingBase}...` : `${aiAnalyzingBase} (${modelName})...`;
+    if (typeof updateStudioStatus === 'function') {
+        updateStudioStatus(initialStatusText, 'active');
+    } else if (statusDiv) {
+        statusDiv.innerText = initialStatusText;
     }
 
     autoLabelTimerInterval = setInterval(() => {
@@ -1267,8 +1278,11 @@ function showAutoLabelLoading(modelName, provider) {
             const modelTag = isMobile ? '' : ` (<em>${modelName}</em>)`;
             autolabelStatus.innerHTML = `<span class="status-radar-dot active" style="display:inline-block; vertical-align:middle; margin-right:6px;"></span>${aiAnalyzingBase}${modelTag} · ${timeStr}...`;
         }
-        if (statusDiv) {
-            statusDiv.innerText = isMobile ? `${aiAnalyzingBase} (${timeStr})...` : `${aiAnalyzingBase} (${modelName} · ${timeStr})...`;
+        const tickStatusText = isMobile ? `${aiAnalyzingBase} (${timeStr})...` : `${aiAnalyzingBase} (${modelName} · ${timeStr})...`;
+        if (typeof updateStudioStatus === 'function') {
+            updateStudioStatus(tickStatusText, 'active');
+        } else if (statusDiv) {
+            statusDiv.innerText = tickStatusText;
         }
     }, 100);
 }
@@ -1310,6 +1324,9 @@ function abortAutoLabel() {
     }
     hideAutoLabelLoading(false);
     if (autolabelStatus) autolabelStatus.innerText = 'Auto-Label vom Benutzer abgebrochen.';
+    if (typeof updateStudioStatus === 'function') {
+        updateStudioStatus('Auto-Label abgebrochen · Bereit', 'ready');
+    }
 }
 
 const stopAutolabelBtn = document.getElementById('stop-autolabel-btn');
@@ -1451,6 +1468,14 @@ if (runAutolabelBtn) {
             }
 
             hideAutoLabelLoading(true);
+            const successStatus = window.t
+                ? window.t('canvas.autolabel_result', { count: detectedBoxes.length, ms: data.latency_ms })
+                : `Auto-Label: ${detectedBoxes.length} Bauteil${detectedBoxes.length === 1 ? '' : 'e'} erkannt (${data.latency_ms} ms) · Bereit`;
+            if (typeof updateStudioStatus === 'function') {
+                updateStudioStatus(successStatus, 'ready');
+            } else if (statusDiv) {
+                statusDiv.innerText = successStatus;
+            }
         } catch (err) {
             if (err.name === 'AbortError') {
                 console.log('Auto-Label vom Benutzer abgebrochen.');
@@ -1459,6 +1484,12 @@ if (runAutolabelBtn) {
             console.error('Auto-Label Fehler:', err);
             autolabelStatus.innerText = window.t ? window.t('autolabel.error_prefix', { error: err.message }) : `Fehler: ${err.message}`;
             hideAutoLabelLoading(false);
+            const errStatus = window.t ? window.t('autolabel.error_prefix', { error: err.message }) : `Auto-Label Fehler: ${err.message}`;
+            if (typeof updateStudioStatus === 'function') {
+                updateStudioStatus(errStatus, 'warning');
+            } else if (statusDiv) {
+                statusDiv.innerText = errStatus;
+            }
             const errTitle = window.t ? window.t('autolabel.error_prefix', { error: '' }) : 'Auto-Label Fehler: ';
             alert(`${errTitle}\n${err.message}`);
         } finally {

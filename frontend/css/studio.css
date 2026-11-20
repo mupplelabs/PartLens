@@ -5,7 +5,7 @@
             display: grid;
             grid-template-columns: 1fr 380px;
             gap: 16px;
-            align-items: start;
+            align-items: stretch;
         }
 
         @media (max-width: 1024px) {
@@ -115,7 +115,7 @@
             background-size: 20px 20px;
             position: relative;
             min-height: 380px;
-            max-height: 68vh;
+            flex: 1 1 auto;
             display: flex;
             align-items: center;
             justify-content: center;

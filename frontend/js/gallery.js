@@ -1593,9 +1593,14 @@ async function openSampleInStudio(split, sampleId) {
             if (stage0Summary) stage0Summary.innerText = window.t
                 ? window.t('gallery.loaded_in_studio', { id: sampleId, count: detectedBoxes.length })
                 : `Geladen aus Datensatz: ${sampleId} (${detectedBoxes.length} Boxen)`;
-            if (statusDiv) statusDiv.innerText = window.t
+            const loadStatus = window.t
                 ? window.t('gallery.status_loaded_in_studio', { id: sampleId, count: detectedBoxes.length })
                 : `Sample ${sampleId} im Studio geladen (${detectedBoxes.length} Boxen).`;
+            if (typeof updateStudioStatus === 'function') {
+                updateStudioStatus(loadStatus, 'ready');
+            } else if (statusDiv) {
+                statusDiv.innerText = loadStatus;
+            }
             // Aktives Sample für Review / Freigabe markieren
             const isUnreviewed = (data.tags || []).includes('needs-review');
             window.currentActiveSample = {
@@ -1629,7 +1634,11 @@ async function approveCurrentSample() {
         if (approveBtn) approveBtn.disabled = true;
         if (mobileApproveBtn) mobileApproveBtn.disabled = true;
 
-        if (statusDiv) statusDiv.innerText = `Freigabe für Sample ${id}...`;
+        if (typeof updateStudioStatus === 'function') {
+            updateStudioStatus(`Freigabe für Sample ${id}...`, 'active');
+        } else if (statusDiv) {
+            statusDiv.innerText = `Freigabe für Sample ${id}...`;
+        }
         await CTApi.approveDatasetSample(split, id);
 
         // Tags im In-Memory Datensatz aktualisieren
@@ -1661,14 +1670,27 @@ async function approveCurrentSample() {
         // Automatisch nächstes Sample zur Überprüfung laden
         if (unreviewedRemaining.length > 0) {
             const nextSample = unreviewedRemaining[0];
-            if (statusDiv) statusDiv.innerText = `Sample ${id} freigegeben. Lade nächstes unüberprüftes Bild...`;
+            const nextMsg = `Sample ${id} freigegeben. Lade nächstes unüberprüftes Bild...`;
+            if (typeof updateStudioStatus === 'function') {
+                updateStudioStatus(nextMsg, 'active');
+            } else if (statusDiv) {
+                statusDiv.innerText = nextMsg;
+            }
             await openSampleInStudio(nextSample.split, nextSample.id);
         } else {
-            if (statusDiv) statusDiv.innerText = `Sample ${id} freigegeben. Alle Bilder in der Queue wurden geprüft!`;
+            const doneMsg = `Sample ${id} freigegeben. Alle Bilder in der Queue wurden geprüft!`;
+            if (typeof updateStudioStatus === 'function') {
+                updateStudioStatus(doneMsg, 'ready');
+            } else if (statusDiv) {
+                statusDiv.innerText = doneMsg;
+            }
         }
     } catch (err) {
         console.error('Fehler bei Freigabe:', err);
         alert(`Fehler bei der Freigabe von ${id}: ${err.message}`);
+        if (typeof updateStudioStatus === 'function') {
+            updateStudioStatus(`Fehler bei Freigabe von ${id}`, 'warning');
+        }
         if (approveBtn) approveBtn.disabled = false;
         if (mobileApproveBtn) mobileApproveBtn.disabled = false;
     }

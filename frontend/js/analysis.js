@@ -1183,14 +1183,22 @@ async function runFlorence2Ocr(dataUrl) {
         hideProgress('Florence-2 geladen.');
     }
 
-    statusDiv.innerText = 'Florence-2 liest Bauteil-Beschriftung (<OCR>)...';
+    if (typeof updateStudioStatus === 'function') {
+        updateStudioStatus('Florence-2 liest Bauteil-Beschriftung (<OCR>)...', 'active');
+    } else if (statusDiv) {
+        statusDiv.innerText = 'Florence-2 liest Bauteil-Beschriftung (<OCR>)...';
+    }
     const paddedUrl = padCanvasForSquareModelDataUrl(ocrPreviewCanvas) || dataUrl;
     let bestText = await runFlorence2SinglePass(paddedUrl);
 
     if (findPartCodes(bestText).length === 0) {
         const splitUrl = buildSplitZoneOcrDataUrl(ocrPreviewCanvas);
         if (splitUrl) {
-            statusDiv.innerText = 'Florence-2 prüft mehrzeilige IC-Zonen (Logo + Bauteilcode)...';
+            if (typeof updateStudioStatus === 'function') {
+                updateStudioStatus('Florence-2 prüft mehrzeilige IC-Zonen (Logo + Bauteilcode)...', 'active');
+            } else if (statusDiv) {
+                statusDiv.innerText = 'Florence-2 prüft mehrzeilige IC-Zonen (Logo + Bauteilcode)...';
+            }
             const splitText = await runFlorence2SinglePass(splitUrl);
             const combined = `${bestText} ${splitText}`.trim();
             if (findPartCodes(combined).length > 0) {
@@ -1205,7 +1213,11 @@ async function runFlorence2Ocr(dataUrl) {
     // Falls der binäre Kontrastfilter noch keinen eindeutigen Bauteilcode geliefert hat,
     // prüfe automatisch auch das ungefilterte RGB-Farbbild (inkl. Split-Zonen)
     if (findPartCodes(bestText).length === 0 && enhanceContrastCb.checked) {
-        statusDiv.innerText = 'Florence-2 prüft natürliches RGB-Farbbild (ohne Binärfilter)...';
+        if (typeof updateStudioStatus === 'function') {
+            updateStudioStatus('Florence-2 prüft natürliches RGB-Farbbild (ohne Binärfilter)...', 'active');
+        } else if (statusDiv) {
+            statusDiv.innerText = 'Florence-2 prüft natürliches RGB-Farbbild (ohne Binärfilter)...';
+        }
         prepareOcrImageDataUrl(null, true);
         const natPaddedUrl = padCanvasForSquareModelDataUrl(ocrPreviewCanvas);
         if (natPaddedUrl) {
@@ -1270,13 +1282,21 @@ async function runTesseractOcr(dataUrl) {
         await tesseractWorker.setParameters(defaultParams);
     }
 
-    statusDiv.innerText = 'Tesseract.js analysiert IC-Beschriftung (Block-Modus PSM 6)...';
+    if (typeof updateStudioStatus === 'function') {
+        updateStudioStatus('Tesseract.js analysiert IC-Beschriftung (Block-Modus PSM 6)...', 'active');
+    } else if (statusDiv) {
+        statusDiv.innerText = 'Tesseract.js analysiert IC-Beschriftung (Block-Modus PSM 6)...';
+    }
     const ret = await tesseractWorker.recognize(dataUrl);
     let bestText = (ret?.data?.text || '').trim();
 
     // Pass 2: Sparse-Text (PSM 11) - findet verstreute Markierungen, Logos und Datumscodes
     if (findPartCodes(bestText).length === 0) {
-        statusDiv.innerText = 'Tesseract.js prüft verstreute Beschriftung (PSM 11)...';
+        if (typeof updateStudioStatus === 'function') {
+            updateStudioStatus('Tesseract.js prüft verstreute Beschriftung (PSM 11)...', 'active');
+        } else if (statusDiv) {
+            statusDiv.innerText = 'Tesseract.js prüft verstreute Beschriftung (PSM 11)...';
+        }
         await tesseractWorker.setParameters({ tessedit_pageseg_mode: '11' });
         const retSparse = await tesseractWorker.recognize(dataUrl);
         const sparseText = (retSparse?.data?.text || '').trim();
@@ -1289,7 +1309,11 @@ async function runTesseractOcr(dataUrl) {
     if (findPartCodes(bestText).length === 0) {
         const splitUrl = buildSplitZoneOcrDataUrl(ocrPreviewCanvas);
         if (splitUrl) {
-            statusDiv.innerText = 'Tesseract.js prüft mehrzeilige IC-Zonen...';
+            if (typeof updateStudioStatus === 'function') {
+                updateStudioStatus('Tesseract.js prüft mehrzeilige IC-Zonen...', 'active');
+            } else if (statusDiv) {
+                statusDiv.innerText = 'Tesseract.js prüft mehrzeilige IC-Zonen...';
+            }
             await tesseractWorker.setParameters({ tessedit_pageseg_mode: '6' });
             const retSplit = await tesseractWorker.recognize(splitUrl);
             const splitText = (retSplit?.data?.text || '').trim();
@@ -1303,7 +1327,11 @@ async function runTesseractOcr(dataUrl) {
     // Pass 4: Falls der IC-Binärfilter aktiv war und kein Code erkannt wurde:
     // Teste das natürliche Farbbild mit automatischer Helligkeitsinversion und Kontrastspreizung
     if (findPartCodes(bestText).length === 0 && enhanceContrastCb.checked) {
-        statusDiv.innerText = 'Tesseract.js prüft natürliches Bild (invertiert & gespreizt)...';
+        if (typeof updateStudioStatus === 'function') {
+            updateStudioStatus('Tesseract.js prüft natürliches Bild (invertiert & gespreizt)...', 'active');
+        } else if (statusDiv) {
+            statusDiv.innerText = 'Tesseract.js prüft natürliches Bild (invertiert & gespreizt)...';
+        }
         prepareOcrImageDataUrl(null, true);
         const enhancedNatUrl = buildEnhancedGrayscaleTesseractDataUrl(ocrPreviewCanvas);
         if (enhancedNatUrl) {
@@ -1429,7 +1457,11 @@ async function executeOcrRecognition() {
             const { primaryCodes, summaryText } = analyzeSemiconductorText(text);
             ocrOutput.innerText = summaryText ? `${text}\n${summaryText}` : text;
             extractPartNumbersAndRenderLinks(text);
-            statusDiv.innerText = 'OCR & Bauteil-Analyse abgeschlossen.';
+            if (typeof updateStudioStatus === 'function') {
+                updateStudioStatus('OCR & Bauteil-Analyse abgeschlossen.', 'ready');
+            } else if (statusDiv) {
+                statusDiv.innerText = 'OCR & Bauteil-Analyse abgeschlossen.';
+            }
 
             const partMarkingInput = document.getElementById('part-marking-input');
             if (partMarkingInput) {
@@ -1443,7 +1475,11 @@ async function executeOcrRecognition() {
             }
         } else {
             ocrOutput.innerText = '(Kein Text erkannt – probiere Florence-2 oder schalte den IC-Kontrastfilter um)';
-            statusDiv.innerText = 'Kein Text erkannt.';
+            if (typeof updateStudioStatus === 'function') {
+                updateStudioStatus('Kein Text erkannt.', 'ready');
+            } else if (statusDiv) {
+                statusDiv.innerText = 'Kein Text erkannt.';
+            }
         }
     } catch (err) {
         if (err.name === 'AbortError') {
@@ -1452,6 +1488,11 @@ async function executeOcrRecognition() {
         }
         console.error('OCR-Fehler:', err);
         ocrOutput.innerText = `Fehler bei der Texterkennung: ${err.message || err}`;
+        if (typeof updateStudioStatus === 'function') {
+            updateStudioStatus(`OCR-Fehler: ${err.message || err}`, 'warning');
+        } else if (statusDiv) {
+            statusDiv.innerText = `OCR-Fehler: ${err.message || err}`;
+        }
         hideProgress('OCR-Fehler.');
     } finally {
         isOcrRunning = false;
@@ -1756,12 +1797,27 @@ function drawBboxOverlay() {
     }
 
     if (detectedBoxes && detectedBoxes.length > 0) {
-        detectedBoxes.forEach((box, idx) => {
-        if (typeof isolateSelectedBox !== 'undefined' && isolateSelectedBox) {
-            if (selectedBoxIndex < 0 || idx !== selectedBoxIndex) {
-                return;
+        // Z-Index Sortierung: Unselektierte Boxen zuerst, gehoverte Box darüber,
+        // und die aktuell selektierte Box (inkl. Handles, Label-Badge und Maße) ganz oben im Vordergrund
+        const drawOrder = detectedBoxes.map((_, i) => i).sort((a, b) => {
+            const aIsSelected = (a === selectedBoxIndex);
+            const bIsSelected = (b === selectedBoxIndex);
+            if (aIsSelected !== bIsSelected) return aIsSelected ? 1 : -1;
+
+            const aIsHovered = (a === hoveredBoxIndex);
+            const bIsHovered = (b === hoveredBoxIndex);
+            if (aIsHovered !== bIsHovered) return aIsHovered ? 1 : -1;
+
+            return a - b;
+        });
+
+        drawOrder.forEach(idx => {
+            const box = detectedBoxes[idx];
+            if (typeof isolateSelectedBox !== 'undefined' && isolateSelectedBox) {
+                if (selectedBoxIndex < 0 || idx !== selectedBoxIndex) {
+                    return;
+                }
             }
-        }
         const isSelected = idx === selectedBoxIndex;
         const isHovered = idx === hoveredBoxIndex;
         const bw = box.x2 - box.x1;
@@ -2046,9 +2102,11 @@ async function runStage0Detection() {
 
         if (detectedBoxes.length === 0) {
             lastStage0Result = { count: 0, ms: dtMs, bestIdx: -1 };
-            stage0Summary.innerText = window.t
+            const noBoxMsg = window.t
                 ? window.t('canvas.no_component_detected_ms', { ms: dtMs })
                 : `Kein Bauteil im Bild erkannt (${dtMs} ms)`;
+            if (stage0Summary) stage0Summary.innerText = noBoxMsg;
+            if (typeof updateStudioStatus === 'function') updateStudioStatus(noBoxMsg, 'ready');
             selectComponentBox(-1, true);
             return;
         }
@@ -2064,15 +2122,19 @@ async function runStage0Detection() {
         });
 
         lastStage0Result = { count: detectedBoxes.length, ms: dtMs, bestIdx };
-        stage0Summary.innerText = window.t
+        const foundMsg = window.t
             ? window.t('canvas.components_detected_focused', { count: detectedBoxes.length, ms: dtMs, idx: bestIdx + 1 })
             : `${detectedBoxes.length} Bauteil${detectedBoxes.length === 1 ? '' : 'e'} erkannt (${dtMs} ms) – Bauteil #${bestIdx + 1} fokussiert`;
+        if (stage0Summary) stage0Summary.innerText = foundMsg;
+        if (typeof updateStudioStatus === 'function') updateStudioStatus(foundMsg, 'ready');
         selectComponentBox(bestIdx, true);
     } catch (err) {
         console.error('Stufe-0 Detektionsfehler:', err);
-        stage0Summary.innerText = window.t
+        const errMsg = window.t
             ? window.t('canvas.error_localizing', { error: err.message || err })
             : `Fehler bei Lokalisierung: ${err.message || err}`;
+        if (stage0Summary) stage0Summary.innerText = errMsg;
+        if (typeof updateStudioStatus === 'function') updateStudioStatus(errMsg, 'warning');
     } finally {
         runDetectBtn.disabled = false;
     }

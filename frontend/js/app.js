@@ -242,19 +242,33 @@ function setStudioToolsState(ready, reason = '') {
 }
 
 function updateStudioStatus(text, state = 'info') {
-    if (statusDiv) statusDiv.innerText = text;
+    if (statusDiv && text) statusDiv.innerText = text;
     const indicator = document.getElementById('status-live-indicator');
     if (!indicator) return;
     if (state === 'ready') {
         indicator.className = 'status-radar-dot ready';
-    } else if (state === 'busy' || state === 'loading') {
-        indicator.className = 'status-radar-dot busy';
-    } else if (state === 'warning') {
+    } else if (state === 'busy' || state === 'loading' || state === 'active') {
+        indicator.className = 'status-radar-dot active';
+    } else if (state === 'warning' || state === 'error') {
         indicator.className = 'status-radar-dot warning';
     } else {
         indicator.className = 'status-radar-dot initializing';
     }
 }
+window.updateStudioStatus = updateStudioStatus;
+
+function setBackendStatus(isOnline) {
+    window.isBackendOnline = isOnline;
+    const backendVal = document.getElementById('chip-backend-val');
+    const backendChip = document.getElementById('chip-backend');
+    if (backendVal) {
+        backendVal.innerText = isOnline ? 'Online' : 'Offline';
+    }
+    if (backendChip) {
+        backendChip.classList.toggle('warning', !isOnline);
+    }
+}
+window.setBackendStatus = setBackendStatus;
 
 async function initStudioBackground() {
     const t0 = performance.now();
@@ -308,8 +322,7 @@ async function initStudioBackground() {
 
     // Schritt 2: Backend-Daten verarbeiten
     if (serverData) {
-        if (backendVal) backendVal.innerText = 'Online';
-        if (backendChip) backendChip.classList.remove('warning');
+        setBackendStatus(true);
 
         if (serverData.classes) {
             knownDatasetClasses = serverData.classes;
@@ -343,8 +356,7 @@ async function initStudioBackground() {
                 : `Schritt 2/3: Datensatz synchronisiert (${sampleCount} Bilder, ${boxCount} Boxen)...`;
         }
     } else {
-        if (backendVal) backendVal.innerText = 'Offline';
-        if (backendChip) backendChip.classList.add('warning');
+        setBackendStatus(false);
         updateOcrStatusChip();
         updateLlmStatusChip();
         if (statusDiv) {
@@ -378,20 +390,16 @@ async function initStudioBackground() {
     setStudioToolsState(true);
     const elapsed = Math.round(performance.now() - t0);
 
-    if (liveIndicator) {
-        liveIndicator.className = serverData ? 'status-radar-dot ready' : 'status-radar-dot warning';
-    }
-
-    if (statusDiv) {
-        if (serverData) {
-            statusDiv.innerText = window.t
-                ? window.t('footer.studio_ready', { samples: sampleCount, boxes: boxCount, ms: elapsed })
-                : `Studio einsatzbereit · Backend online (${sampleCount} Samples, ${boxCount} Boxen) · ${elapsed}ms`;
-        } else {
-            statusDiv.innerText = window.t
-                ? window.t('footer.studio_ready_offline', { ms: elapsed })
-                : `Studio einsatzbereit (Offline-Modus: Detektor & Tools aktiv) · ${elapsed}ms`;
-        }
+    if (serverData) {
+        const readyText = window.t
+            ? window.t('footer.studio_ready', { samples: sampleCount, boxes: boxCount, ms: elapsed })
+            : `Studio einsatzbereit · Backend online (${sampleCount} Samples, ${boxCount} Boxen) · ${elapsed}ms`;
+        updateStudioStatus(readyText, 'ready');
+    } else {
+        const offlineText = window.t
+            ? window.t('footer.studio_ready_offline', { ms: elapsed })
+            : `Studio einsatzbereit (Offline-Modus: Detektor & Tools aktiv) · ${elapsed}ms`;
+        updateStudioStatus(offlineText, 'warning');
     }
 
     if (outputDiv) {

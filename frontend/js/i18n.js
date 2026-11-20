@@ -26,7 +26,7 @@
     // 2. Load Translations for Language
     async function loadTranslations(lang) {
         try {
-            const res = await fetch(`/frontend/locales/${lang}.json?v=2.9.0`);
+            const res = await fetch(`/frontend/locales/${lang}.json?v=2.9.2`);
             if (res.ok) {
                 return await res.json();
             }
@@ -105,6 +105,17 @@
         // Re-render dataset badge if stats are cached
         if (typeof window.renderDatasetStatsBadge === 'function') {
             window.renderDatasetStatsBadge();
+        }
+
+        // Re-render status chips (OCR, LLM, Backend)
+        if (typeof window.updateOcrStatusChip === 'function') {
+            window.updateOcrStatusChip();
+        }
+        if (typeof window.updateLlmStatusChip === 'function') {
+            window.updateLlmStatusChip();
+        }
+        if (typeof window.setBackendStatus === 'function' && typeof window.isBackendOnline !== 'undefined') {
+            window.setBackendStatus(window.isBackendOnline);
         }
 
         // Update language button indicator

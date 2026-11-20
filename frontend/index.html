@@ -18,12 +18,12 @@
         })();
     </script>
     <title>PartLens – Visual Part-DB & YOLO Studio</title>
-    <link rel="stylesheet" href="/frontend/css/base.css?v=2.9.0">
-    <link rel="stylesheet" href="/frontend/css/layout.css?v=2.9.0">
-    <link rel="stylesheet" href="/frontend/css/components.css?v=2.9.0">
-    <link rel="stylesheet" href="/frontend/css/studio.css?v=2.9.0">
-    <link rel="stylesheet" href="/frontend/css/gallery.css?v=2.9.0">
-    <link rel="stylesheet" href="/frontend/css/modals.css?v=2.9.0">
+    <link rel="stylesheet" href="/frontend/css/base.css?v=2.9.3">
+    <link rel="stylesheet" href="/frontend/css/layout.css?v=2.9.3">
+    <link rel="stylesheet" href="/frontend/css/components.css?v=2.9.3">
+    <link rel="stylesheet" href="/frontend/css/studio.css?v=2.9.3">
+    <link rel="stylesheet" href="/frontend/css/gallery.css?v=2.9.3">
+    <link rel="stylesheet" href="/frontend/css/modals.css?v=2.9.3">
 </head>
 <body class="view-studio-active">
 
@@ -449,7 +449,6 @@
                             <option value="/studies/4xDIP14_teils_im_schatten.jpeg">7) 4× DIP-14 (Schatten)</option>
                             <option value="/studies/4xDIP14_zuviel_Licht.jpeg">8) 4× DIP-14 (starkes Licht)</option>
                         </select>
-                        <span id="stage0-summary" style="margin-left: 8px;" data-i18n="canvas.status_ready">Bereit.</span>
                     </div>
                 </div>
 
@@ -1176,20 +1175,20 @@
     <footer id="studio-status-bar" class="studio-status-bar" role="status" aria-live="polite">
         <div class="status-left">
             <span id="status-live-indicator" class="status-radar-dot initializing" title="Status-Aktivität" data-i18n-title="footer.status_activity"></span>
-            <span id="status" class="status-text" data-i18n="footer.initializing">Initialisiere Studio: Verbinde mit Backend...</span>
+            <span id="status" class="status-text">Initialisiere Studio...</span>
         </div>
         <div class="status-right" id="status-system-badges">
             <span class="status-chip" id="chip-backend" title="Backend-Server Status" data-i18n-title="footer.backend_title">
-                <span class="chip-dot"></span>Backend: <span class="chip-val" id="chip-backend-val" data-i18n="footer.connecting">Verbinde...</span>
+                <span class="chip-dot"></span>Backend: <span class="chip-val" id="chip-backend-val">Verbinde...</span>
             </span>
             <span class="status-chip" id="chip-llm" title="Aktives KI-Modell für Auto-Labeling (Klick öffnet Einstellungen)" data-i18n-title="footer.llm_title" style="cursor: pointer;">
-                <span class="chip-dot"></span>LLM: <span class="chip-val" id="chip-llm-val" data-i18n="footer.checking">Prüfe...</span>
+                <span class="chip-dot"></span>LLM: <span class="chip-val" id="chip-llm-val">Prüfe...</span>
             </span>
             <span class="status-chip" id="chip-ocr" title="Aktive optische Zeichenerkennungs-Engine (Klick öffnet Einstellungen)" data-i18n-title="footer.ocr_title" style="cursor: pointer;">
-                <span class="chip-dot"></span>OCR: <span class="chip-val" id="chip-ocr-val" data-i18n="footer.checking">Prüfe...</span>
+                <span class="chip-dot"></span>OCR: <span class="chip-val" id="chip-ocr-val">Prüfe...</span>
             </span>
             <span class="status-chip standby" id="chip-clip" title="Lokales CLIP-Modell (Xenova) wird bei Bedarf on-demand geladen" data-i18n-title="footer.clip_title">
-                <span class="chip-dot"></span>CLIP: <span class="chip-val" id="chip-clip-val" data-i18n="footer.standby">Standby</span>
+                <span class="chip-dot"></span>CLIP: <span class="chip-val" id="chip-clip-val">Standby</span>
             </span>
         </div>
     </footer>
@@ -1555,19 +1554,19 @@
 
 
     <!-- PartLens Modular Scripts -->
-    <script src="/frontend/js/i18n.js?v=2.9.0"></script>
-    <script src="/frontend/js/state.js?v=2.9.0"></script>
-    <script src="/frontend/js/api.js?v=2.9.0"></script>
-    <script src="/frontend/js/analysis.js?v=2.9.0"></script>
-    <script src="/frontend/js/resistor.js?v=2.9.0"></script>
-    <script src="/frontend/js/canvas.js?v=2.9.0"></script>
-    <script src="/frontend/js/boxes.js?v=2.9.0"></script>
-    <script src="/frontend/js/footprints.js?v=2.9.0"></script>
-    <script src="/frontend/js/autolabel.js?v=2.9.0"></script>
-    <script src="/frontend/js/gallery.js?v=2.9.0"></script>
-    <script src="/frontend/js/import_modal.js?v=2.9.0"></script>
-    <script src="/frontend/js/export.js?v=2.9.0"></script>
-    <script src="/frontend/js/webcam.js?v=2.9.0"></script>
-    <script src="/frontend/js/app.js?v=2.9.0"></script>
+    <script src="/frontend/js/i18n.js?v=2.9.3"></script>
+    <script src="/frontend/js/state.js?v=2.9.3"></script>
+    <script src="/frontend/js/api.js?v=2.9.3"></script>
+    <script src="/frontend/js/analysis.js?v=2.9.3"></script>
+    <script src="/frontend/js/resistor.js?v=2.9.3"></script>
+    <script src="/frontend/js/canvas.js?v=2.9.3"></script>
+    <script src="/frontend/js/boxes.js?v=2.9.3"></script>
+    <script src="/frontend/js/footprints.js?v=2.9.3"></script>
+    <script src="/frontend/js/autolabel.js?v=2.9.3"></script>
+    <script src="/frontend/js/gallery.js?v=2.9.3"></script>
+    <script src="/frontend/js/import_modal.js?v=2.9.3"></script>
+    <script src="/frontend/js/export.js?v=2.9.3"></script>
+    <script src="/frontend/js/webcam.js?v=2.9.3"></script>
+    <script src="/frontend/js/app.js?v=2.9.3"></script>
 </body>
 </html>

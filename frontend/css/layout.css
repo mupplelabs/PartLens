@@ -123,15 +123,83 @@
         main.app-main {
             flex: 1;
             width: 100%;
-            max-width: 1440px;
+            max-width: min(1820px, calc(100vw - 24px));
             margin: 0 auto;
-            padding: 12px 16px 38px;
+            padding: 10px 16px 34px;
             display: flex;
             flex-direction: column;
         }
         @media (max-width: 768px) {
             main.app-main {
                 padding-bottom: 84px;
+            }
+        }
+
+        /* =====================================================================
+           DESKTOP STUDIO VIEWPORT (Optimale Ausnutzung des Bildschirms)
+           ===================================================================== */
+        @media (min-width: 769px) {
+            body.view-studio-active main.app-main {
+                padding: 8px 16px 30px;
+                height: calc(100dvh - 50px);
+                max-height: calc(100dvh - 50px);
+                box-sizing: border-box;
+                overflow: hidden;
+            }
+
+            body.view-studio-active #view-studio {
+                height: 100%;
+                min-height: 0;
+                display: flex;
+                flex-direction: column;
+                flex: 1 1 auto;
+            }
+
+            body.view-studio-active .studio-grid {
+                height: 100%;
+                min-height: 0;
+                flex: 1 1 auto;
+                display: grid;
+                grid-template-columns: 1fr 380px;
+                gap: 16px;
+                align-items: stretch;
+            }
+
+            body.view-studio-active .studio-canvas-card {
+                height: 100%;
+                min-height: 0;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+
+            body.view-studio-active .stage-viewport {
+                flex: 1 1 auto;
+                height: 100%;
+                min-height: 440px;
+                max-height: none;
+            }
+
+            body.view-studio-active .studio-inspector {
+                height: 100%;
+                max-height: 100%;
+                position: static;
+                top: auto;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                min-height: 0;
+            }
+
+            body.view-studio-active .studio-inspector .inspector-tabs-nav {
+                flex-shrink: 0;
+            }
+
+            body.view-studio-active .studio-inspector .inspector-tab-pane {
+                flex: 1 1 auto;
+                overflow-y: auto;
+                min-height: 0;
+                scrollbar-width: thin;
             }
         }
 
@@ -442,14 +510,6 @@
                 max-width: none !important;
                 height: 30px;
                 font-size: 0.74rem;
-            }
-            #stage0-summary {
-                font-size: 0.72rem;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                max-width: 45%;
-                margin-left: auto;
             }
 
             /* Kompakte Klassenpalette auf Mobile */

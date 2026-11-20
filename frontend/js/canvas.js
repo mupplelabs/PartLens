@@ -117,6 +117,21 @@ window.addEventListener('orientationchange', () => {
     setTimeout(fitImageToWorkspace, 180);
 });
 
+if (typeof ResizeObserver !== 'undefined') {
+    const vpObserver = new ResizeObserver(() => {
+        handleStageResize();
+    });
+    const vpEl = document.querySelector('.stage-viewport');
+    if (vpEl) {
+        vpObserver.observe(vpEl);
+    } else {
+        document.addEventListener('DOMContentLoaded', () => {
+            const el = document.querySelector('.stage-viewport');
+            if (el) vpObserver.observe(el);
+        });
+    }
+}
+
 function zoomAtPoint(deltaFactor, clientX, clientY) {
     const viewport = document.querySelector('.stage-viewport');
     if (!viewport) return;

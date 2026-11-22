@@ -176,7 +176,7 @@
     "train_label": "Train (80%)",
     "val_label": "Val (20%)",
     "save_btn": "Sample im Datensatz speichern",
-    "status_ready": "Bereit."
+    "status_ready": "Bereit zum Speichern."
   },
   "footprints": {
     "modal_title": "Footprint & Bauform wählen",

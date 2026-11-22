@@ -1271,10 +1271,6 @@ async function fetchDatasetStatus() {
 
             updateOcrStatusChip();
             updateLlmStatusChip();
-
-            if (data.has_gemini_env && autolabelStatus && !geminiApiKey.value) {
-                autolabelStatus.innerText = 'Server nutzt GEMINI_API_KEY aus Umgebungsvariable.';
-            }
             return data;
         }
     } catch (err) {

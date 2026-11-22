@@ -347,9 +347,6 @@ async function initStudioBackground() {
         }
         updateOcrStatusChip();
         updateLlmStatusChip();
-        if (serverData.has_gemini_env && autolabelStatus && !geminiApiKey.value) {
-            autolabelStatus.innerText = window.t ? window.t('telemetry.server_env_key') : 'Server nutzt GEMINI_API_KEY aus Umgebungsvariable.';
-        }
         if (statusDiv) {
             statusDiv.innerText = window.t
                 ? window.t('telemetry.step_sync', { samples: sampleCount, boxes: boxCount })

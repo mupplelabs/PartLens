@@ -2193,7 +2193,6 @@ function initCropRotateModal() {
     const viewport = document.getElementById('crop-rotate-viewport');
     const slider = document.getElementById('crop-rotate-slider');
     const numInput = document.getElementById('crop-rotate-num-input');
-    const angleBadge = document.getElementById('crop-rotate-angle-badge');
     const boxTag = document.getElementById('crop-rotate-box-tag');
     const guidelines = document.getElementById('crop-rotate-guidelines');
     const toggleGrid = document.getElementById('crop-rotate-toggle-grid');
@@ -2214,9 +2213,12 @@ function initCropRotateModal() {
     let currentAngle = 0;
     let initialAngle = 0;
     let contrastMode = 0; // 0: Normal, 1: High Contrast, 2: Inverted
+    let zoomLevel = 1.0;
+    let panX = 0;
+    let panY = 0;
 
     function renderModalCrop() {
-        if (!canvas) return;
+        if (!canvas || !viewport) return;
         const selBox = getSelectedComponentBox();
         const { el: sourceEl, ready } = getActiveMediaSource();
         if (!selBox || !ready) return;
@@ -2224,25 +2226,18 @@ function initCropRotateModal() {
         const bw = Math.max(8, selBox.x2 - selBox.x1);
         const bh = Math.max(8, selBox.y2 - selBox.y1);
 
-        const rad = (currentAngle * Math.PI) / 180;
-        const cos = Math.abs(Math.cos(rad));
-        const sin = Math.abs(Math.sin(rad));
-        const bbW = bw * cos + bh * sin;
-        const bbH = bw * sin + bh * cos;
+        const vpW = Math.max(200, viewport.clientWidth);
+        const vpH = Math.max(150, viewport.clientHeight);
 
-        // Viewport hat feste Maße, Canvas hineinskalieren mit reichlich Details
-        const maxVpW = (viewport ? viewport.clientWidth : 560) - 24;
-        const maxVpH = (viewport ? viewport.clientHeight : 280) - 24;
-        const scale = Math.min(maxVpW / bbW, maxVpH / bbH, 4.0);
-
-        const cw = Math.max(30, Math.round(bbW * scale));
-        const ch = Math.max(30, Math.round(bbH * scale));
-        canvas.width = cw;
-        canvas.height = ch;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(vpW * dpr);
+        canvas.height = Math.round(vpH * dpr);
+        canvas.style.width = `${vpW}px`;
+        canvas.style.height = `${vpH}px`;
 
         const ctx = canvas.getContext('2d');
         ctx.save();
-        ctx.clearRect(0, 0, cw, ch);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         // Filter anwenden
         if (contrastMode === 1) {
@@ -2253,18 +2248,30 @@ function initCropRotateModal() {
             ctx.filter = 'none';
         }
 
-        ctx.translate(cw / 2, ch / 2);
+        const rad = (currentAngle * Math.PI) / 180;
+        const cos = Math.abs(Math.cos(rad));
+        const sin = Math.abs(Math.sin(rad));
+        const bbW = bw * cos + bh * sin;
+        const bbH = bw * sin + bh * cos;
+
+        // Basisskalierung: Passt das Bauteil zentriert in den Viewport
+        const baseScale = Math.min((vpW - 32) / bbW, (vpH - 32) / bbH, 4.0);
+        const totalScale = baseScale * zoomLevel * dpr;
+
+        ctx.translate(canvas.width / 2 + panX * dpr, canvas.height / 2 + panY * dpr);
         ctx.rotate(rad);
-        const drawW = bw * scale;
-        const drawH = bh * scale;
+        const drawW = bw * totalScale;
+        const drawH = bh * totalScale;
         ctx.drawImage(sourceEl, selBox.x1, selBox.y1, bw, bh, -drawW / 2, -drawH / 2, drawW, drawH);
         ctx.restore();
 
-        // UI-Werte synchronisieren
-        if (angleBadge) {
-            const prefix = currentAngle > 0 ? '+' : '';
-            angleBadge.innerText = `${prefix}${currentAngle.toFixed(1)}°`;
+        // Zoom-Badge aktualisieren
+        const zoomBadge = document.getElementById('crop-zoom-level-badge');
+        if (zoomBadge) {
+            zoomBadge.innerText = `${Math.round(zoomLevel * 100)}%`;
         }
+
+        // Steuerungselemente synchronisieren
         if (slider && Math.abs(Number(slider.value) - currentAngle) > 0.1) {
             slider.value = currentAngle;
         }
@@ -2301,6 +2308,9 @@ function initCropRotateModal() {
         const isVert = (selBox.y2 - selBox.y1) > (selBox.x2 - selBox.x1) * 1.35 && selBox.leadType !== 'to92';
         currentAngle = typeof selBox.rotation === 'number' ? selBox.rotation : (isVert ? -90 : 0);
         initialAngle = currentAngle;
+        zoomLevel = 1.0;
+        panX = 0;
+        panY = 0;
 
         if (boxTag) {
             boxTag.innerText = `Box #${selectedBoxIndex + 1}: ${selBox.label}`;
@@ -2362,37 +2372,119 @@ function initCropRotateModal() {
         });
     }
 
-    // Mausrad über Viewport dreht Bild frei um 1° (oder mit Shift um 0.5°)
+    // --- Maus & Finger Interaktion im Viewport: ZOOM & PAN ---
     if (viewport) {
+        // Mausrad: Zoom zentriert auf Cursor
         viewport.addEventListener('wheel', (e) => {
             e.preventDefault();
-            const step = e.shiftKey ? 0.5 : (e.altKey ? 5 : 1);
-            const delta = e.deltaY < 0 ? step : -step;
-            setAngle(currentAngle + delta);
+            const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
+            const newZoom = Math.max(0.8, Math.min(10.0, zoomLevel * zoomFactor));
+
+            const rect = viewport.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left - rect.width / 2;
+            const mouseY = e.clientY - rect.top - rect.height / 2;
+
+            panX -= (mouseX - panX) * (newZoom / zoomLevel - 1);
+            panY -= (mouseY - panY) * (newZoom / zoomLevel - 1);
+
+            zoomLevel = newZoom;
+            renderModalCrop();
         }, { passive: false });
 
-        // Ziehen (Drag) über Viewport
+        // Maus-Drag: Verschieben (Pan)
         let isDragging = false;
         let startX = 0;
-        let startAngle = 0;
+        let startY = 0;
+        let startPanX = 0;
+        let startPanY = 0;
 
         viewport.addEventListener('mousedown', (e) => {
             isDragging = true;
             startX = e.clientX;
-            startAngle = currentAngle;
+            startY = e.clientY;
+            startPanX = panX;
+            startPanY = panY;
             viewport.style.cursor = 'grabbing';
         });
+
         window.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
-            const dx = e.clientX - startX;
-            // 2 Pixel = 1 Grad
-            const dAngle = dx * 0.5;
-            setAngle(startAngle + dAngle);
+            panX = startPanX + (e.clientX - startX);
+            panY = startPanY + (e.clientY - startY);
+            renderModalCrop();
         });
+
         window.addEventListener('mouseup', () => {
             if (isDragging) {
                 isDragging = false;
                 if (viewport) viewport.style.cursor = 'grab';
+            }
+        });
+
+        // Doppelklick im Viewport: Zoom & Pan zurücksetzen
+        viewport.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
+            zoomLevel = 1.0;
+            panX = 0;
+            panY = 0;
+            renderModalCrop();
+        });
+
+        // Touch-Gesten: Ein-Finger-Pan & Zwei-Finger-Pinch-to-Zoom
+        let isTouching = false;
+        let initialPinchDist = 0;
+        let initialZoom = 1.0;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchStartPanX = 0;
+        let touchStartPanY = 0;
+
+        viewport.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                isTouching = true;
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+                touchStartPanX = panX;
+                touchStartPanY = panY;
+            } else if (e.touches.length === 2) {
+                isTouching = false;
+                initialPinchDist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                initialZoom = zoomLevel;
+            }
+        }, { passive: false });
+
+        viewport.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                const dist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                if (initialPinchDist > 5) {
+                    const scale = dist / initialPinchDist;
+                    zoomLevel = Math.max(0.8, Math.min(10.0, initialZoom * scale));
+                    renderModalCrop();
+                }
+            } else if (e.touches.length === 1 && isTouching) {
+                e.preventDefault();
+                panX = touchStartPanX + (e.touches[0].clientX - touchStartX);
+                panY = touchStartPanY + (e.touches[0].clientY - touchStartY);
+                renderModalCrop();
+            }
+        }, { passive: false });
+
+        viewport.addEventListener('touchend', (e) => {
+            if (e.touches.length === 0) {
+                isTouching = false;
+            } else if (e.touches.length === 1) {
+                isTouching = true;
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+                touchStartPanX = panX;
+                touchStartPanY = panY;
             }
         });
     }

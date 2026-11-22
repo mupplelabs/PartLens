@@ -70,7 +70,6 @@
         }
     }
 
-    setupDropdown('export-yolo-btn-top', 'export-dropdown-menu-top');
     setupDropdown('export-dataset-btn-gallery', 'export-dropdown-menu-gallery');
 
     document.addEventListener('click', () => {

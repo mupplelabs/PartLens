@@ -249,6 +249,59 @@ def parse_detected_component(c: dict, default_confidence: float = 0.95) -> Optio
         ic_subgroup=str(ic_subgroup).strip() if ic_subgroup else None
     )
 
+def extract_usage_tokens(result_json: dict) -> tuple[int, int, int]:
+    """Extrahiert (prompt_tokens, completion_tokens, total_tokens) aus allen bekannten API-Formaten."""
+    if not isinstance(result_json, dict):
+        return 0, 0, 0
+
+    usage = (
+        result_json.get("usageMetadata")
+        or result_json.get("usage_metadata")
+        or result_json.get("usage")
+        or {}
+    )
+
+    if not usage:
+        for step in result_json.get("steps", []):
+            if isinstance(step, dict) and (step.get("usage") or step.get("usageMetadata") or step.get("usage_metadata")):
+                usage = step.get("usage") or step.get("usageMetadata") or step.get("usage_metadata") or {}
+                break
+
+    prompt = (
+        usage.get("promptTokenCount")
+        or usage.get("prompt_tokens")
+        or usage.get("prompt_token_count")
+        or usage.get("input_tokens")
+        or usage.get("input_token_count")
+        or result_json.get("prompt_eval_count")
+        or 0
+    )
+
+    completion = (
+        usage.get("candidatesTokenCount")
+        or usage.get("completion_tokens")
+        or usage.get("completion_token_count")
+        or usage.get("output_tokens")
+        or usage.get("output_token_count")
+        or result_json.get("eval_count")
+        or 0
+    )
+
+    total = (
+        usage.get("totalTokenCount")
+        or usage.get("total_tokens")
+        or usage.get("total_token_count")
+        or 0
+    )
+
+    p = max(0, int(prompt or 0))
+    c = max(0, int(completion or 0))
+    t = max(0, int(total or 0))
+    if t == 0 and (p > 0 or c > 0):
+        t = p + c
+
+    return p, c, t
+
 async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
     t0 = time.time()
     cfg = load_llm_config()
@@ -321,11 +374,12 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
                     debug_log(f"\n[DEBUG GEMINI generateContent ERROR]\nStatus: {resp.status_code}\nResponse: {resp.text}\n")
                     raise RuntimeError(f"Gemini API Fehler ({resp.status_code}): {resp.text}")
                 result_json = resp.json()
-                usage_meta = result_json.get("usageMetadata") or result_json.get("usage") or {}
-                nonlocal prompt_tokens, completion_tokens, total_tokens
-                prompt_tokens = usage_meta.get("promptTokenCount") or usage_meta.get("prompt_tokens") or 0
-                completion_tokens = usage_meta.get("candidatesTokenCount") or usage_meta.get("completion_tokens") or 0
-                total_tokens = usage_meta.get("totalTokenCount") or usage_meta.get("total_tokens") or (prompt_tokens + completion_tokens)
+                p, c, t = extract_usage_tokens(result_json)
+                if t > 0:
+                    nonlocal prompt_tokens, completion_tokens, total_tokens
+                    prompt_tokens = p
+                    completion_tokens = c
+                    total_tokens = t
                 debug_log(f"\n========== [DEBUG GEMINI generateContent RESPONSE] ==========")
                 debug_log(f"Modell: {m_name} (Status: {resp.status_code})")
                 debug_log(f"Raw Response JSON:\n{json.dumps(result_json, indent=2, ensure_ascii=False)}")
@@ -373,11 +427,12 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
                     debug_log(f"\n[DEBUG GEMINI interactions ERROR]\nStatus: {resp.status_code}\nResponse: {resp.text}\n")
                     raise RuntimeError(f"Gemini Interactions API Fehler ({resp.status_code}): {resp.text}")
                 result_json = resp.json()
-                usage_meta = result_json.get("usageMetadata") or result_json.get("usage") or {}
-                nonlocal prompt_tokens, completion_tokens, total_tokens
-                prompt_tokens = usage_meta.get("promptTokenCount") or usage_meta.get("prompt_tokens") or 0
-                completion_tokens = usage_meta.get("candidatesTokenCount") or usage_meta.get("completion_tokens") or 0
-                total_tokens = usage_meta.get("totalTokenCount") or usage_meta.get("total_tokens") or (prompt_tokens + completion_tokens)
+                p, c, t = extract_usage_tokens(result_json)
+                if t > 0:
+                    nonlocal prompt_tokens, completion_tokens, total_tokens
+                    prompt_tokens = p
+                    completion_tokens = c
+                    total_tokens = t
                 debug_log(f"\n========== [DEBUG GEMINI interactions RESPONSE] ==========")
                 debug_log(f"Modell: {m_name} (Status: {resp.status_code})")
                 debug_log(f"Raw Response JSON:\n{json.dumps(result_json, indent=2, ensure_ascii=False)}")
@@ -585,15 +640,11 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
                 raise RuntimeError(f"{provider.upper()} API Fehler an {used_endpoint}: {last_resp_err}{hint}")
 
             result_json = resp.json()
-            usage = result_json.get("usage", {})
-            if not usage and "prompt_eval_count" in result_json:
-                prompt_tokens = result_json.get("prompt_eval_count", 0)
-                completion_tokens = result_json.get("eval_count", 0)
-                total_tokens = prompt_tokens + completion_tokens
-            elif usage:
-                prompt_tokens = usage.get("prompt_tokens", 0)
-                completion_tokens = usage.get("completion_tokens", 0)
-                total_tokens = usage.get("total_tokens", prompt_tokens + completion_tokens)
+            p, c, t = extract_usage_tokens(result_json)
+            if t > 0:
+                prompt_tokens = p
+                completion_tokens = c
+                total_tokens = t
             raw_text = ""
             choices = result_json.get("choices", [])
             if choices:
@@ -625,6 +676,7 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
             model=model_used,
             prompt_tokens=prompt_tokens,
             completion_tokens=completion_tokens,
+            total_tokens=total_tokens,
             latency_ms=latency_ms
         )
     except Exception as e_tok:

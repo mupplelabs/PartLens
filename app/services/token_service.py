@@ -45,12 +45,19 @@ def record_token_usage(
     model: str,
     prompt_tokens: int = 0,
     completion_tokens: int = 0,
+    total_tokens: Optional[int] = None,
     latency_ms: int = 0
 ) -> dict:
     stats = get_token_stats()
     p_tokens = max(0, int(prompt_tokens or 0))
     c_tokens = max(0, int(completion_tokens or 0))
-    t_tokens = p_tokens + c_tokens
+    if total_tokens is not None and int(total_tokens) > 0:
+        t_tokens = max(p_tokens + c_tokens, int(total_tokens))
+    else:
+        t_tokens = p_tokens + c_tokens
+
+    if t_tokens > 0 and p_tokens == 0 and c_tokens == 0:
+        p_tokens = t_tokens
 
     clean_prov = (provider or "unknown").strip().lower()
     clean_mod = (model or "unknown").replace("google:", "").replace("openai:", "").replace("ollama:", "").replace("lmstudio:", "").strip()

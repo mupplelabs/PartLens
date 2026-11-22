@@ -18,12 +18,12 @@
         })();
     </script>
     <title>PartLens – Visual Part-DB & YOLO Studio</title>
-    <link rel="stylesheet" href="/frontend/css/base.css?v=2.9.3">
-    <link rel="stylesheet" href="/frontend/css/layout.css?v=2.9.3">
-    <link rel="stylesheet" href="/frontend/css/components.css?v=2.9.3">
-    <link rel="stylesheet" href="/frontend/css/studio.css?v=2.9.3">
-    <link rel="stylesheet" href="/frontend/css/gallery.css?v=2.9.3">
-    <link rel="stylesheet" href="/frontend/css/modals.css?v=2.9.3">
+    <link rel="stylesheet" href="/frontend/css/base.css?v=2.9.4">
+    <link rel="stylesheet" href="/frontend/css/layout.css?v=2.9.4">
+    <link rel="stylesheet" href="/frontend/css/components.css?v=2.9.4">
+    <link rel="stylesheet" href="/frontend/css/studio.css?v=2.9.4">
+    <link rel="stylesheet" href="/frontend/css/gallery.css?v=2.9.4">
+    <link rel="stylesheet" href="/frontend/css/modals.css?v=2.9.4">
 </head>
 <body class="view-studio-active">
 
@@ -1035,9 +1035,9 @@
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="2" height="2"/><rect x="13" y="9" width="2" height="2"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
                             <span data-i18n="settings.llm_card_title">LLM Auto-Labeling Provider</span>
                         </span>
-                        <span style="font-size: 0.72rem; color: #34d399; font-weight: 600; display: flex; align-items: center; gap: 4px;">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                            <span data-i18n="settings.autosave_active">Auto-Speicherung aktiv</span>
+                        <span id="llm-settings-header-badge" style="font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; display: flex; align-items: center; gap: 4px;">
+                            <span class="live-dot" style="width: 7px; height: 7px; background: #3b82f6;"></span>
+                            <span id="llm-active-summary-text">Gemini / oMLX</span>
                         </span>
                     </div>
 
@@ -1139,6 +1139,15 @@
                         <div style="font-size: 0.72rem; color: var(--muted); margin-top: 6px; line-height: 1.4;" data-i18n="settings.features_hint">
                             Prompt und JSON-Schema passen sich dynamisch an. Deaktivierte Felder reduzieren die Inferenzzeit und Tokens des LLMs.
                         </div>
+                    </div>
+
+                    <!-- Speichern & Anwenden Button -->
+                    <div style="border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+                        <div id="llm-save-feedback" style="font-size: 0.8rem; font-weight: 600; color: var(--muted); display: flex; align-items: center; gap: 6px;"></div>
+                        <button type="button" id="btn-save-llm-settings" class="btn btn-primary" style="padding: 9px 18px; font-weight: 700; font-size: 0.84rem; display: inline-flex; align-items: center; gap: 7px;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            <span data-i18n="settings.btn_save_settings">Einstellungen speichern &amp; anwenden</span>
+                        </button>
                     </div>
                 </div>
 
@@ -1554,19 +1563,19 @@
 
 
     <!-- PartLens Modular Scripts -->
-    <script src="/frontend/js/i18n.js?v=2.9.3"></script>
-    <script src="/frontend/js/state.js?v=2.9.3"></script>
-    <script src="/frontend/js/api.js?v=2.9.3"></script>
-    <script src="/frontend/js/analysis.js?v=2.9.3"></script>
-    <script src="/frontend/js/resistor.js?v=2.9.3"></script>
-    <script src="/frontend/js/canvas.js?v=2.9.3"></script>
-    <script src="/frontend/js/boxes.js?v=2.9.3"></script>
-    <script src="/frontend/js/footprints.js?v=2.9.3"></script>
-    <script src="/frontend/js/autolabel.js?v=2.9.3"></script>
-    <script src="/frontend/js/gallery.js?v=2.9.3"></script>
-    <script src="/frontend/js/import_modal.js?v=2.9.3"></script>
-    <script src="/frontend/js/export.js?v=2.9.3"></script>
-    <script src="/frontend/js/webcam.js?v=2.9.3"></script>
-    <script src="/frontend/js/app.js?v=2.9.3"></script>
+    <script src="/frontend/js/i18n.js?v=2.9.4"></script>
+    <script src="/frontend/js/state.js?v=2.9.4"></script>
+    <script src="/frontend/js/api.js?v=2.9.4"></script>
+    <script src="/frontend/js/analysis.js?v=2.9.4"></script>
+    <script src="/frontend/js/resistor.js?v=2.9.4"></script>
+    <script src="/frontend/js/canvas.js?v=2.9.4"></script>
+    <script src="/frontend/js/boxes.js?v=2.9.4"></script>
+    <script src="/frontend/js/footprints.js?v=2.9.4"></script>
+    <script src="/frontend/js/autolabel.js?v=2.9.4"></script>
+    <script src="/frontend/js/gallery.js?v=2.9.4"></script>
+    <script src="/frontend/js/import_modal.js?v=2.9.4"></script>
+    <script src="/frontend/js/export.js?v=2.9.4"></script>
+    <script src="/frontend/js/webcam.js?v=2.9.4"></script>
+    <script src="/frontend/js/app.js?v=2.9.4"></script>
 </body>
 </html>

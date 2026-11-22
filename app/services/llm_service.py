@@ -269,7 +269,10 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
         if not api_key:
             raise ValueError("Kein Gemini API-Key auf dem Server hinterlegt. Bitte unter Einstellungen konfigurieren.")
 
-        model_name = req.model_name or cfg.get("default_model") or 'gemini-2.0-flash'
+        model_name = req.model_name or cfg.get("gemini_model") or cfg.get("default_model") or 'gemini-2.0-flash'
+        # Guard: Verhindert, dass lokale Modellnamen (wie Qwen, Llama) oder Platzhalter an Gemini gesendet werden
+        if not model_name or any(k in model_name.lower() for k in ["qwen", "llama", "deepseek", "mistral", "lade modelle", "__custom__"]):
+            model_name = cfg.get("gemini_model") or 'gemini-2.0-flash'
         model_used = f"google:{model_name}"
 
         gemini_schema = build_gemini_schema(
@@ -416,14 +419,17 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
     elif provider in ('openai', 'lmstudio', 'ollama'):
         if provider in ('openai', 'lmstudio'):
             default_port = 1234
-            default_def_model = 'Qwen2.5-VL-7B-Instruct-4bit'
+            default_def_model = cfg.get("openai_model") or 'Qwen2.5-VL-7B-Instruct-4bit'
             configured_url = req.openai_url or req.lmstudio_url or cfg.get("openai_url") or cfg.get("lmstudio_url") or 'http://localhost:1234/v1'
         else:
             default_port = 11434
-            default_def_model = 'qwen2-vl'
+            default_def_model = cfg.get("ollama_model") or 'qwen2-vl'
             configured_url = req.ollama_url or cfg.get("ollama_url") or 'http://localhost:11434/v1'
 
         model_name = req.model_name or default_def_model
+        # Guard: Verhindert, dass Gemini-Modellnamen oder Platzhalter an lokale Server gesendet werden
+        if not model_name or any(k in model_name.lower() for k in ["gemini", "lade modelle", "__custom__"]):
+            model_name = default_def_model
         model_used = f"{provider}:{model_name}"
         api_key = req.api_key or get_api_key_for_provider(provider)
         headers = {
@@ -528,7 +534,8 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
         used_endpoint = None
         last_resp_err = ""
 
-        async with httpx.AsyncClient(timeout=120.0, verify=False) as client:
+        client_timeout = httpx.Timeout(180.0, connect=10.0)
+        async with httpx.AsyncClient(timeout=client_timeout, verify=False) as client:
             for cand_base in candidates:
                 endpoint = f"{cand_base.rstrip('/')}/chat/completions"
                 used_endpoint = endpoint
@@ -558,7 +565,10 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
 
             if not resp or resp.status_code != 200:
                 debug_log(f"\n[DEBUG {provider.upper()} ERROR]\nEndpoint: {used_endpoint}\nError: {last_resp_err}\n")
-                raise RuntimeError(f"{provider.upper()} API Fehler an {used_endpoint}: {last_resp_err}")
+                hint = ""
+                if "connection attempts failed" in last_resp_err.lower() or "connect" in last_resp_err.lower():
+                    hint = " (Tipp: Prüfen, ob der Server auf dem Mac Studio läuft und an 0.0.0.0/LAN lauscht, nicht nur an 127.0.0.1/localhost)"
+                raise RuntimeError(f"{provider.upper()} API Fehler an {used_endpoint}: {last_resp_err}{hint}")
 
             result_json = resp.json()
             raw_text = ""

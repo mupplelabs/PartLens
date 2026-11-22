@@ -30,9 +30,31 @@ async def update_llm_settings(update: LLMSettingsUpdate):
     if prov is not None and prov.strip():
         update_dict["default_provider"] = prov.strip()
 
+    def is_valid_model(m: Optional[str]) -> bool:
+        if not m:
+            return False
+        s = m.strip()
+        if not s or s == "__custom__" or s.lower().startswith("lade modelle"):
+            return False
+        return True
+
     mod = update.model or update.default_model
-    if mod is not None and mod.strip():
-        update_dict["default_model"] = mod.strip()
+    if is_valid_model(mod):
+        mod_clean = mod.strip()
+        update_dict["default_model"] = mod_clean
+        if prov == "gemini":
+            update_dict["gemini_model"] = mod_clean
+        elif prov in ("openai", "lmstudio"):
+            update_dict["openai_model"] = mod_clean
+        elif prov == "ollama":
+            update_dict["ollama_model"] = mod_clean
+
+    if is_valid_model(update.gemini_model):
+        update_dict["gemini_model"] = update.gemini_model.strip()
+    if is_valid_model(update.openai_model):
+        update_dict["openai_model"] = update.openai_model.strip()
+    if is_valid_model(update.ollama_model):
+        update_dict["ollama_model"] = update.ollama_model.strip()
 
     url_val = update.custom_url or update.openai_url
     if url_val is not None and url_val.strip():

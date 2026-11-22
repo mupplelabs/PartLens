@@ -342,7 +342,9 @@
   },
   "settings": {
     "llm_card_title": "LLM Auto-Labeling Provider",
-    "autosave_active": "Auto-Speicherung aktiv",
+    "btn_save_settings": "Einstellungen speichern & anwenden",
+    "saved_success": "Konfiguration erfolgreich gespeichert und aktiviert!",
+    "select_valid_model": "Bitte wähle ein gültiges Modell aus.",
     "provider_label": "Provider:",
     "model_label": "Modell:",
     "refresh_models_title": "Verfügbare Modelle live abrufen",

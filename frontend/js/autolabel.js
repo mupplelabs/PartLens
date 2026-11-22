@@ -28,6 +28,9 @@ const LLM_STORAGE_KEYS = {
     PROVIDER: 'ct_llm_provider',
     MODEL: 'ct_llm_model',
     CUSTOM_MODEL: 'ct_llm_custom_model',
+    MODEL_GEMINI: 'ct_llm_model_gemini',
+    MODEL_OPENAI: 'ct_llm_model_openai',
+    MODEL_OLLAMA: 'ct_llm_model_ollama',
     LOCAL_URL: 'ct_local_url',
     OPENAI_URL: 'ct_openai_url',
     OLLAMA_URL: 'ct_ollama_url',
@@ -49,6 +52,7 @@ const autolabelOptionsBtn = document.getElementById('autolabel-options-btn');
 const autolabelOptionsMenu = document.getElementById('autolabel-options-menu');
 const closeAutolabelOptionsBtn = document.getElementById('close-autolabel-options-btn');
 const autolabelQuickBadge = document.getElementById('autolabel-quick-badge');
+const btnSaveLlmSettings = document.getElementById('btn-save-llm-settings');
 
 function updateAutolabelBadge() {
     const fp = optFootprint ? optFootprint.checked : true;
@@ -72,27 +76,29 @@ function setAutolabelFeatures(fp, mk, sg, persist = true) {
     if (quickOptSubgroup) quickOptSubgroup.checked = sg;
     updateAutolabelBadge();
     if (persist) {
-        saveLlmSettingsToStorage();
+        localStorage.setItem(LLM_STORAGE_KEYS.DETECT_FOOTPRINT, fp ? '1' : '0');
+        localStorage.setItem(LLM_STORAGE_KEYS.DETECT_MARKING, mk ? '1' : '0');
+        localStorage.setItem(LLM_STORAGE_KEYS.DETECT_SUBGROUP, sg ? '1' : '0');
     }
 }
 
 [
-    [optFootprint, quickOptFootprint],
-    [optMarking, quickOptMarking],
-    [optSubgroup, quickOptSubgroup]
-].forEach(([mainEl, quickEl]) => {
+    [optFootprint, quickOptFootprint, 'DETECT_FOOTPRINT'],
+    [optMarking, quickOptMarking, 'DETECT_MARKING'],
+    [optSubgroup, quickOptSubgroup, 'DETECT_SUBGROUP']
+].forEach(([mainEl, quickEl, storageKey]) => {
     if (mainEl) {
         mainEl.addEventListener('change', () => {
             if (quickEl) quickEl.checked = mainEl.checked;
             updateAutolabelBadge();
-            saveLlmSettingsToStorage();
+            localStorage.setItem(LLM_STORAGE_KEYS[storageKey], mainEl.checked ? '1' : '0');
         });
     }
     if (quickEl) {
         quickEl.addEventListener('change', () => {
             if (mainEl) mainEl.checked = quickEl.checked;
             updateAutolabelBadge();
-            saveLlmSettingsToStorage();
+            localStorage.setItem(LLM_STORAGE_KEYS[storageKey], quickEl.checked ? '1' : '0');
         });
     }
 });
@@ -132,20 +138,58 @@ if (autolabelOptionsBtn && autolabelOptionsMenu) {
     }
 }
 
-        async function saveLlmSettingsToStorage() {
+async function saveLlmSettingsToStorage(showFeedback = true) {
     try {
         const prov = autolabelProvider ? autolabelProvider.value : 'gemini';
+        const modelName = getAutolabelModelName();
+
+        // Validierung: Keine leeren oder temporären Lade-Platzhalter speichern
+        if (!modelName || modelName.startsWith('Lade Modelle') || modelName === '__custom__') {
+            const feedbackEl = document.getElementById('llm-save-feedback');
+            if (feedbackEl && showFeedback) {
+                feedbackEl.innerHTML = `<span style="color: #ef4444; display: inline-flex; align-items: center; gap: 4px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    ${window.t ? window.t('settings.select_valid_model') : 'Bitte wähle ein gültiges Modell aus.'}
+                </span>`;
+            }
+            return;
+        }
+
+        // Provider-isolierte Speicherung im Browser
         if (autolabelProvider) localStorage.setItem(LLM_STORAGE_KEYS.PROVIDER, prov);
-        if (autolabelModelSelect) localStorage.setItem(LLM_STORAGE_KEYS.MODEL, autolabelModelSelect.value);
+        if (prov === 'gemini') {
+            localStorage.setItem(LLM_STORAGE_KEYS.MODEL_GEMINI, modelName);
+        } else if (prov === 'ollama') {
+            localStorage.setItem(LLM_STORAGE_KEYS.MODEL_OLLAMA, modelName);
+        } else {
+            localStorage.setItem(LLM_STORAGE_KEYS.MODEL_OPENAI, modelName);
+        }
+        localStorage.setItem(LLM_STORAGE_KEYS.MODEL, modelName);
+
+        if (localUrl) {
+            const urlVal = localUrl.value.trim();
+            if (prov === 'ollama') {
+                localStorage.setItem(LLM_STORAGE_KEYS.OLLAMA_URL, urlVal);
+            } else {
+                localStorage.setItem(LLM_STORAGE_KEYS.OPENAI_URL, urlVal);
+            }
+            localStorage.setItem(LLM_STORAGE_KEYS.LOCAL_URL, urlVal);
+        }
+
         if (autolabelModelCustom) localStorage.setItem(LLM_STORAGE_KEYS.CUSTOM_MODEL, autolabelModelCustom.value.trim());
         if (ocrSelect) localStorage.setItem(LLM_STORAGE_KEYS.OCR_ENGINE, ocrSelect.value);
         if (customClassesInput) localStorage.setItem(LLM_STORAGE_KEYS.CUSTOM_CLASSES, customClassesInput.value.trim());
 
-        // Persist securely to backend server (/api/settings/llm)
+        // Konfiguration an den Backend-Server übertragen
         const payload = {
             provider: prov,
-            model: getAutolabelModelName(),
+            model: modelName,
+            gemini_model: prov === 'gemini' ? modelName : (localStorage.getItem(LLM_STORAGE_KEYS.MODEL_GEMINI) || 'gemini-2.0-flash'),
+            openai_model: (prov === 'openai' || prov === 'lmstudio') ? modelName : (localStorage.getItem(LLM_STORAGE_KEYS.MODEL_OPENAI) || 'qwen2-vl-7b-instruct'),
+            ollama_model: prov === 'ollama' ? modelName : (localStorage.getItem(LLM_STORAGE_KEYS.MODEL_OLLAMA) || 'qwen2-vl'),
             custom_url: localUrl ? localUrl.value.trim() : '',
+            openai_url: (prov === 'openai' || prov === 'lmstudio') && localUrl ? localUrl.value.trim() : '',
+            ollama_url: prov === 'ollama' && localUrl ? localUrl.value.trim() : '',
             custom_model: autolabelModelCustom ? autolabelModelCustom.value.trim() : '',
             options: {
                 detect_footprint: optFootprint ? optFootprint.checked : true,
@@ -182,17 +226,44 @@ if (autolabelOptionsBtn && autolabelOptionsMenu) {
 
         updateOcrStatusChip();
         updateLlmStatusChip();
+
+        const feedbackEl = document.getElementById('llm-save-feedback');
+        if (feedbackEl && showFeedback) {
+            feedbackEl.innerHTML = `<span style="color: #10b981; display: inline-flex; align-items: center; gap: 4px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                ${window.t ? window.t('settings.saved_success') : 'Einstellungen gespeichert und aktiviert!'}
+            </span>`;
+            setTimeout(() => {
+                if (feedbackEl) feedbackEl.innerHTML = '';
+            }, 3500);
+        }
+
+        const headerSummary = document.getElementById('llm-active-summary-text');
+        if (headerSummary) {
+            headerSummary.innerText = `${prov.toUpperCase()}: ${modelName}`;
+        }
     } catch (e) {
         console.warn('Fehler beim Speichern der LLM-Einstellungen:', e);
+        const feedbackEl = document.getElementById('llm-save-feedback');
+        if (feedbackEl && showFeedback) {
+            feedbackEl.innerHTML = `<span style="color: #ef4444;">Fehler beim Speichern: ${e.message}</span>`;
+        }
     }
 }
 
 function getAutolabelModelName() {
-    if (!autolabelModelSelect) return 'gemini-2.0-flash';
-    if (autolabelModelSelect.value === '__custom__') {
-        return (autolabelModelCustom ? autolabelModelCustom.value.trim() : '') || (autolabelProvider.value === 'gemini' ? 'gemini-2.0-flash' : 'qwen2-vl-7b-instruct');
+    const prov = autolabelProvider ? autolabelProvider.value : 'gemini';
+    const fallbackModel = (prov === 'gemini') ? 'gemini-2.0-flash' : ((prov === 'ollama') ? 'qwen2-vl' : 'qwen2-vl-7b-instruct');
+    if (!autolabelModelSelect) return fallbackModel;
+    let val = autolabelModelSelect.value;
+    if (val === '__custom__') {
+        const customVal = autolabelModelCustom ? autolabelModelCustom.value.trim() : '';
+        return customVal || fallbackModel;
     }
-    return autolabelModelSelect.value;
+    if (!val || val.startsWith('Lade Modelle') || val.includes('...')) {
+        return fallbackModel;
+    }
+    return val;
 }
 
 // --- Status Pillen Synchronisierung (OCR & LLM) ---
@@ -336,7 +407,6 @@ if (autolabelModelSelect) {
         }
         updateVisionHintForSelectedModel();
         updateLlmStatusChip();
-        saveLlmSettingsToStorage();
     });
 }
 
@@ -344,15 +414,12 @@ if (autolabelModelCustom) {
     autolabelModelCustom.addEventListener('input', () => {
         updateVisionHintForSelectedModel();
         updateLlmStatusChip();
-        saveLlmSettingsToStorage();
     });
 }
 
 if (geminiApiKey) {
     let keyDebounceTimer = null;
     geminiApiKey.addEventListener('input', () => {
-        saveLlmSettingsToStorage();
-        updateLlmStatusChip();
         clearTimeout(keyDebounceTimer);
         keyDebounceTimer = setTimeout(() => {
             if (autolabelProvider && autolabelProvider.value === 'gemini' && geminiApiKey.value.trim().length > 10) {
@@ -361,8 +428,6 @@ if (geminiApiKey) {
         }, 600);
     });
     geminiApiKey.addEventListener('change', () => {
-        saveLlmSettingsToStorage();
-        updateLlmStatusChip();
         if (autolabelProvider && autolabelProvider.value === 'gemini' && geminiApiKey.value.trim().length > 10) {
             fetchGeminiModels();
         }
@@ -372,8 +437,6 @@ if (geminiApiKey) {
 if (localUrl) {
     let localUrlDebounceTimer = null;
     localUrl.addEventListener('input', () => {
-        saveLlmSettingsToStorage();
-        updateLlmStatusChip();
         clearTimeout(localUrlDebounceTimer);
         localUrlDebounceTimer = setTimeout(() => {
             const prov = autolabelProvider ? autolabelProvider.value : 'gemini';
@@ -383,8 +446,6 @@ if (localUrl) {
         }, 600);
     });
     localUrl.addEventListener('change', () => {
-        saveLlmSettingsToStorage();
-        updateLlmStatusChip();
         const prov = autolabelProvider ? autolabelProvider.value : 'gemini';
         if (prov === 'openai' || prov === 'lmstudio' || prov === 'ollama') {
             fetchLocalModels(prov);
@@ -395,8 +456,6 @@ if (localUrl) {
 if (openaiApiKey) {
     let openaiKeyDebounceTimer = null;
     openaiApiKey.addEventListener('input', () => {
-        saveLlmSettingsToStorage();
-        updateLlmStatusChip();
         clearTimeout(openaiKeyDebounceTimer);
         openaiKeyDebounceTimer = setTimeout(() => {
             const prov = autolabelProvider ? autolabelProvider.value : 'gemini';
@@ -406,8 +465,6 @@ if (openaiApiKey) {
         }, 600);
     });
     openaiApiKey.addEventListener('change', () => {
-        saveLlmSettingsToStorage();
-        updateLlmStatusChip();
         const prov = autolabelProvider ? autolabelProvider.value : 'gemini';
         if (prov === 'openai' || prov === 'lmstudio') {
             fetchLocalModels(prov);
@@ -417,8 +474,8 @@ if (openaiApiKey) {
 
 if (ocrSelect) {
     ocrSelect.addEventListener('change', () => {
+        localStorage.setItem(LLM_STORAGE_KEYS.OCR_ENGINE, ocrSelect.value);
         updateOcrStatusChip();
-        saveLlmSettingsToStorage();
     });
 }
 
@@ -427,14 +484,20 @@ if (ocrEngineQuickToggle) {
     ocrEngineQuickToggle.addEventListener('click', () => {
         if (!ocrSelect) return;
         ocrSelect.value = ocrSelect.value === 'florence2' ? 'tesseract' : 'florence2';
+        localStorage.setItem(LLM_STORAGE_KEYS.OCR_ENGINE, ocrSelect.value);
         updateOcrStatusChip();
-        saveLlmSettingsToStorage();
     });
 }
 
 if (customClassesInput) {
     customClassesInput.addEventListener('input', () => {
-        saveLlmSettingsToStorage();
+        localStorage.setItem(LLM_STORAGE_KEYS.CUSTOM_CLASSES, customClassesInput.value.trim());
+    });
+}
+
+if (btnSaveLlmSettings) {
+    btnSaveLlmSettings.addEventListener('click', () => {
+        saveLlmSettingsToStorage(true);
     });
 }
 
@@ -483,8 +546,8 @@ async function fetchGeminiModels(preferredModel = null) {
                     autolabelModelSelect.appendChild(customOpt);
 
                     // Bevorzugtes Modell auswählen (ignoriere ungültige oder experimentelle Altwerte)
-                    const target = preferredModel || localStorage.getItem(LLM_STORAGE_KEYS.MODEL);
-                    const isTargetValid = target && !target.includes('exp') && !target.startsWith('gemini-3.');
+                    const target = preferredModel || localStorage.getItem(LLM_STORAGE_KEYS.MODEL_GEMINI) || localStorage.getItem(LLM_STORAGE_KEYS.MODEL);
+                    const isTargetValid = target && !target.includes('exp') && !target.startsWith('gemini-3.') && target.startsWith('gemini-');
                     const match = isTargetValid ? modelsList.find(m => (m.id || m) === target) : null;
                     if (match) {
                         autolabelModelSelect.value = match.id || match;
@@ -497,7 +560,6 @@ async function fetchGeminiModels(preferredModel = null) {
                             autolabelModelSelect.value = topFlash.id || topFlash;
                         }
                     }
-                    saveLlmSettingsToStorage();
                     updateVisionHintForSelectedModel();
                 }
                 if (modelCountBadge) modelCountBadge.innerText = `(${modelsList.length} verfügbar)`;
@@ -589,9 +651,10 @@ async function fetchLocalModels(provider, preferredModel = null) {
             customOpt.textContent = 'Eigenes Modell eingeben...';
             autolabelModelSelect.appendChild(customOpt);
 
-            // Automatische Wahl: preferredModel > Vision-Modell > models[0]
-            const targetToSelect = preferredModel || localStorage.getItem(LLM_STORAGE_KEYS.MODEL);
-            const matchPref = models.find(m => m === targetToSelect);
+            // Automatische Wahl: preferredModel > gespeichertes Provider-Modell > Vision-Modell > models[0]
+            const savedProvModel = queryProv === 'ollama' ? localStorage.getItem(LLM_STORAGE_KEYS.MODEL_OLLAMA) : localStorage.getItem(LLM_STORAGE_KEYS.MODEL_OPENAI);
+            const targetToSelect = preferredModel || savedProvModel || localStorage.getItem(LLM_STORAGE_KEYS.MODEL);
+            const matchPref = targetToSelect ? models.find(m => m === targetToSelect) : null;
             const visionMatch = models.find(m => /vl|vision|qwen.*vl|minicpm|llava|pixtral|phi-3.5-vision|omni/i.test(m));
             if (matchPref) {
                 autolabelModelSelect.value = matchPref;
@@ -605,15 +668,15 @@ async function fetchLocalModels(provider, preferredModel = null) {
         if (modelCountBadge) modelCountBadge.innerText = `(${models.length} verfügbar)`;
         if (localStatusBadge) localStatusBadge.innerText = `Verbunden (${models.length} Modelle)`;
         updateVisionHintForSelectedModel();
-        saveLlmSettingsToStorage();
     } else {
         if (autolabelModelSelect) {
-            const defModel = queryProv === 'ollama' ? 'qwen2-vl' : 'qwen2-vl-7b-instruct';
+            const savedProvModel = queryProv === 'ollama' ? localStorage.getItem(LLM_STORAGE_KEYS.MODEL_OLLAMA) : localStorage.getItem(LLM_STORAGE_KEYS.MODEL_OPENAI);
+            const defModel = savedProvModel || (queryProv === 'ollama' ? 'qwen2-vl' : 'qwen2-vl-7b-instruct');
             autolabelModelSelect.innerHTML = `
                 <option value="${defModel}">${defModel} (Standard)</option>
                 <option value="__custom__">Eigenes Modell eingeben...</option>
             `;
-            const targetToSelect = preferredModel || localStorage.getItem(LLM_STORAGE_KEYS.MODEL);
+            const targetToSelect = preferredModel || savedProvModel || localStorage.getItem(LLM_STORAGE_KEYS.MODEL);
             if (targetToSelect === '__custom__') {
                 autolabelModelSelect.value = '__custom__';
                 if (autolabelModelCustom) autolabelModelCustom.style.display = 'block';
@@ -642,9 +705,10 @@ function handleProviderChange(isUserSwitch = false) {
             refreshModelsBtn.title = 'Aktuelle Gemini-Modelle von Google abrufen';
         }
         if (modelCountBadge) modelCountBadge.innerText = '';
-        if (autolabelModelSelect && autolabelModelSelect.options.length === 0) {
+        const savedGeminiModel = localStorage.getItem(LLM_STORAGE_KEYS.MODEL_GEMINI) || 'gemini-2.0-flash';
+        if (autolabelModelSelect) {
             autolabelModelSelect.innerHTML = `
-                <option value="gemini-2.0-flash" selected>2.0 Flash (Standard &amp; Schnell · Empfohlen)</option>
+                <option value="gemini-2.0-flash">2.0 Flash (Standard &amp; Schnell · Empfohlen)</option>
                 <option value="gemini-3.8-flash">3.8 Flash (Vielseitige Unterstützung)</option>
                 <option value="gemini-3.5-flash-lite">3.5 Flash-Lite (Schnellste Antworten)</option>
                 <option value="gemini-3.1-pro">3.1 Pro (Logisches Schlussfolgern)</option>
@@ -653,11 +717,19 @@ function handleProviderChange(isUserSwitch = false) {
                 <option value="gemini-1.5-flash">1.5 Flash (Klassisch &amp; Sparsam)</option>
                 <option value="__custom__">Eigenes Modell eingeben...</option>
             `;
+            const hasOpt = Array.from(autolabelModelSelect.options).some(o => o.value === savedGeminiModel);
+            if (!hasOpt && savedGeminiModel && savedGeminiModel.startsWith('gemini-')) {
+                const opt = document.createElement('option');
+                opt.value = savedGeminiModel;
+                opt.textContent = savedGeminiModel;
+                autolabelModelSelect.insertBefore(opt, autolabelModelSelect.firstChild);
+            }
+            autolabelModelSelect.value = savedGeminiModel;
         }
-        if (autolabelModelCustom) autolabelModelCustom.style.display = 'none';
+        if (autolabelModelCustom) autolabelModelCustom.style.display = savedGeminiModel === '__custom__' ? 'block' : 'none';
         updateVisionHintForSelectedModel();
         if (isUserSwitch) {
-            fetchGeminiModels();
+            fetchGeminiModels(savedGeminiModel);
         }
     } else if (prov === 'openai' || prov === 'lmstudio') {
         if (geminiKeyRow) geminiKeyRow.style.display = 'none';
@@ -671,17 +743,20 @@ function handleProviderChange(isUserSwitch = false) {
         
         // URL aus lokalem Speicher für OpenAI laden falls vorhanden oder Fallback beibehalten
         const savedUrl = localStorage.getItem(LLM_STORAGE_KEYS.OPENAI_URL) || localStorage.getItem(LLM_STORAGE_KEYS.LOCAL_URL);
-        if (savedUrl) {
+        if (savedUrl && localUrl) {
             localUrl.value = savedUrl;
-        } else if (!localUrl.value) {
+        } else if (localUrl && !localUrl.value) {
             localUrl.value = 'http://127.0.0.1:1234/v1';
         }
+        const savedOpenaiModel = localStorage.getItem(LLM_STORAGE_KEYS.MODEL_OPENAI) || 'qwen2-vl-7b-instruct';
         if (autolabelModelSelect) {
-            autolabelModelSelect.innerHTML = '<option value="">Lade Modelle...</option>';
+            autolabelModelSelect.innerHTML = `<option value="${savedOpenaiModel}">${savedOpenaiModel}</option><option value="">Lade Modelle...</option>`;
+            autolabelModelSelect.value = savedOpenaiModel;
         }
-        if (autolabelModelCustom) autolabelModelCustom.style.display = 'none';
+        if (autolabelModelCustom) autolabelModelCustom.style.display = savedOpenaiModel === '__custom__' ? 'block' : 'none';
+        updateVisionHintForSelectedModel();
         if (isUserSwitch) {
-            fetchLocalModels(prov);
+            fetchLocalModels(prov, savedOpenaiModel);
         }
     } else if (prov === 'ollama') {
         if (geminiKeyRow) geminiKeyRow.style.display = 'none';
@@ -694,17 +769,20 @@ function handleProviderChange(isUserSwitch = false) {
         if (localUrlLabel) localUrlLabel.innerText = 'Ollama Endpoint URL:';
         
         const savedUrl = localStorage.getItem(LLM_STORAGE_KEYS.OLLAMA_URL);
-        if (savedUrl) {
+        if (savedUrl && localUrl) {
             localUrl.value = savedUrl;
-        } else if (!localUrl.value || localUrl.value.includes(':8000') || localUrl.value.includes(':1234')) {
+        } else if (localUrl && (!localUrl.value || localUrl.value.includes(':8000') || localUrl.value.includes(':1234'))) {
             localUrl.value = 'http://127.0.0.1:11434/v1';
         }
+        const savedOllamaModel = localStorage.getItem(LLM_STORAGE_KEYS.MODEL_OLLAMA) || 'qwen2-vl';
         if (autolabelModelSelect) {
-            autolabelModelSelect.innerHTML = '<option value="">Lade Modelle aus Ollama...</option>';
+            autolabelModelSelect.innerHTML = `<option value="${savedOllamaModel}">${savedOllamaModel}</option><option value="">Lade Modelle aus Ollama...</option>`;
+            autolabelModelSelect.value = savedOllamaModel;
         }
-        if (autolabelModelCustom) autolabelModelCustom.style.display = 'none';
+        if (autolabelModelCustom) autolabelModelCustom.style.display = savedOllamaModel === '__custom__' ? 'block' : 'none';
+        updateVisionHintForSelectedModel();
         if (isUserSwitch) {
-            fetchLocalModels('ollama');
+            fetchLocalModels('ollama', savedOllamaModel);
         }
     }
 }
@@ -712,7 +790,7 @@ function handleProviderChange(isUserSwitch = false) {
 if (autolabelProvider) {
     autolabelProvider.addEventListener('change', () => {
         handleProviderChange(true);
-        saveLlmSettingsToStorage();
+        updateLlmStatusChip();
     });
 }
 
@@ -730,7 +808,7 @@ function loadLlmSettingsFromStorage() {
         const savedCustomClasses = localStorage.getItem(LLM_STORAGE_KEYS.CUSTOM_CLASSES);
         if (savedCustomClasses !== null && customClassesInput) customClassesInput.value = savedCustomClasses;
 
-        let savedProvider = localStorage.getItem(LLM_STORAGE_KEYS.PROVIDER);
+        let savedProvider = localStorage.getItem(LLM_STORAGE_KEYS.PROVIDER) || 'gemini';
         if (savedProvider === 'lmstudio') savedProvider = 'openai';
 
         let savedLocalUrl = '';
@@ -740,7 +818,9 @@ function loadLlmSettingsFromStorage() {
             savedLocalUrl = localStorage.getItem(LLM_STORAGE_KEYS.OPENAI_URL) || localStorage.getItem(LLM_STORAGE_KEYS.LOCAL_URL) || 'http://127.0.0.1:1234/v1';
         }
 
-        const savedModel = localStorage.getItem(LLM_STORAGE_KEYS.MODEL);
+        const savedGeminiModel = localStorage.getItem(LLM_STORAGE_KEYS.MODEL_GEMINI);
+        const savedOpenaiModel = localStorage.getItem(LLM_STORAGE_KEYS.MODEL_OPENAI);
+        const savedOllamaModel = localStorage.getItem(LLM_STORAGE_KEYS.MODEL_OLLAMA);
         const savedCustomModel = localStorage.getItem(LLM_STORAGE_KEYS.CUSTOM_MODEL);
 
         if (savedLocalUrl && localUrl) {
@@ -756,27 +836,28 @@ function loadLlmSettingsFromStorage() {
             handleProviderChange(false);
         }
 
-        let targetModel = savedModel;
-        if (targetModel && targetModel.includes('2.0')) {
-            targetModel = targetModel.replace('2.0', '3.8');
-            localStorage.setItem(LLM_STORAGE_KEYS.MODEL, targetModel);
+        let targetModel = '';
+        if (savedProvider === 'gemini') {
+            targetModel = savedGeminiModel || localStorage.getItem(LLM_STORAGE_KEYS.MODEL) || 'gemini-2.0-flash';
+        } else if (savedProvider === 'ollama') {
+            targetModel = savedOllamaModel || localStorage.getItem(LLM_STORAGE_KEYS.MODEL) || 'qwen2-vl';
+        } else {
+            targetModel = savedOpenaiModel || localStorage.getItem(LLM_STORAGE_KEYS.MODEL) || 'qwen2-vl-7b-instruct';
         }
 
         if (targetModel && autolabelModelSelect) {
-            if (autolabelProvider && autolabelProvider.value === 'gemini') {
-                const exists = Array.from(autolabelModelSelect.options).some(o => o.value === targetModel);
-                if (!exists && targetModel !== '__custom__') {
-                    const opt = document.createElement('option');
-                    opt.value = targetModel;
-                    opt.textContent = targetModel;
-                    autolabelModelSelect.insertBefore(opt, autolabelModelSelect.firstChild);
-                }
-                autolabelModelSelect.value = targetModel;
-                if (targetModel === '__custom__' && autolabelModelCustom) {
-                    autolabelModelCustom.style.display = 'block';
-                }
-                updateVisionHintForSelectedModel();
+            const exists = Array.from(autolabelModelSelect.options).some(o => o.value === targetModel);
+            if (!exists && targetModel !== '__custom__') {
+                const opt = document.createElement('option');
+                opt.value = targetModel;
+                opt.textContent = targetModel;
+                autolabelModelSelect.insertBefore(opt, autolabelModelSelect.firstChild);
             }
+            autolabelModelSelect.value = targetModel;
+            if (targetModel === '__custom__' && autolabelModelCustom) {
+                autolabelModelCustom.style.display = 'block';
+            }
+            updateVisionHintForSelectedModel();
         }
 
         // Einziger kontrollierter Start-Abruf der Modelle basierend auf dem geladenen Provider
@@ -1632,6 +1713,10 @@ async function syncLlmSettingsWithServer() {
         const res = await CTApi.getLlmSettings();
         const s = res?.settings || res;
         if (s) {
+            if (s.gemini_model) localStorage.setItem(LLM_STORAGE_KEYS.MODEL_GEMINI, s.gemini_model);
+            if (s.openai_model) localStorage.setItem(LLM_STORAGE_KEYS.MODEL_OPENAI, s.openai_model);
+            if (s.ollama_model) localStorage.setItem(LLM_STORAGE_KEYS.MODEL_OLLAMA, s.ollama_model);
+
             const prov = s.default_provider || s.provider;
             if (prov && autolabelProvider) {
                 autolabelProvider.value = prov;
@@ -1639,8 +1724,10 @@ async function syncLlmSettingsWithServer() {
             }
             if (s.openai_url && localUrl && (prov === 'openai' || prov === 'lmstudio')) {
                 localUrl.value = s.openai_url;
+                localStorage.setItem(LLM_STORAGE_KEYS.OPENAI_URL, s.openai_url);
             } else if (s.ollama_url && localUrl && prov === 'ollama') {
                 localUrl.value = s.ollama_url;
+                localStorage.setItem(LLM_STORAGE_KEYS.OLLAMA_URL, s.ollama_url);
             } else if (s.custom_url && localUrl) {
                 localUrl.value = s.custom_url;
             }

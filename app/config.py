@@ -139,6 +139,9 @@ class LLMSettingsUpdate(BaseModel):
     default_provider: Optional[str] = None
     model: Optional[str] = None
     default_model: Optional[str] = None
+    gemini_model: Optional[str] = None
+    openai_model: Optional[str] = None
+    ollama_model: Optional[str] = None
     custom_url: Optional[str] = None
     openai_url: Optional[str] = None
     ollama_url: Optional[str] = None
@@ -151,7 +154,10 @@ def load_llm_config() -> dict:
         "gemini_api_key": os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or "",
         "openai_api_key": os.environ.get("OPENAI_API_KEY") or "",
         "default_provider": os.environ.get("DEFAULT_LLM_PROVIDER") or "gemini",
-        "default_model": os.environ.get("DEFAULT_LLM_MODEL") or "gemini-2.5-flash",
+        "default_model": os.environ.get("DEFAULT_LLM_MODEL") or "gemini-2.0-flash",
+        "gemini_model": os.environ.get("GEMINI_MODEL") or "gemini-2.0-flash",
+        "openai_model": os.environ.get("OPENAI_MODEL") or "qwen2-vl-7b-instruct",
+        "ollama_model": os.environ.get("OLLAMA_MODEL") or "qwen2-vl",
         "openai_url": os.environ.get("OPENAI_URL") or "http://host.docker.internal:1234/v1",
         "ollama_url": os.environ.get("OLLAMA_URL") or "http://host.docker.internal:11434/v1",
         "lmstudio_url": os.environ.get("LMSTUDIO_URL") or "http://host.docker.internal:1234/v1"
@@ -183,7 +189,10 @@ def get_llm_public_settings() -> dict:
         "has_gemini_key": bool(cfg.get("gemini_api_key", "").strip()),
         "has_openai_key": bool(cfg.get("openai_api_key", "").strip()),
         "default_provider": cfg.get("default_provider", "gemini"),
-        "default_model": cfg.get("default_model", "gemini-2.5-flash"),
+        "default_model": cfg.get("default_model", "gemini-2.0-flash"),
+        "gemini_model": cfg.get("gemini_model", "gemini-2.0-flash"),
+        "openai_model": cfg.get("openai_model", "qwen2-vl-7b-instruct"),
+        "ollama_model": cfg.get("ollama_model", "qwen2-vl"),
         "openai_url": cfg.get("openai_url", "http://host.docker.internal:1234/v1"),
         "ollama_url": cfg.get("ollama_url", "http://host.docker.internal:11434/v1"),
         "lmstudio_url": cfg.get("lmstudio_url", "http://host.docker.internal:1234/v1")

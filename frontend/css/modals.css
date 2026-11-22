@@ -692,3 +692,32 @@
             color: #0284c7;
         }
 
+        /* Crop & Rotate Modal: Zoom Control & Slider Popover */
+        .crop-zoom-pill-btn {
+            transition: all 0.15s ease;
+        }
+        .crop-zoom-pill-btn:hover {
+            border-color: rgba(255, 255, 255, 0.6) !important;
+            background: rgba(15, 23, 42, 0.96) !important;
+        }
+        [data-theme="light"] .crop-zoom-pill-btn {
+            background: rgba(15, 23, 42, 0.88) !important;
+            color: #ffffff !important;
+        }
+        [data-theme="light"] #crop-zoom-slider-popover {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-color: rgba(0, 0, 0, 0.15) !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+        }
+        [data-theme="light"] #crop-zoom-slider-popover span {
+            color: #475569 !important;
+        }
+        [data-theme="light"] #crop-zoom-reset-btn {
+            background: #e2e8f0 !important;
+            border-color: #cbd5e1 !important;
+            color: #1e293b !important;
+        }
+        [data-theme="light"] #crop-zoom-reset-btn:hover {
+            background: #cbd5e1 !important;
+        }
+

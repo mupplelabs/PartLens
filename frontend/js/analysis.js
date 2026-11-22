@@ -2334,10 +2334,14 @@ function initCropRotateModal() {
         ctx.drawImage(sourceEl, selBox.x1, selBox.y1, bw, bh, -drawW / 2, -drawH / 2, drawW, drawH);
         ctx.restore();
 
-        // Zoom-Badge aktualisieren
-        const zoomBadge = document.getElementById('crop-zoom-level-badge');
-        if (zoomBadge) {
-            zoomBadge.innerText = `${Math.round(zoomLevel * 100)}%`;
+        // Zoom-Badge & Slider aktualisieren
+        const zoomText = document.getElementById('crop-zoom-text');
+        if (zoomText) {
+            zoomText.innerText = `${Math.round(zoomLevel * 100)}%`;
+        }
+        const zoomSlider = document.getElementById('crop-zoom-slider');
+        if (zoomSlider && Math.abs(Number(zoomSlider.value) - Math.round(zoomLevel * 100)) > 5) {
+            zoomSlider.value = Math.round(zoomLevel * 100);
         }
 
         // Steuerungselemente synchronisieren
@@ -2454,21 +2458,57 @@ function initCropRotateModal() {
         });
     }
 
-    // Zoom-Badge Klick: Auf 100% zurücksetzen
+    // Zoom-Badge Klick: Schieberegler einblenden / ausblenden
     const zoomBadge = document.getElementById('crop-zoom-level-badge');
-    if (zoomBadge) {
-        zoomBadge.style.cursor = 'pointer';
-        zoomBadge.style.pointerEvents = 'auto';
-        zoomBadge.title = 'Klick: Zoom auf 100% zurücksetzen';
+    const zoomPopover = document.getElementById('crop-zoom-slider-popover');
+    const zoomSlider = document.getElementById('crop-zoom-slider');
+    const zoomResetBtn = document.getElementById('crop-zoom-reset-btn');
+
+    if (zoomBadge && zoomPopover) {
         zoomBadge.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = (zoomPopover.style.display === 'flex');
+            zoomPopover.style.display = isOpen ? 'none' : 'flex';
+            const chevron = zoomBadge.querySelector('.zoom-pill-chevron');
+            if (chevron) {
+                chevron.style.transform = isOpen ? 'none' : 'rotate(180deg)';
+            }
+        });
+    }
+
+    if (zoomSlider) {
+        zoomSlider.addEventListener('input', (e) => {
+            e.stopPropagation();
+            const newZoom = Number(zoomSlider.value) / 100;
+            zoomLevel = Math.max(0.8, Math.min(10.0, newZoom));
+            commitBoxState();
+            renderModalCrop();
+        });
+        zoomSlider.addEventListener('mousedown', (e) => e.stopPropagation());
+        zoomSlider.addEventListener('touchstart', (e) => e.stopPropagation());
+    }
+
+    if (zoomResetBtn) {
+        zoomResetBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             zoomLevel = 1.0;
             panX = 0;
             panY = 0;
+            if (zoomSlider) zoomSlider.value = 100;
             commitBoxState();
             renderModalCrop();
         });
     }
+
+    // Modal-Klick schließt Zoom-Popover wenn außerhalb geklickt
+    window.addEventListener('click', (e) => {
+        if (!zoomPopover || zoomPopover.style.display !== 'flex') return;
+        if (!e.target.closest('.crop-zoom-control-wrap')) {
+            zoomPopover.style.display = 'none';
+            const chevron = zoomBadge?.querySelector('.zoom-pill-chevron');
+            if (chevron) chevron.style.transform = 'none';
+        }
+    });
 
     // --- Maus & Finger Interaktion im Viewport: ZOOM & PAN ---
     if (viewport) {

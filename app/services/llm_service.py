@@ -277,7 +277,7 @@ def extract_usage_tokens(result_json: dict) -> tuple[int, int, int]:
         or 0
     )
 
-    completion = (
+    candidates = (
         usage.get("candidatesTokenCount")
         or usage.get("completion_tokens")
         or usage.get("completion_token_count")
@@ -286,6 +286,8 @@ def extract_usage_tokens(result_json: dict) -> tuple[int, int, int]:
         or result_json.get("eval_count")
         or 0
     )
+    thoughts = usage.get("thoughtsTokenCount") or 0
+    completion = candidates + thoughts
 
     total = (
         usage.get("totalTokenCount")
@@ -297,7 +299,9 @@ def extract_usage_tokens(result_json: dict) -> tuple[int, int, int]:
     p = max(0, int(prompt or 0))
     c = max(0, int(completion or 0))
     t = max(0, int(total or 0))
-    if t == 0 and (p > 0 or c > 0):
+    if t > p and c == 0:
+        c = t - p
+    elif t == 0 and (p > 0 or c > 0):
         t = p + c
 
     return p, c, t

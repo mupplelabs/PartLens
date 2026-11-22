@@ -56,7 +56,9 @@ def record_token_usage(
     else:
         t_tokens = p_tokens + c_tokens
 
-    if t_tokens > 0 and p_tokens == 0 and c_tokens == 0:
+    if t_tokens > p_tokens and c_tokens == 0:
+        c_tokens = t_tokens - p_tokens
+    elif t_tokens > 0 and p_tokens == 0 and c_tokens == 0:
         p_tokens = t_tokens
 
     clean_prov = (provider or "unknown").strip().lower()

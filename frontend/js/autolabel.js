@@ -1214,10 +1214,13 @@ function setCanvasToolMode(mode) {
     }
 
     // 4. Statuszeile
-    if (autolabelStatus) {
-        autolabelStatus.innerText = (mode === 'box')
-            ? 'Modus: Box zeichnen (R) aktiv – Klicke und ziehe im Bild, um ein neues Bauteil einzurahmen. (Taste V oder Esc für Auswahl)'
-            : 'Modus: Select (V) aktiv – Klicke auf ein Bauteil zum Auswählen, Verschieben oder Skalieren.';
+    if (typeof updateStudioStatus === 'function') {
+        updateStudioStatus(
+            (mode === 'box')
+                ? 'Modus: Box zeichnen (R) aktiv – Klicke und ziehe im Bild, um ein neues Bauteil einzurahmen. (Taste V oder Esc für Auswahl)'
+                : 'Modus: Select (V) aktiv – Klicke auf ein Bauteil zum Auswählen, Verschieben oder Skalieren.',
+            'ready'
+        );
     }
 }
 window.setCanvasToolMode = setCanvasToolMode;
@@ -1328,10 +1331,6 @@ function showAutoLabelLoading(modelName, provider) {
 
     const isMobile = window.innerWidth <= 768;
     const aiAnalyzingBase = window.t ? window.t('canvas.ai_analyzing') : 'KI analysiert Bauteile';
-    if (autolabelStatus) {
-        const modelTag = isMobile ? '' : ` (<em>${modelName}</em>)`;
-        autolabelStatus.innerHTML = `<span class="status-radar-dot active" style="display:inline-block; vertical-align:middle; margin-right:6px;"></span>${aiAnalyzingBase}${modelTag} · 00:00.0...`;
-    }
     const initialStatusText = isMobile ? `${aiAnalyzingBase}...` : `${aiAnalyzingBase} (${modelName})...`;
     if (typeof updateStudioStatus === 'function') {
         updateStudioStatus(initialStatusText, 'active');
@@ -1351,10 +1350,6 @@ function showAutoLabelLoading(modelName, provider) {
             pillBar.style.width = `${pct}%`;
         }
 
-        if (autolabelStatus) {
-            const modelTag = isMobile ? '' : ` (<em>${modelName}</em>)`;
-            autolabelStatus.innerHTML = `<span class="status-radar-dot active" style="display:inline-block; vertical-align:middle; margin-right:6px;"></span>${aiAnalyzingBase}${modelTag} · ${timeStr}...`;
-        }
         const tickStatusText = isMobile ? `${aiAnalyzingBase} (${timeStr})...` : `${aiAnalyzingBase} (${modelName} · ${timeStr})...`;
         if (typeof updateStudioStatus === 'function') {
             updateStudioStatus(tickStatusText, 'active');
@@ -1400,7 +1395,6 @@ function abortAutoLabel() {
         autoLabelAbortController = null;
     }
     hideAutoLabelLoading(false);
-    if (autolabelStatus) autolabelStatus.innerText = 'Auto-Label vom Benutzer abgebrochen.';
     if (typeof updateStudioStatus === 'function') {
         updateStudioStatus('Auto-Label abgebrochen · Bereit', 'ready');
     }
@@ -1429,7 +1423,6 @@ if (runAutolabelBtn) {
 
         autoLabelAbortController = new AbortController();
         showAutoLabelLoading(chosenModel, provider);
-        autolabelStatus.innerText = (window.innerWidth <= 768) ? 'KI-Erkennung wird ausgeführt...' : `Rufe ${provider} (${chosenModel}) auf...`;
 
         try {
             const detectFp = optFootprint ? optFootprint.checked : true;
@@ -1472,14 +1465,15 @@ if (runAutolabelBtn) {
 
             if (!data.components || data.components.length === 0) {
                 hideAutoLabelLoading(true);
-                if (window.t) {
-                    autolabelStatus.innerText = (window.innerWidth <= 768)
+                const noCompMsg = (window.t)
+                    ? ((window.innerWidth <= 768)
                         ? window.t('autolabel.no_components_found', { ms: data.latency_ms })
-                        : window.t('autolabel.no_components_found_model', { model: data.model, ms: data.latency_ms });
-                } else {
-                    autolabelStatus.innerText = (window.innerWidth <= 768)
-                        ? `Keine Bauteile im Bild gefunden (${data.latency_ms} ms).`
-                        : `${data.model} hat keine Bauteile im Bild gefunden (${data.latency_ms} ms).`;
+                        : window.t('autolabel.no_components_found_model', { model: data.model, ms: data.latency_ms }))
+                    : `Keine Bauteile im Bild gefunden (${data.latency_ms} ms).`;
+                if (typeof updateStudioStatus === 'function') {
+                    updateStudioStatus(noCompMsg, 'warning');
+                } else if (statusDiv) {
+                    statusDiv.innerText = noCompMsg;
                 }
                 return;
             }
@@ -1518,12 +1512,6 @@ if (runAutolabelBtn) {
                     ? window.t('canvas.autolabel_result', { count: detectedBoxes.length, ms: data.latency_ms })
                     : `Auto-Label: ${detectedBoxes.length} Bauteile erkannt (${data.latency_ms} ms)`;
             }
-            if (autolabelStatus) {
-                autolabelStatus.innerText = window.t
-                    ? window.t('canvas.autolabel_status_success', { count: detectedBoxes.length, ms: data.latency_ms })
-                    : `${detectedBoxes.length} Bauteile erkannt (${data.latency_ms} ms). Bitte kontrollieren und speichern!`;
-            }
-
             selectComponentBox(0, true);
 
             // Automatische Split-Empfehlung (Train vs. Val) anwenden & anzeigen
@@ -1559,7 +1547,6 @@ if (runAutolabelBtn) {
                 return;
             }
             console.error('Auto-Label Fehler:', err);
-            autolabelStatus.innerText = window.t ? window.t('autolabel.error_prefix', { error: err.message }) : `Fehler: ${err.message}`;
             hideAutoLabelLoading(false);
             const errStatus = window.t ? window.t('autolabel.error_prefix', { error: err.message }) : `Auto-Label Fehler: ${err.message}`;
             if (typeof updateStudioStatus === 'function') {

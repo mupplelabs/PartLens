@@ -342,9 +342,8 @@ function selectPaletteClass(cls) {
     updateActiveClassPill();
     closeQuickTagPopover();
 
-    const statusEl = document.getElementById('autolabel-status');
-    if (statusEl) {
-        statusEl.innerText = `Zeichen-Klasse auf '${cls}' gesetzt.`;
+    if (typeof updateStudioStatus === 'function') {
+        updateStudioStatus(`Zeichen-Klasse auf '${cls}' gesetzt.`, 'ready');
     }
 }
 window.selectPaletteClass = selectPaletteClass;
@@ -628,8 +627,9 @@ if (clearBoxesBtn) {
             if (typeof closeQuickTagPopover === 'function') closeQuickTagPopover();
             updateStage0CropPreview();
             if (typeof updateBoxEditBar === 'function') updateBoxEditBar();
-            const statusEl = document.getElementById('autolabel-status');
-            if (statusEl) statusEl.innerText = 'Alle Bounding Boxes entfernt.';
+            if (typeof updateStudioStatus === 'function') {
+                updateStudioStatus('Alle Bounding Boxes entfernt.', 'ready');
+            }
         }
     });
 }

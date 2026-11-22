@@ -467,9 +467,8 @@ function bindOverlayCanvasInteractions(canvasEl) {
                 // Werkzeug bleibt 'box' für flüssiges Durchzeichnen (Continuous Box Drawing wie in Affinity/Photoshop)
                 isDrawingManualBox = true;
                 selectComponentBox(newIdx, true);
-                const statusEl = document.getElementById('autolabel-status');
-                if (statusEl) {
-                    statusEl.innerText = `Neue Box #${detectedBoxes.length} (${defaultClass}) gezeichnet: ${Math.round(x2 - x1)}×${Math.round(y2 - y1)} px.`;
+                if (typeof updateStudioStatus === 'function') {
+                    updateStudioStatus(`Neue Box #${detectedBoxes.length} (${defaultClass}) gezeichnet: ${Math.round(x2 - x1)}×${Math.round(y2 - y1)} px.`, 'ready');
                 }
             } else {
                 // Bei Klick ohne Zug im Box-Modus verbleiben
@@ -489,9 +488,8 @@ function bindOverlayCanvasInteractions(canvasEl) {
 
             if (hadMove && selectedBoxIndex >= 0 && selectedBoxIndex < detectedBoxes.length) {
                 const b = detectedBoxes[selectedBoxIndex];
-                const statusEl = document.getElementById('autolabel-status');
-                if (statusEl) {
-                    statusEl.innerText = `Box #${selectedBoxIndex + 1} (${b.label}) angepasst: ${b.x2 - b.x1}×${b.y2 - b.y1} px.`;
+                if (typeof updateStudioStatus === 'function') {
+                    updateStudioStatus(`Box #${selectedBoxIndex + 1} (${b.label}) angepasst: ${b.x2 - b.x1}×${b.y2 - b.y1} px.`, 'ready');
                 }
                 updateStage0CropPreview();
                 renderStage0Chips();

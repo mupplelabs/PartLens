@@ -197,10 +197,12 @@ async def recommend_split_endpoint(
 ):
     class_list = [c.strip() for c in classes.split(",")] if classes else []
     marking_list = [m.strip() for m in part_markings.split(",")] if part_markings else []
-    suggested_split, reason = recommend_split(class_list, marking_list)
+    suggested_split, reason, code, params = recommend_split(class_list, marking_list)
     return {
         "suggested_split": suggested_split,
-        "reason": reason
+        "reason": reason,
+        "code": code,
+        "params": params
     }
 
 @router.get("/export-coco")

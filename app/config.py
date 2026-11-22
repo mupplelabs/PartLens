@@ -116,6 +116,8 @@ class AutoLabelResponse(BaseModel):
     latency_ms: int
     suggested_split: Optional[str] = "train"
     suggested_split_reason: Optional[str] = None
+    suggested_split_code: Optional[str] = None
+    suggested_split_params: Optional[dict] = None
 
 class SaveSampleRequest(BaseModel):
     image_base64: str

@@ -17,9 +17,11 @@ async def autolabel_endpoint(req: AutoLabelRequest):
         resp = await run_autolabel_inference(req)
         classes = [c.label for c in resp.components]
         part_markings = [c.part_marking for c in resp.components if c.part_marking]
-        suggested_split, reason = recommend_split(classes, part_markings)
+        suggested_split, reason, code, params = recommend_split(classes, part_markings)
         resp.suggested_split = suggested_split
         resp.suggested_split_reason = reason
+        resp.suggested_split_code = code
+        resp.suggested_split_params = params
         return resp
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

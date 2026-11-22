@@ -920,8 +920,82 @@ function populateClassDropdown(classes) {
 }
 populateClassDropdown(knownDatasetClasses);
 
+let currentSplitRecommendation = null;
+
+function renderSplitRecommendation() {
+    const hintEl = document.getElementById('split-recommendation-hint');
+    const textEl = document.getElementById('split-recommendation-text');
+    if (!hintEl || !textEl || !currentSplitRecommendation) return;
+
+    const { targetSplit, code, params, rawReason } = currentSplitRecommendation;
+    const splitUpper = (targetSplit || 'train').toUpperCase();
+
+    let localizedReason = '';
+    if (code) {
+        if (code === 'val_underrepresented_general') {
+            localizedReason = window.t ? window.t('curation.split_reason_val_general', params || {}) : `Validation-Split allgemein unterrepräsentiert (${params?.ratio || 0}%)`;
+        } else if (code === 'val_underrepresented_class') {
+            localizedReason = window.t ? window.t('curation.split_reason_val_class', params || {}) : `Klasse '${params?.class || ''}' in Val unterrepräsentiert (${params?.ratio || 0}%)`;
+        } else if (code === 'leakage_protection') {
+            localizedReason = window.t ? window.t('curation.split_reason_leakage', params || {}) : `Part-Marking '${params?.marking || ''}' existiert bereits in ${params?.split || ''} (Leakage-Schutz)`;
+        } else if (code === 'standard_allocation') {
+            localizedReason = window.t ? window.t('curation.split_reason_standard') : 'Standard 80:20 Train-Allokation';
+        }
+    }
+
+    if (!localizedReason && rawReason) {
+        const generalMatch = rawReason.match(/Validation-Split\s+allgemein\s+unterrepräsentiert\s*\(([^)]+)\)/i);
+        const classMatch = rawReason.match(/Klasse\s+'([^']+)'\s+in\s+Val\s+unterrepräsentiert\s*\(([^)]+)\)/i);
+        const leakageMatch = rawReason.match(/Part-Marking\s+'([^']+)'\s+existiert\s+bereits\s+in\s+(\w+)/i);
+        const standardMatch = rawReason.match(/Standard\s+80:20/i);
+
+        if (generalMatch) {
+            localizedReason = window.t ? window.t('curation.split_reason_val_general', { ratio: generalMatch[1].replace('%', '') }) : rawReason;
+        } else if (classMatch) {
+            localizedReason = window.t ? window.t('curation.split_reason_val_class', { class: classMatch[1], ratio: classMatch[2].replace('%', '') }) : rawReason;
+        } else if (leakageMatch) {
+            localizedReason = window.t ? window.t('curation.split_reason_leakage', { marking: leakageMatch[1], split: leakageMatch[2] }) : rawReason;
+        } else if (standardMatch) {
+            localizedReason = window.t ? window.t('curation.split_reason_standard') : rawReason;
+        } else {
+            localizedReason = rawReason;
+        }
+    }
+
+    if (!localizedReason) {
+        localizedReason = targetSplit === 'val'
+            ? (window.t ? window.t('curation.split_reason_val_balancing') : '20% Val-Balancing')
+            : (window.t ? window.t('curation.split_reason_standard') : 'Train Split');
+    }
+
+    const fullText = window.t
+        ? window.t('curation.recommendation_prefix', { split: splitUpper, reason: localizedReason })
+        : `Empfehlung: ${splitUpper} (${localizedReason})`;
+
+    textEl.innerText = fullText;
+    hintEl.style.display = 'block';
+}
+window.renderSplitRecommendation = renderSplitRecommendation;
+
+const splitHintEl = document.getElementById('split-recommendation-hint');
+if (splitHintEl) {
+    splitHintEl.addEventListener('click', () => {
+        if (!currentSplitRecommendation) return;
+        const targetSplit = currentSplitRecommendation.targetSplit;
+        if (typeof datasetSplit !== 'undefined' && datasetSplit) datasetSplit.value = targetSplit;
+        if (typeof splitPillBtns !== 'undefined' && splitPillBtns) {
+            splitPillBtns.forEach(b => {
+                b.classList.toggle('active', b.getAttribute('data-split') === targetSplit);
+            });
+        }
+    });
+}
+
 window.addEventListener('languageChanged', () => {
     populateClassDropdown(knownDatasetClasses);
+    if (currentSplitRecommendation) {
+        renderSplitRecommendation();
+    }
 });
 
 const boxIcTypeSelect = document.getElementById('box-ic-type-select');
@@ -1523,13 +1597,13 @@ if (runAutolabelBtn) {
                         b.classList.toggle('active', b.getAttribute('data-split') === targetSplit);
                     });
                 }
-                const hintEl = document.getElementById('split-recommendation-hint');
-                const textEl = document.getElementById('split-recommendation-text');
-                if (hintEl && textEl) {
-                    const reason = data.suggested_split_reason || (targetSplit === 'val' ? '20% Val-Balancing' : 'Train Split');
-                    textEl.innerText = `Empfehlung: ${targetSplit.toUpperCase()} (${reason})`;
-                    hintEl.style.display = 'block';
-                }
+                currentSplitRecommendation = {
+                    targetSplit: targetSplit,
+                    code: data.suggested_split_code,
+                    params: data.suggested_split_params,
+                    rawReason: data.suggested_split_reason
+                };
+                renderSplitRecommendation();
             }
 
             hideAutoLabelLoading(true);

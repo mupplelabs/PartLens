@@ -175,6 +175,13 @@
     "split_label": "Split wählen:",
     "train_label": "Train (80%)",
     "val_label": "Val (20%)",
+    "split_hint_title": "Klicken, um den empfohlenen Split zu übernehmen",
+    "recommendation_prefix": "Empfehlung: {split} ({reason})",
+    "split_reason_val_general": "Validation-Split allgemein unterrepräsentiert ({ratio}%)",
+    "split_reason_val_class": "Klasse '{class}' in Val unterrepräsentiert ({ratio}%)",
+    "split_reason_leakage": "Part-Marking '{marking}' existiert bereits in {split} (Leakage-Schutz)",
+    "split_reason_standard": "Standard 80:20 Train-Allokation",
+    "split_reason_val_balancing": "20% Val-Balancing",
     "save_btn": "Sample im Datensatz speichern",
     "status_ready": "Bereit zum Speichern."
   },

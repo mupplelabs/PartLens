@@ -630,7 +630,7 @@ def approve_sample(split: str, sample_id: str) -> dict:
         "unreviewed_count": _cached_stats.unreviewed_count if _cached_stats else 0
     }
 
-def recommend_split(classes: list[str], part_markings: Optional[list[str]] = None) -> tuple[str, str]:
+def recommend_split(classes: list[str], part_markings: Optional[list[str]] = None) -> tuple[str, str, str, dict]:
     """
     Intelligente Train vs. Val Empfehlung:
     1. Data-Leakage Schutz: Wenn ein konkretes part_marking bereits existiert, gleichen Split nutzen.
@@ -646,12 +646,13 @@ def recommend_split(classes: list[str], part_markings: Optional[list[str]] = Non
             s_tags = [str(t).upper() for t in s.get("tags", [])]
             for m in clean_markings:
                 if any(m in t for t in s_tags):
-                    return s_split, f"Part-Marking '{m}' existiert bereits in {s_split} (Leakage-Schutz)"
+                    return s_split, f"Part-Marking '{m}' existiert bereits in {s_split} (Leakage-Schutz)", "leakage_protection", {"marking": m, "split": s_split.upper()}
 
     stats = get_stats()
     val_ratio = stats.val_images / max(1, stats.train_images + stats.val_images)
     if val_ratio < 0.15:
-        return "val", f"Validation-Split allgemein unterrepräsentiert ({val_ratio * 100:.1f}%)"
+        ratio_str = f"{val_ratio * 100:.1f}"
+        return "val", f"Validation-Split allgemein unterrepräsentiert ({ratio_str}%)", "val_underrepresented_general", {"ratio": ratio_str}
 
     if classes and samples:
         class_val_counts = {}
@@ -672,6 +673,7 @@ def recommend_split(classes: list[str], part_markings: Optional[list[str]] = Non
             if total_c >= 2:
                 c_val_ratio = v_cnt / total_c
                 if c_val_ratio < 0.18:
-                    return "val", f"Klasse '{norm_c}' in Val unterrepräsentiert ({c_val_ratio * 100:.0f}%)"
+                    ratio_str = f"{c_val_ratio * 100:.0f}"
+                    return "val", f"Klasse '{norm_c}' in Val unterrepräsentiert ({ratio_str}%)", "val_underrepresented_class", {"class": norm_c, "ratio": ratio_str}
 
-    return "train", "Standard 80:20 Train-Allokation"
+    return "train", "Standard 80:20 Train-Allokation", "standard_allocation", {}

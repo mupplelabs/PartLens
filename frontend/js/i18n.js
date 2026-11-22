@@ -26,7 +26,7 @@
     // 2. Load Translations for Language
     async function loadTranslations(lang) {
         try {
-            const res = await fetch(`/frontend/locales/${lang}.json?v=2.9.2`);
+            const res = await fetch(`/frontend/locales/${lang}.json?v=2.9.14`);
             if (res.ok) {
                 return await res.json();
             }
@@ -116,6 +116,9 @@
         }
         if (typeof window.setBackendStatus === 'function' && typeof window.isBackendOnline !== 'undefined') {
             window.setBackendStatus(window.isBackendOnline);
+        }
+        if (typeof window.renderSplitRecommendation === 'function') {
+            window.renderSplitRecommendation();
         }
 
         // Update language button indicator

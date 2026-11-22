@@ -699,6 +699,16 @@ function prepareOcrImageDataUrl(overrideAngleDeg = null, forceNatural = false) {
         cropDescription += ` · ${Math.round(totalAngleDeg * 10) / 10}° ausgerichtet`;
     }
 
+    const zoom = (selectedStage0Box && typeof selectedStage0Box.zoom === 'number' && selectedStage0Box.zoom >= 0.8)
+        ? selectedStage0Box.zoom
+        : 1.0;
+    const panRelX = (selectedStage0Box && typeof selectedStage0Box.panRelX === 'number') ? selectedStage0Box.panRelX : 0;
+    const panRelY = (selectedStage0Box && typeof selectedStage0Box.panRelY === 'number') ? selectedStage0Box.panRelY : 0;
+
+    if (zoom > 1.05 || zoom < 0.95) {
+        cropDescription += ` · Zoom ${Math.round(zoom * 100)}%`;
+    }
+
     if (ocrPreviewLabel && !forceNatural) {
         ocrPreviewLabel.innerText = `Vorverarbeiteter OCR-Bildausschnitt (${cropDescription}):`;
     }
@@ -710,11 +720,13 @@ function prepareOcrImageDataUrl(overrideAngleDeg = null, forceNatural = false) {
     const rotH = sw * sin + sh * cos;
 
     const maxDim = 780;
-    const scale = Math.min(1, maxDim / Math.max(rotW, rotH));
-    const rawTargetW = Math.max(1, Math.round(sw * scale));
-    const rawTargetH = Math.max(1, Math.round(sh * scale));
-    const innerW = Math.max(1, Math.round(rotW * scale));
-    const innerH = Math.max(1, Math.round(rotH * scale));
+    const baseScale = Math.min(1, maxDim / Math.max(rotW, rotH));
+    const totalScale = baseScale * zoom;
+
+    const rawTargetW = Math.max(1, Math.round(sw * totalScale));
+    const rawTargetH = Math.max(1, Math.round(sh * totalScale));
+    const innerW = Math.max(1, Math.round(rotW * baseScale));
+    const innerH = Math.max(1, Math.round(rotH * baseScale));
 
     // Weißer Ruhe-Rand um den Chip, damit Buchstaben nie am Bildrand kleben und Florence-2 kein extremes 6:1-Seitenverhältnis staucht
     const borderX = Math.round(Math.max(16, innerW * 0.04));
@@ -729,7 +741,16 @@ function prepareOcrImageDataUrl(overrideAngleDeg = null, forceNatural = false) {
     octx.fillStyle = '#ffffff';
     octx.fillRect(0, 0, targetW, targetH);
     octx.save();
-    octx.translate(targetW / 2, targetH / 2);
+
+    // Striktes Clipping an den inneren Bildgrenzen, damit nichts über die Box hinausragt
+    octx.beginPath();
+    octx.rect(borderX, borderY, innerW, innerH);
+    octx.clip();
+
+    const ocrPanX = panRelX * (rotW * baseScale);
+    const ocrPanY = panRelY * (rotH * baseScale);
+
+    octx.translate(targetW / 2 + ocrPanX, targetH / 2 + ocrPanY);
     octx.rotate(rad);
     octx.drawImage(sourceEl, sx, sy, sw, sh, -rawTargetW / 2, -rawTargetH / 2, rawTargetW, rawTargetH);
     octx.restore();
@@ -1986,26 +2007,46 @@ function updateStage0CropPreview() {
     const bbW = bw * cos + bh * sin;
     const bbH = bw * sin + bh * cos;
 
-    const scale = Math.min(180 / bbW, 95 / bbH);
-    const cw = Math.max(24, Math.round(bbW * scale));
-    const ch = Math.max(24, Math.round(bbH * scale));
+    // Feste interne Auflösung (220x144 für 2x Retina, CSS: 110x72 px)
+    const cw = 220;
+    const ch = 144;
     stage0CropCanvas.width = cw;
     stage0CropCanvas.height = ch;
+    stage0CropCanvas.style.width = '110px';
+    stage0CropCanvas.style.height = '72px';
+
+    const zoom = (typeof selBox.zoom === 'number' && selBox.zoom >= 0.8) ? selBox.zoom : 1.0;
+    const panRelX = (typeof selBox.panRelX === 'number') ? selBox.panRelX : 0;
+    const panRelY = (typeof selBox.panRelY === 'number') ? selBox.panRelY : 0;
+
+    // Basisskalierung: So dimensionieren, dass bei zoom=1.0 nichts über die Box-Grenzen hinausragt
+    const baseScale = Math.min((cw - 12) / bbW, (ch - 12) / bbH);
+    const totalScale = baseScale * zoom;
 
     cctx.save();
     cctx.fillStyle = '#0f172a';
     cctx.fillRect(0, 0, cw, ch);
-    cctx.translate(cw / 2, ch / 2);
+
+    // Striktes Clipping an den Rändern des Vorschaubereichs
+    cctx.beginPath();
+    cctx.rect(0, 0, cw, ch);
+    cctx.clip();
+
+    const panPxX = panRelX * (bbW * baseScale);
+    const panPxY = panRelY * (bbH * baseScale);
+
+    cctx.translate(cw / 2 + panPxX, ch / 2 + panPxY);
     cctx.rotate(rad);
-    const drawW = bw * scale;
-    const drawH = bh * scale;
+    const drawW = bw * totalScale;
+    const drawH = bh * totalScale;
     cctx.drawImage(sourceEl, selBox.x1, selBox.y1, bw, bh, -drawW / 2, -drawH / 2, drawW, drawH);
     cctx.restore();
 
     const confPct = selBox.confidence ? `${Math.round(selBox.confidence * 100)}%` : '';
     stage0CropTitle.innerText = `Box #${selectedBoxIndex + 1}: ${selBox.label}`;
     const rotBadge = Math.abs(rotDeg) > 0.1 ? ` <span class="meta-pill accent" title="Drehwinkel: ${rotDeg.toFixed(1)}°">↻ ${Math.round(rotDeg * 10) / 10}°</span>` : '';
-    stage0CropInfo.innerHTML = `<span class="meta-pill">${bw} × ${bh} px</span>` + (confPct ? ` <span class="meta-pill accent">${confPct}</span>` : '') + rotBadge;
+    const zoomBadge = (zoom > 1.05 || zoom < 0.95) ? ` <span class="meta-pill" title="Zoom: ${Math.round(zoom * 100)}%">${Math.round(zoom * 100)}%</span>` : '';
+    stage0CropInfo.innerHTML = `<span class="meta-pill">${bw} × ${bh} px</span>` + (confPct ? ` <span class="meta-pill accent">${confPct}</span>` : '') + rotBadge + zoomBadge;
 }
 
 function renderStage0Chips() {
@@ -2214,8 +2255,31 @@ function initCropRotateModal() {
     let initialAngle = 0;
     let contrastMode = 0; // 0: Normal, 1: High Contrast, 2: Inverted
     let zoomLevel = 1.0;
+    let initialZoom = 1.0;
     let panX = 0;
     let panY = 0;
+    let initialPanRelX = 0;
+    let initialPanRelY = 0;
+
+    function commitBoxState() {
+        const selBox = getSelectedComponentBox();
+        if (!selBox) return;
+        selBox.rotation = currentAngle;
+        selBox.zoom = zoomLevel;
+
+        const bw = Math.max(8, selBox.x2 - selBox.x1);
+        const bh = Math.max(8, selBox.y2 - selBox.y1);
+        const rad = (currentAngle * Math.PI) / 180;
+        const bbW = bw * Math.abs(Math.cos(rad)) + bh * Math.abs(Math.sin(rad));
+        const bbH = bw * Math.abs(Math.sin(rad)) + bh * Math.abs(Math.cos(rad));
+        const vpW = Math.max(200, viewport ? viewport.clientWidth : 560);
+        const vpH = Math.max(150, viewport ? viewport.clientHeight : 280);
+        const baseScale = Math.min((vpW - 32) / bbW, (vpH - 32) / bbH, 4.0);
+
+        selBox.panRelX = (bbW * baseScale > 0) ? (panX / (bbW * baseScale)) : 0;
+        selBox.panRelY = (bbH * baseScale > 0) ? (panY / (bbH * baseScale)) : 0;
+        updateStage0CropPreview();
+    }
 
     function renderModalCrop() {
         if (!canvas || !viewport) return;
@@ -2238,6 +2302,11 @@ function initCropRotateModal() {
         const ctx = canvas.getContext('2d');
         ctx.save();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Striktes Clipping im Viewport, damit niemals Pixel über den Rahmen hinausspülen
+        ctx.beginPath();
+        ctx.rect(0, 0, canvas.width, canvas.height);
+        ctx.clip();
 
         // Filter anwenden
         if (contrastMode === 1) {
@@ -2287,11 +2356,7 @@ function initCropRotateModal() {
         currentAngle = Math.round(a * 2) / 2;
 
         if (updateLiveBox) {
-            const selBox = getSelectedComponentBox();
-            if (selBox) {
-                selBox.rotation = currentAngle;
-                updateStage0CropPreview();
-            }
+            commitBoxState();
         }
         renderModalCrop();
     }
@@ -2308,9 +2373,23 @@ function initCropRotateModal() {
         const isVert = (selBox.y2 - selBox.y1) > (selBox.x2 - selBox.x1) * 1.35 && selBox.leadType !== 'to92';
         currentAngle = typeof selBox.rotation === 'number' ? selBox.rotation : (isVert ? -90 : 0);
         initialAngle = currentAngle;
-        zoomLevel = 1.0;
-        panX = 0;
-        panY = 0;
+
+        initialZoom = (typeof selBox.zoom === 'number' && selBox.zoom >= 0.8) ? selBox.zoom : 1.0;
+        zoomLevel = initialZoom;
+        initialPanRelX = typeof selBox.panRelX === 'number' ? selBox.panRelX : 0;
+        initialPanRelY = typeof selBox.panRelY === 'number' ? selBox.panRelY : 0;
+
+        const bw = Math.max(8, selBox.x2 - selBox.x1);
+        const bh = Math.max(8, selBox.y2 - selBox.y1);
+        const rad = (currentAngle * Math.PI) / 180;
+        const bbW = bw * Math.abs(Math.cos(rad)) + bh * Math.abs(Math.sin(rad));
+        const bbH = bw * Math.abs(Math.sin(rad)) + bh * Math.abs(Math.cos(rad));
+        const vpW = Math.max(200, viewport ? viewport.clientWidth : 560);
+        const vpH = Math.max(150, viewport ? viewport.clientHeight : 280);
+        const baseScale = Math.min((vpW - 32) / bbW, (vpH - 32) / bbH, 4.0);
+
+        panX = initialPanRelX * (bbW * baseScale);
+        panY = initialPanRelY * (bbH * baseScale);
 
         if (boxTag) {
             boxTag.innerText = `Box #${selectedBoxIndex + 1}: ${selBox.label}`;
@@ -2324,6 +2403,9 @@ function initCropRotateModal() {
             const selBox = getSelectedComponentBox();
             if (selBox) {
                 selBox.rotation = initialAngle;
+                selBox.zoom = initialZoom;
+                selBox.panRelX = initialPanRelX;
+                selBox.panRelY = initialPanRelY;
                 updateStage0CropPreview();
             }
         }
@@ -2372,6 +2454,22 @@ function initCropRotateModal() {
         });
     }
 
+    // Zoom-Badge Klick: Auf 100% zurücksetzen
+    const zoomBadge = document.getElementById('crop-zoom-level-badge');
+    if (zoomBadge) {
+        zoomBadge.style.cursor = 'pointer';
+        zoomBadge.style.pointerEvents = 'auto';
+        zoomBadge.title = 'Klick: Zoom auf 100% zurücksetzen';
+        zoomBadge.addEventListener('click', (e) => {
+            e.stopPropagation();
+            zoomLevel = 1.0;
+            panX = 0;
+            panY = 0;
+            commitBoxState();
+            renderModalCrop();
+        });
+    }
+
     // --- Maus & Finger Interaktion im Viewport: ZOOM & PAN ---
     if (viewport) {
         // Mausrad: Zoom zentriert auf Cursor
@@ -2388,6 +2486,7 @@ function initCropRotateModal() {
             panY -= (mouseY - panY) * (newZoom / zoomLevel - 1);
 
             zoomLevel = newZoom;
+            commitBoxState();
             renderModalCrop();
         }, { passive: false });
 
@@ -2411,6 +2510,7 @@ function initCropRotateModal() {
             if (!isDragging) return;
             panX = startPanX + (e.clientX - startX);
             panY = startPanY + (e.clientY - startY);
+            commitBoxState();
             renderModalCrop();
         });
 
@@ -2427,13 +2527,14 @@ function initCropRotateModal() {
             zoomLevel = 1.0;
             panX = 0;
             panY = 0;
+            commitBoxState();
             renderModalCrop();
         });
 
         // Touch-Gesten: Ein-Finger-Pan & Zwei-Finger-Pinch-to-Zoom
         let isTouching = false;
         let initialPinchDist = 0;
-        let initialZoom = 1.0;
+        let touchStartZoom = 1.0;
         let touchStartX = 0;
         let touchStartY = 0;
         let touchStartPanX = 0;
@@ -2452,7 +2553,7 @@ function initCropRotateModal() {
                     e.touches[0].clientX - e.touches[1].clientX,
                     e.touches[0].clientY - e.touches[1].clientY
                 );
-                initialZoom = zoomLevel;
+                touchStartZoom = zoomLevel;
             }
         }, { passive: false });
 
@@ -2465,13 +2566,15 @@ function initCropRotateModal() {
                 );
                 if (initialPinchDist > 5) {
                     const scale = dist / initialPinchDist;
-                    zoomLevel = Math.max(0.8, Math.min(10.0, initialZoom * scale));
+                    zoomLevel = Math.max(0.8, Math.min(10.0, touchStartZoom * scale));
+                    commitBoxState();
                     renderModalCrop();
                 }
             } else if (e.touches.length === 1 && isTouching) {
                 e.preventDefault();
                 panX = touchStartPanX + (e.touches[0].clientX - touchStartX);
                 panY = touchStartPanY + (e.touches[0].clientY - touchStartY);
+                commitBoxState();
                 renderModalCrop();
             }
         }, { passive: false });
@@ -2492,15 +2595,13 @@ function initCropRotateModal() {
     // Speichern & OCR ausführen
     if (btnSave) {
         btnSave.addEventListener('click', () => {
-            const selBox = getSelectedComponentBox();
-            if (selBox) selBox.rotation = currentAngle;
+            commitBoxState();
             closeModal(false);
         });
     }
     if (btnApplyOcr) {
         btnApplyOcr.addEventListener('click', () => {
-            const selBox = getSelectedComponentBox();
-            if (selBox) selBox.rotation = currentAngle;
+            commitBoxState();
             closeModal(false);
             executeOcrRecognition();
         });

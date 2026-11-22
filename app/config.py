@@ -118,6 +118,9 @@ class AutoLabelResponse(BaseModel):
     suggested_split_reason: Optional[str] = None
     suggested_split_code: Optional[str] = None
     suggested_split_params: Optional[dict] = None
+    prompt_tokens: Optional[int] = 0
+    completion_tokens: Optional[int] = 0
+    total_tokens: Optional[int] = 0
 
 class SaveSampleRequest(BaseModel):
     image_base64: str

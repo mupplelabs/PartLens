@@ -4,6 +4,7 @@ from app.config import (
     get_llm_public_settings,
     save_llm_config
 )
+from app.services.token_service import get_token_stats, reset_token_stats
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
 
@@ -72,4 +73,21 @@ async def update_llm_settings(update: LLMSettingsUpdate):
         "success": True,
         "message": "LLM-Konfiguration erfolgreich auf dem Server gespeichert.",
         "settings": get_llm_public_settings()
+    }
+
+@router.get("/token-usage")
+async def get_token_usage_endpoint():
+    """Liefert aggregierte Token-Verbrauchsdaten und Modellstatistiken."""
+    return {
+        "success": True,
+        "usage": get_token_stats()
+    }
+
+@router.post("/token-usage/reset")
+async def reset_token_usage_endpoint():
+    """Setzt die gespeicherten Token-Verbrauchsstatistiken zurueck."""
+    return {
+        "success": True,
+        "message": "Token-Statistiken erfolgreich zurueckgesetzt.",
+        "usage": reset_token_stats()
     }

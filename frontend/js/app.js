@@ -20,7 +20,7 @@ const navTabs = [
     { btn: navStudioBtn, view: viewStudio },
     { btn: navDatasetBtn, view: viewDataset, onOpen: loadDatasetGallery },
     { btn: navAnalyticsBtn, view: viewAnalytics, onOpen: loadAnalyticsView },
-    { btn: navSettingsBtn, view: viewSettings }
+    { btn: navSettingsBtn, view: viewSettings, onOpen: () => { if (typeof window.loadTokenUsageStats === 'function') window.loadTokenUsageStats(); } }
 ];
 
 function switchAppView(targetBtn) {

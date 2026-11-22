@@ -14,6 +14,7 @@ from app.config import (
     load_llm_config
 )
 from app.services.dataset_service import parse_image_base64
+from app.services.token_service import record_token_usage
 
 def is_llm_debug_enabled() -> bool:
     for arg in sys.argv:
@@ -263,6 +264,9 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
 
     detected_components = []
     model_used = ""
+    prompt_tokens = 0
+    completion_tokens = 0
+    total_tokens = 0
 
     if provider == 'gemini':
         api_key = req.api_key or get_api_key_for_provider("gemini")
@@ -317,6 +321,11 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
                     debug_log(f"\n[DEBUG GEMINI generateContent ERROR]\nStatus: {resp.status_code}\nResponse: {resp.text}\n")
                     raise RuntimeError(f"Gemini API Fehler ({resp.status_code}): {resp.text}")
                 result_json = resp.json()
+                usage_meta = result_json.get("usageMetadata") or result_json.get("usage") or {}
+                nonlocal prompt_tokens, completion_tokens, total_tokens
+                prompt_tokens = usage_meta.get("promptTokenCount") or usage_meta.get("prompt_tokens") or 0
+                completion_tokens = usage_meta.get("candidatesTokenCount") or usage_meta.get("completion_tokens") or 0
+                total_tokens = usage_meta.get("totalTokenCount") or usage_meta.get("total_tokens") or (prompt_tokens + completion_tokens)
                 debug_log(f"\n========== [DEBUG GEMINI generateContent RESPONSE] ==========")
                 debug_log(f"Modell: {m_name} (Status: {resp.status_code})")
                 debug_log(f"Raw Response JSON:\n{json.dumps(result_json, indent=2, ensure_ascii=False)}")
@@ -364,6 +373,11 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
                     debug_log(f"\n[DEBUG GEMINI interactions ERROR]\nStatus: {resp.status_code}\nResponse: {resp.text}\n")
                     raise RuntimeError(f"Gemini Interactions API Fehler ({resp.status_code}): {resp.text}")
                 result_json = resp.json()
+                usage_meta = result_json.get("usageMetadata") or result_json.get("usage") or {}
+                nonlocal prompt_tokens, completion_tokens, total_tokens
+                prompt_tokens = usage_meta.get("promptTokenCount") or usage_meta.get("prompt_tokens") or 0
+                completion_tokens = usage_meta.get("candidatesTokenCount") or usage_meta.get("completion_tokens") or 0
+                total_tokens = usage_meta.get("totalTokenCount") or usage_meta.get("total_tokens") or (prompt_tokens + completion_tokens)
                 debug_log(f"\n========== [DEBUG GEMINI interactions RESPONSE] ==========")
                 debug_log(f"Modell: {m_name} (Status: {resp.status_code})")
                 debug_log(f"Raw Response JSON:\n{json.dumps(result_json, indent=2, ensure_ascii=False)}")
@@ -571,6 +585,15 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
                 raise RuntimeError(f"{provider.upper()} API Fehler an {used_endpoint}: {last_resp_err}{hint}")
 
             result_json = resp.json()
+            usage = result_json.get("usage", {})
+            if not usage and "prompt_eval_count" in result_json:
+                prompt_tokens = result_json.get("prompt_eval_count", 0)
+                completion_tokens = result_json.get("eval_count", 0)
+                total_tokens = prompt_tokens + completion_tokens
+            elif usage:
+                prompt_tokens = usage.get("prompt_tokens", 0)
+                completion_tokens = usage.get("completion_tokens", 0)
+                total_tokens = usage.get("total_tokens", prompt_tokens + completion_tokens)
             raw_text = ""
             choices = result_json.get("choices", [])
             if choices:
@@ -596,11 +619,25 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
         raise ValueError(f"Unbekannter Provider: {provider}")
 
     latency_ms = int((time.time() - t0) * 1000)
+    try:
+        record_token_usage(
+            provider=provider,
+            model=model_used,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            latency_ms=latency_ms
+        )
+    except Exception as e_tok:
+        debug_log(f"Fehler beim Erfassen von Token-Statistiken: {e_tok}")
+
     return AutoLabelResponse(
         components=detected_components,
         provider=provider,
         model=model_used,
-        latency_ms=latency_ms
+        latency_ms=latency_ms,
+        prompt_tokens=prompt_tokens,
+        completion_tokens=completion_tokens,
+        total_tokens=total_tokens
     )
 
 async def query_local_models(provider: str = 'openai', url: Optional[str] = None, api_key: Optional[str] = None) -> dict:

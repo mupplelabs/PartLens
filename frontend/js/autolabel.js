@@ -513,6 +513,160 @@ if (toggleOpenaiKeyVisBtn && openaiApiKey) {
     });
 }
 
+// =====================================================================
+// LLM TOKEN USAGE & STATS
+// =====================================================================
+let cachedTokenUsageStats = null;
+
+async function loadTokenUsageStats() {
+    try {
+        const res = await fetch('/api/settings/token-usage');
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.usage) {
+                cachedTokenUsageStats = data.usage;
+                renderTokenUsageStats(data.usage);
+            }
+        }
+    } catch (e) {
+        console.warn('Fehler beim Laden der Token-Statistiken:', e);
+    }
+}
+
+function renderTokenUsageStats(stats) {
+    if (!stats) return;
+
+    const totalEl = document.getElementById('token-stat-total');
+    const promptEl = document.getElementById('token-stat-prompt');
+    const completionEl = document.getElementById('token-stat-completion');
+    const requestsEl = document.getElementById('token-stat-requests');
+    const avgEl = document.getElementById('token-stat-avg');
+    const updatedEl = document.getElementById('token-stat-last-updated');
+    const modelListEl = document.getElementById('token-by-model-list');
+    const recentListEl = document.getElementById('token-recent-calls-list');
+    const recentContainer = document.getElementById('token-recent-container');
+
+    const total = stats.total_tokens || 0;
+    const prompt = stats.prompt_tokens || 0;
+    const completion = stats.completion_tokens || 0;
+    const requests = stats.total_requests || 0;
+
+    if (totalEl) totalEl.innerText = total.toLocaleString();
+    if (promptEl) promptEl.innerText = prompt.toLocaleString();
+    if (completionEl) completionEl.innerText = completion.toLocaleString();
+    if (requestsEl) requestsEl.innerText = requests.toLocaleString();
+
+    if (avgEl) {
+        const avg = requests > 0 ? Math.round(total / requests).toLocaleString() : '0';
+        avgEl.innerText = window.t
+            ? window.t('settings.token_avg_per_call', { avg })
+            : `Ø ${avg} Tokens pro Anfrage`;
+    }
+
+    if (updatedEl && stats.last_updated) {
+        const d = new Date(stats.last_updated * 1000);
+        updatedEl.innerText = `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
+    }
+
+    // Breakdown by Model
+    if (modelListEl) {
+        const byModel = stats.by_model || {};
+        const modelKeys = Object.keys(byModel);
+
+        if (modelKeys.length === 0) {
+            const emptyMsg = window.t ? window.t('settings.token_no_usage') : 'Noch keine Token-Daten erfasst.';
+            modelListEl.innerHTML = `<div style="font-size: 0.75rem; color: var(--muted); font-style: italic;">${emptyMsg}</div>`;
+        } else {
+            const sortedModels = modelKeys.map(k => ({ id: k, ...byModel[k] })).sort((a, b) => (b.total_tokens || 0) - (a.total_tokens || 0));
+            const maxTokens = Math.max(1, total);
+
+            modelListEl.innerHTML = sortedModels.map(m => {
+                const mTotal = m.total_tokens || 0;
+                const mPct = Math.round((mTotal / maxTokens) * 100);
+                const prov = (m.provider || 'gemini').toUpperCase();
+                const reqs = m.requests || 0;
+                const reqLabel = window.t ? window.t('settings.token_model_calls') : 'Aufrufe';
+                return `
+                    <div style="background: var(--surface-hover); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 6px; font-weight: 600;">
+                                <span class="chip" style="font-size: 0.65rem; padding: 1px 5px; border-radius: 3px; background: rgba(59, 130, 246, 0.15); color: #3b82f6;">${prov}</span>
+                                <span style="color: var(--text);">${m.id}</span>
+                            </div>
+                            <div style="color: var(--muted); font-size: 0.72rem;">
+                                ${reqs} ${reqLabel} · <strong style="color: var(--text);">${mTotal.toLocaleString()}</strong> (${mPct}%)
+                            </div>
+                        </div>
+                        <div style="width: 100%; height: 5px; background: rgba(255, 255, 255, 0.08); border-radius: 3px; overflow: hidden;">
+                            <div style="width: ${mPct}%; height: 100%; background: linear-gradient(90deg, #3b82f6, #a855f7); border-radius: 3px;"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
+    // Recent Calls Mini-List
+    if (recentListEl && recentContainer) {
+        const recent = stats.recent_calls || [];
+        if (recent.length === 0) {
+            recentContainer.style.display = 'none';
+        } else {
+            recentContainer.style.display = 'block';
+            recentListEl.innerHTML = recent.slice(0, 8).map(c => {
+                const timeStr = c.timestamp ? new Date(c.timestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
+                return `
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; padding: 4px 8px; background: var(--surface-hover); border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.04);">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span style="color: var(--muted); font-feature-settings: 'tnum';">${timeStr}</span>
+                            <span style="font-weight: 600; color: var(--text);">${c.model}</span>
+                            <span style="color: var(--muted);">(${c.latency_ms} ms)</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="color: #38bdf8;">${(c.prompt_tokens || 0).toLocaleString()} in</span>
+                            <span style="color: #a855f7;">${(c.completion_tokens || 0).toLocaleString()} out</span>
+                            <strong style="color: var(--accent);">${(c.total_tokens || 0).toLocaleString()} tok</strong>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+}
+
+window.loadTokenUsageStats = loadTokenUsageStats;
+window.renderTokenUsageStats = renderTokenUsageStats;
+
+const refreshTokenUsageBtn = document.getElementById('refresh-token-usage-btn');
+if (refreshTokenUsageBtn) {
+    refreshTokenUsageBtn.addEventListener('click', () => {
+        loadTokenUsageStats();
+    });
+}
+
+const resetTokenUsageBtn = document.getElementById('reset-token-usage-btn');
+if (resetTokenUsageBtn) {
+    resetTokenUsageBtn.addEventListener('click', async () => {
+        const confirmMsg = window.t
+            ? window.t('settings.token_btn_reset_confirm')
+            : 'Möchtest du die Token-Statistiken wirklich auf 0 zurücksetzen?';
+        if (!confirm(confirmMsg)) return;
+
+        try {
+            const res = await fetch('/api/settings/token-usage/reset', { method: 'POST' });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success && data.usage) {
+                    cachedTokenUsageStats = data.usage;
+                    renderTokenUsageStats(data.usage);
+                }
+            }
+        } catch (e) {
+            console.error('Fehler beim Zurücksetzen der Token-Statistiken:', e);
+        }
+    });
+}
+
 let _activeGeminiModelsController = null;
 async function fetchGeminiModels(preferredModel = null) {
     if (modelCountBadge) modelCountBadge.innerText = 'Lade...';
@@ -995,6 +1149,9 @@ window.addEventListener('languageChanged', () => {
     populateClassDropdown(knownDatasetClasses);
     if (currentSplitRecommendation) {
         renderSplitRecommendation();
+    }
+    if (cachedTokenUsageStats) {
+        renderTokenUsageStats(cachedTokenUsageStats);
     }
 });
 
@@ -1607,9 +1764,14 @@ if (runAutolabelBtn) {
             }
 
             hideAutoLabelLoading(true);
-            const successStatus = window.t
-                ? window.t('canvas.autolabel_result', { count: detectedBoxes.length, ms: data.latency_ms })
-                : `Auto-Label: ${detectedBoxes.length} Bauteil${detectedBoxes.length === 1 ? '' : 'e'} erkannt (${data.latency_ms} ms) · Bereit`;
+            const hasTokens = typeof data.total_tokens === 'number' && data.total_tokens > 0;
+            const successStatus = hasTokens
+                ? (window.t
+                    ? window.t('canvas.autolabel_result_tokens', { count: detectedBoxes.length, ms: data.latency_ms, tokens: data.total_tokens.toLocaleString() })
+                    : `Auto-Label: ${detectedBoxes.length} Bauteil${detectedBoxes.length === 1 ? '' : 'e'} erkannt (${data.latency_ms} ms · ${data.total_tokens.toLocaleString()} Tokens) · Bereit`)
+                : (window.t
+                    ? window.t('canvas.autolabel_result', { count: detectedBoxes.length, ms: data.latency_ms })
+                    : `Auto-Label: ${detectedBoxes.length} Bauteil${detectedBoxes.length === 1 ? '' : 'e'} erkannt (${data.latency_ms} ms) · Bereit`);
             if (typeof updateStudioStatus === 'function') {
                 updateStudioStatus(successStatus, 'ready');
             } else if (statusDiv) {

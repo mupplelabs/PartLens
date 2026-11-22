@@ -249,10 +249,10 @@ def parse_detected_component(c: dict, default_confidence: float = 0.95) -> Optio
         ic_subgroup=str(ic_subgroup).strip() if ic_subgroup else None
     )
 
-def extract_usage_tokens(result_json: dict) -> tuple[int, int, int]:
-    """Extrahiert (prompt_tokens, completion_tokens, total_tokens) aus allen bekannten API-Formaten."""
+def extract_usage_tokens(result_json: dict) -> tuple[int, int, int, dict]:
+    """Extrahiert (prompt_tokens, completion_tokens, total_tokens, details) aus allen bekannten API-Formaten."""
     if not isinstance(result_json, dict):
-        return 0, 0, 0
+        return 0, 0, 0, {}
 
     usage = (
         result_json.get("usageMetadata")
@@ -267,8 +267,11 @@ def extract_usage_tokens(result_json: dict) -> tuple[int, int, int]:
                 usage = step.get("usage") or step.get("usageMetadata") or step.get("usage_metadata") or {}
                 break
 
+    # Prompt / Input Tokens
     prompt = (
-        usage.get("promptTokenCount")
+        usage.get("total_input_tokens")
+        or usage.get("initial_input_tokens")
+        or usage.get("promptTokenCount")
         or usage.get("prompt_tokens")
         or usage.get("prompt_token_count")
         or usage.get("input_tokens")
@@ -277,8 +280,10 @@ def extract_usage_tokens(result_json: dict) -> tuple[int, int, int]:
         or 0
     )
 
+    # Output / Candidates Tokens
     candidates = (
-        usage.get("candidatesTokenCount")
+        usage.get("total_output_tokens")
+        or usage.get("candidatesTokenCount")
         or usage.get("completion_tokens")
         or usage.get("completion_token_count")
         or usage.get("output_tokens")
@@ -286,12 +291,30 @@ def extract_usage_tokens(result_json: dict) -> tuple[int, int, int]:
         or result_json.get("eval_count")
         or 0
     )
-    thoughts = usage.get("thoughtsTokenCount") or 0
-    completion = candidates + thoughts
+
+    # Thought / Reasoning Tokens
+    thoughts = (
+        usage.get("total_thought_tokens")
+        or usage.get("thoughtsTokenCount")
+        or (usage.get("completion_tokens_details") or {}).get("reasoning_tokens")
+        or 0
+    )
+
+    # In Gemini (both generateContent and interactions API), output tokens and thought tokens are separate.
+    # In standard OpenAI API, completion_tokens already aggregates reasoning_tokens.
+    if thoughts > 0:
+        if "total_output_tokens" in usage or "candidatesTokenCount" in usage:
+            completion = int(candidates or 0) + int(thoughts or 0)
+        elif "completion_tokens" in usage and int(candidates or 0) > int(thoughts or 0):
+            completion = int(candidates or 0)
+        else:
+            completion = int(candidates or 0) + int(thoughts or 0)
+    else:
+        completion = int(candidates or 0)
 
     total = (
-        usage.get("totalTokenCount")
-        or usage.get("total_tokens")
+        usage.get("total_tokens")
+        or usage.get("totalTokenCount")
         or usage.get("total_token_count")
         or 0
     )
@@ -299,12 +322,40 @@ def extract_usage_tokens(result_json: dict) -> tuple[int, int, int]:
     p = max(0, int(prompt or 0))
     c = max(0, int(completion or 0))
     t = max(0, int(total or 0))
-    if t > p and c == 0:
-        c = t - p
+
+    if t > 0:
+        if p > 0 and c == 0 and t >= p:
+            c = t - p
+        elif c > 0 and p == 0 and t >= c:
+            p = t - c
+        elif p == 0 and c == 0:
+            p = t
     elif t == 0 and (p > 0 or c > 0):
         t = p + c
 
-    return p, c, t
+    # Detailaufschlüsselung der Modalitäten
+    details = {}
+    if isinstance(usage.get("input_tokens_by_modality"), list):
+        for mod in usage["input_tokens_by_modality"]:
+            if isinstance(mod, dict):
+                m_type = str(mod.get("modality", "")).lower()
+                m_tokens = int(mod.get("tokens", 0))
+                if m_type and m_tokens > 0:
+                    details[m_type] = m_tokens
+    elif isinstance(usage.get("promptTokensDetails"), list):
+        for mod in usage["promptTokensDetails"]:
+            if isinstance(mod, dict):
+                m_type = str(mod.get("modality", "")).lower()
+                m_tokens = int(mod.get("tokenCount", 0))
+                if m_type and m_tokens > 0:
+                    details[m_type] = m_tokens
+
+    if thoughts > 0:
+        details["thought"] = int(thoughts)
+    if candidates > 0:
+        details["output"] = int(candidates)
+
+    return p, c, t, details
 
 async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
     t0 = time.time()
@@ -324,6 +375,7 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
     prompt_tokens = 0
     completion_tokens = 0
     total_tokens = 0
+    token_details = {}
 
     if provider == 'gemini':
         api_key = req.api_key or get_api_key_for_provider("gemini")
@@ -378,12 +430,13 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
                     debug_log(f"\n[DEBUG GEMINI generateContent ERROR]\nStatus: {resp.status_code}\nResponse: {resp.text}\n")
                     raise RuntimeError(f"Gemini API Fehler ({resp.status_code}): {resp.text}")
                 result_json = resp.json()
-                p, c, t = extract_usage_tokens(result_json)
+                p, c, t, det = extract_usage_tokens(result_json)
                 if t > 0:
-                    nonlocal prompt_tokens, completion_tokens, total_tokens
+                    nonlocal prompt_tokens, completion_tokens, total_tokens, token_details
                     prompt_tokens = p
                     completion_tokens = c
                     total_tokens = t
+                    token_details = det
                 debug_log(f"\n========== [DEBUG GEMINI generateContent RESPONSE] ==========")
                 debug_log(f"Modell: {m_name} (Status: {resp.status_code})")
                 debug_log(f"Raw Response JSON:\n{json.dumps(result_json, indent=2, ensure_ascii=False)}")
@@ -431,12 +484,13 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
                     debug_log(f"\n[DEBUG GEMINI interactions ERROR]\nStatus: {resp.status_code}\nResponse: {resp.text}\n")
                     raise RuntimeError(f"Gemini Interactions API Fehler ({resp.status_code}): {resp.text}")
                 result_json = resp.json()
-                p, c, t = extract_usage_tokens(result_json)
+                p, c, t, det = extract_usage_tokens(result_json)
                 if t > 0:
-                    nonlocal prompt_tokens, completion_tokens, total_tokens
+                    nonlocal prompt_tokens, completion_tokens, total_tokens, token_details
                     prompt_tokens = p
                     completion_tokens = c
                     total_tokens = t
+                    token_details = det
                 debug_log(f"\n========== [DEBUG GEMINI interactions RESPONSE] ==========")
                 debug_log(f"Modell: {m_name} (Status: {resp.status_code})")
                 debug_log(f"Raw Response JSON:\n{json.dumps(result_json, indent=2, ensure_ascii=False)}")
@@ -644,11 +698,12 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
                 raise RuntimeError(f"{provider.upper()} API Fehler an {used_endpoint}: {last_resp_err}{hint}")
 
             result_json = resp.json()
-            p, c, t = extract_usage_tokens(result_json)
+            p, c, t, det = extract_usage_tokens(result_json)
             if t > 0:
                 prompt_tokens = p
                 completion_tokens = c
                 total_tokens = t
+                token_details = det
             raw_text = ""
             choices = result_json.get("choices", [])
             if choices:
@@ -681,7 +736,8 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
             prompt_tokens=prompt_tokens,
             completion_tokens=completion_tokens,
             total_tokens=total_tokens,
-            latency_ms=latency_ms
+            latency_ms=latency_ms,
+            details=token_details
         )
     except Exception as e_tok:
         debug_log(f"Fehler beim Erfassen von Token-Statistiken: {e_tok}")
@@ -693,7 +749,8 @@ async def run_autolabel_inference(req: AutoLabelRequest) -> AutoLabelResponse:
         latency_ms=latency_ms,
         prompt_tokens=prompt_tokens,
         completion_tokens=completion_tokens,
-        total_tokens=total_tokens
+        total_tokens=total_tokens,
+        token_details=token_details
     )
 
 async def query_local_models(provider: str = 'openai', url: Optional[str] = None, api_key: Optional[str] = None) -> dict:

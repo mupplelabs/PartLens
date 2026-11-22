@@ -412,7 +412,11 @@
     "token_btn_reset": "Reset Statistics",
     "token_btn_reset_confirm": "Are you sure you want to reset all token statistics to 0?",
     "token_no_usage": "No token data recorded yet. Run an auto-labeling task.",
-    "token_reset_success": "Token statistics reset successfully."
+    "token_reset_success": "Token statistics reset successfully.",
+    "token_mod_image": "image",
+    "token_mod_text": "text",
+    "token_mod_thought": "thinking",
+    "token_mod_output": "output"
   },
   "footer": {
     "initializing": "Initializing Studio: Connecting to backend...",

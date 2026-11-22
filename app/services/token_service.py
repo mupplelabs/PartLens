@@ -46,7 +46,8 @@ def record_token_usage(
     prompt_tokens: int = 0,
     completion_tokens: int = 0,
     total_tokens: Optional[int] = None,
-    latency_ms: int = 0
+    latency_ms: int = 0,
+    details: Optional[dict] = None
 ) -> dict:
     stats = get_token_stats()
     p_tokens = max(0, int(prompt_tokens or 0))
@@ -105,7 +106,7 @@ def record_token_usage(
 
     # Recent Calls (Keep last 15)
     recent = stats.setdefault("recent_calls", [])
-    recent.insert(0, {
+    recent_entry = {
         "timestamp": int(time.time()),
         "provider": clean_prov,
         "model": clean_mod,
@@ -113,7 +114,10 @@ def record_token_usage(
         "completion_tokens": c_tokens,
         "total_tokens": t_tokens,
         "latency_ms": latency_ms
-    })
+    }
+    if details and isinstance(details, dict):
+        recent_entry["details"] = details
+    recent.insert(0, recent_entry)
     stats["recent_calls"] = recent[:15]
 
     save_token_stats(stats)

@@ -615,18 +615,48 @@ function renderTokenUsageStats(stats) {
             recentContainer.style.display = 'block';
             recentListEl.innerHTML = recent.slice(0, 8).map(c => {
                 const timeStr = c.timestamp ? new Date(c.timestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
+                let detailsBadge = '';
+                if (c.details && typeof c.details === 'object') {
+                    const parts = [];
+                    if (c.details.image) {
+                        const imgLabel = window.t ? window.t('settings.token_mod_image') : 'Bild';
+                        parts.push(`${c.details.image.toLocaleString()} ${imgLabel}`);
+                    }
+                    if (c.details.text) {
+                        const txtLabel = window.t ? window.t('settings.token_mod_text') : 'Text';
+                        parts.push(`${c.details.text.toLocaleString()} ${txtLabel}`);
+                    }
+                    if (c.details.thought) {
+                        const thkLabel = window.t ? window.t('settings.token_mod_thought') : 'Thinking';
+                        parts.push(`${c.details.thought.toLocaleString()} ${thkLabel}`);
+                    }
+                    if (c.details.output) {
+                        const outLabel = window.t ? window.t('settings.token_mod_output') : 'Antwort';
+                        parts.push(`${c.details.output.toLocaleString()} ${outLabel}`);
+                    }
+                    if (parts.length > 0) {
+                        detailsBadge = `
+                            <div style="font-size: 0.67rem; color: var(--muted); margin-top: 3px; display: flex; align-items: center; gap: 4px; padding-left: 2px;">
+                                <span style="opacity: 0.6;">↳</span> ${parts.join(' · ')}
+                            </div>
+                        `;
+                    }
+                }
                 return `
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; padding: 4px 8px; background: var(--surface-hover); border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.04);">
-                        <div style="display: flex; align-items: center; gap: 6px;">
-                            <span style="color: var(--muted); font-feature-settings: 'tnum';">${timeStr}</span>
-                            <span style="font-weight: 600; color: var(--text);">${c.model}</span>
-                            <span style="color: var(--muted);">(${c.latency_ms} ms)</span>
+                    <div style="display: flex; flex-direction: column; font-size: 0.72rem; padding: 5px 8px; background: var(--surface-hover); border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.04); margin-bottom: 4px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <span style="color: var(--muted); font-feature-settings: 'tnum';">${timeStr}</span>
+                                <span style="font-weight: 600; color: var(--text);">${c.model}</span>
+                                <span style="color: var(--muted);">(${c.latency_ms} ms)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="color: #38bdf8;">${(c.prompt_tokens || 0).toLocaleString()} in</span>
+                                <span style="color: #a855f7;">${(c.completion_tokens || 0).toLocaleString()} out</span>
+                                <strong style="color: var(--accent);">${(c.total_tokens || 0).toLocaleString()} tok</strong>
+                            </div>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <span style="color: #38bdf8;">${(c.prompt_tokens || 0).toLocaleString()} in</span>
-                            <span style="color: #a855f7;">${(c.completion_tokens || 0).toLocaleString()} out</span>
-                            <strong style="color: var(--accent);">${(c.total_tokens || 0).toLocaleString()} tok</strong>
-                        </div>
+                        ${detailsBadge}
                     </div>
                 `;
             }).join('');

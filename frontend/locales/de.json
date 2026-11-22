@@ -412,7 +412,11 @@
     "token_btn_reset": "Statistiken zurücksetzen",
     "token_btn_reset_confirm": "Möchtest du die Token-Statistiken wirklich auf 0 zurücksetzen?",
     "token_no_usage": "Noch keine Token-Daten erfasst. Führe ein Auto-Labeling aus.",
-    "token_reset_success": "Token-Statistiken erfolgreich zurückgesetzt."
+    "token_reset_success": "Token-Statistiken erfolgreich zurückgesetzt.",
+    "token_mod_image": "Bild",
+    "token_mod_text": "Text",
+    "token_mod_thought": "Thinking",
+    "token_mod_output": "Antwort"
   },
   "footer": {
     "initializing": "Initialisiere Studio: Verbinde mit Backend...",

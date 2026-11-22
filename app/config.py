@@ -121,6 +121,7 @@ class AutoLabelResponse(BaseModel):
     prompt_tokens: Optional[int] = 0
     completion_tokens: Optional[int] = 0
     total_tokens: Optional[int] = 0
+    token_details: Optional[dict] = None
 
 class SaveSampleRequest(BaseModel):
     image_base64: str

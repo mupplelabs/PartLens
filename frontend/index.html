@@ -18,12 +18,12 @@
         })();
     </script>
     <title>PartLens – Visual Part-DB & YOLO Studio</title>
-    <link rel="stylesheet" href="/frontend/css/base.css?v=2.9.8">
-    <link rel="stylesheet" href="/frontend/css/layout.css?v=2.9.8">
-    <link rel="stylesheet" href="/frontend/css/components.css?v=2.9.8">
-    <link rel="stylesheet" href="/frontend/css/studio.css?v=2.9.8">
-    <link rel="stylesheet" href="/frontend/css/gallery.css?v=2.9.8">
-    <link rel="stylesheet" href="/frontend/css/modals.css?v=2.9.8">
+    <link rel="stylesheet" href="/frontend/css/base.css?v=2.9.9">
+    <link rel="stylesheet" href="/frontend/css/layout.css?v=2.9.9">
+    <link rel="stylesheet" href="/frontend/css/components.css?v=2.9.9">
+    <link rel="stylesheet" href="/frontend/css/studio.css?v=2.9.9">
+    <link rel="stylesheet" href="/frontend/css/gallery.css?v=2.9.9">
+    <link rel="stylesheet" href="/frontend/css/modals.css?v=2.9.9">
 </head>
 <body class="view-studio-active">
 
@@ -136,6 +136,15 @@
                             <button id="add-manual-box-btn" class="btn-tool" type="button" title="Neue Box zeichnen (Taste: R)" data-i18n-title="canvas.tool_draw">
                                 <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="3 3"/></svg>
                             </button>
+                            <!-- Affinity-Style Active Class Pill -->
+                            <div class="active-class-pill-wrap" style="position: relative; display: inline-flex;">
+                                <button id="active-class-pill-btn" class="btn-tool active-class-pill" type="button" title="Aktive Zeichen-Klasse wählen (Tasten 1–0)" data-i18n-title="canvas.class_pill_title">
+                                    <span class="class-dot" id="active-class-dot" style="background: #3b82f6;"></span>
+                                    <span id="active-class-name" style="font-weight: 600; font-size: 0.74rem;">IC</span>
+                                    <span id="active-class-shortcut" style="opacity: 0.65; font-size: 0.68rem; margin-left: 2px;">(1)</span>
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left: 3px; opacity: 0.7;"><polyline points="6 9 12 15 18 9"/></svg>
+                                </button>
+                            </div>
                             <div class="filter-divider" style="height: 18px; margin: 0 2px;"></div>
                             <button id="run-detect-btn" class="btn-tool" type="button" title="Smart Detect: Lokale Heuristik-Detektion (<10ms)" data-i18n-title="canvas.tool_detect">
                                 <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
@@ -340,95 +349,42 @@
                         </div>
                     </div>
 
-                    <!-- Floating Canvas Quick-Tag Popover (Roboflow Style) -->
+                    <!-- Unified Class Palette & Quick-Tag Popover (Desktop Popover & Mobile Bottom Sheet) -->
                     <div id="canvas-quick-tag-popover" class="canvas-quick-tag-popover" style="display: none;">
+                        <div class="sheet-drag-handle"></div>
                         <div class="popover-header">
                             <span class="popover-tag" id="popover-box-tag">#1 Box</span>
                             <button type="button" class="btn-popover-close" id="btn-popover-close" title="Schließen (Esc)">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                             </button>
                         </div>
-                        <div class="popover-quick-classes">
-                            <button type="button" class="popover-class-btn" data-class="ic"><span class="class-dot" style="background: #3b82f6;"></span><span data-i18n="classes.ic_chip">IC</span> (1)</button>
-                            <button type="button" class="popover-class-btn" data-class="resistor"><span class="class-dot" style="background: #f59e0b;"></span><span data-i18n="classes.resistor_chip">Widerstand</span> (2)</button>
-                            <button type="button" class="popover-class-btn" data-class="capacitor"><span class="class-dot" style="background: #8b5cf6;"></span><span data-i18n="classes.capacitor_chip">Kondensator</span> (3)</button>
-                            <button type="button" class="popover-class-btn" data-class="transistor"><span class="class-dot" style="background: #10b981;"></span><span data-i18n="classes.transistor_chip">Transistor</span> (4)</button>
-                            <button type="button" class="popover-class-btn" data-class="diode"><span class="class-dot" style="background: #ec4899;"></span><span data-i18n="classes.diode_chip">Diode</span> (5)</button>
-                            <button type="button" class="popover-class-btn" data-class="led"><span class="class-dot" style="background: #ef4444;"></span><span data-i18n="classes.led_chip">LED</span> (6)</button>
-                            <button type="button" class="popover-class-btn" data-class="connector"><span class="class-dot" style="background: #14b8a6;"></span><span data-i18n="classes.connector_chip">Stecker</span> (7)</button>
-                            <button type="button" class="popover-class-btn" data-class="switch_button"><span class="class-dot" style="background: #a855f7;"></span><span data-i18n="classes.switch_button_chip">Schalter</span> (8)</button>
+
+                        <!-- Live Search / Filter Input -->
+                        <div class="popover-search-wrap">
+                            <input type="text" id="palette-search-input" class="palette-search-input" placeholder="Klasse filtern (z. B. IC, LED, Display)..." autocomplete="off" />
                         </div>
-                        <div class="popover-input-row">
-                            <select id="popover-class-select" class="popover-class-select"></select>
+
+                        <!-- Top 10 Klassen (Hotkeys 1–0) -->
+                        <div class="palette-section-title">
+                            <span data-i18n="studio.palette_top10">Top 10 (Hotkeys 1–0)</span>
+                            <span style="font-size: 0.65rem; opacity: 0.6;">Tasten 1–0</span>
+                        </div>
+                        <div class="popover-quick-classes" id="palette-top-classes"></div>
+
+                        <!-- Weitere Klassen (11–20) -->
+                        <div class="palette-section-title" id="palette-secondary-title" style="margin-top: 8px;">
+                            <span data-i18n="studio.palette_more">Weitere Bauteile</span>
+                            <span style="font-size: 0.65rem; opacity: 0.6;">10 Klassen</span>
+                        </div>
+                        <div class="popover-quick-classes popover-secondary-classes" id="palette-secondary-classes"></div>
+
+                        <!-- Footer: Part-DB Dropdown & Löschen-Button -->
+                        <div class="popover-input-row" id="popover-footer-row" style="margin-top: 8px;">
+                            <select id="popover-class-select" class="popover-class-select" title="Alle Part-DB Klassen"></select>
                             <button type="button" id="popover-del-btn" class="btn-popover-del" title="Box löschen (Entf)">
                                 <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                             </button>
                         </div>
-                    </div>
-
-                    <!-- Klassen-Schnellauswahl Bar (1-Click & Keyboard Shortcuts 1-9) -->
-                    <div class="class-palette-bar" id="class-quick-bar">
-                        <span style="font-size: 0.7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-right: 4px;" data-i18n="studio.class_header">Klasse:</span>
-                        <button class="class-quick-chip active" data-class="ic" style="color: #3b82f6;">
-                            <span class="class-dot"></span> <span data-i18n="classes.ic_chip">IC</span> <span style="opacity: 0.6; font-size: 0.68rem;">(1)</span>
-                        </button>
-                        <button class="class-quick-chip" data-class="resistor" style="color: #f59e0b;">
-                            <span class="class-dot"></span> <span data-i18n="classes.resistor_chip">Widerstand</span> <span style="opacity: 0.6; font-size: 0.68rem;">(2)</span>
-                        </button>
-                        <button class="class-quick-chip" data-class="capacitor" style="color: #8b5cf6;">
-                            <span class="class-dot"></span> <span data-i18n="classes.capacitor_chip">Kondensator</span> <span style="opacity: 0.6; font-size: 0.68rem;">(3)</span>
-                        </button>
-                        <button class="class-quick-chip" data-class="transistor" style="color: #10b981;">
-                            <span class="class-dot"></span> <span data-i18n="classes.transistor_chip">Transistor</span> <span style="opacity: 0.6; font-size: 0.68rem;">(4)</span>
-                        </button>
-                        <button class="class-quick-chip" data-class="diode" style="color: #ec4899;">
-                            <span class="class-dot"></span> <span data-i18n="classes.diode_chip">Diode</span> <span style="opacity: 0.6; font-size: 0.68rem;">(5)</span>
-                        </button>
-                        <button class="class-quick-chip" data-class="led" style="color: #ef4444;">
-                            <span class="class-dot"></span> <span data-i18n="classes.led_chip">LED</span> <span style="opacity: 0.6; font-size: 0.68rem;">(6)</span>
-                        </button>
-                        <button class="class-quick-chip" data-class="connector" style="color: #14b8a6;">
-                            <span class="class-dot"></span> <span data-i18n="classes.connector_chip">Stecker</span> <span style="opacity: 0.6; font-size: 0.68rem;">(7)</span>
-                        </button>
-                        <button class="class-quick-chip" data-class="switch_button" style="color: #a855f7;">
-                            <span class="class-dot"></span> <span data-i18n="classes.switch_button_chip">Schalter</span> <span style="opacity: 0.6; font-size: 0.68rem;">(8)</span>
-                        </button>
-                        <button class="class-quick-chip" data-class="potentiometer" style="color: #d97706;">
-                            <span class="class-dot"></span> <span data-i18n="classes.potentiometer_chip">Poti</span> <span style="opacity: 0.6; font-size: 0.68rem;">(9)</span>
-                        </button>
-                        <button class="class-quick-chip" data-class="relay" style="color: #e11d48;">
-                            <span class="class-dot"></span> <span data-i18n="classes.relay_chip">Relais</span>
-                        </button>
-                        <button class="class-quick-chip" data-class="display" style="color: #0ea5e9;">
-                            <span class="class-dot"></span> <span data-i18n="classes.display_chip">Display</span>
-                        </button>
-                        <button class="class-quick-chip" data-class="inductor" style="color: #06b6d4;">
-                            <span class="class-dot"></span> <span data-i18n="classes.inductor_chip">Spule</span>
-                        </button>
-                        <button class="class-quick-chip" data-class="board_mcu_stick" style="color: #6366f1;">
-                            <span class="class-dot"></span> <span data-i18n="classes.board_mcu_stick_chip">MCU-Stick</span>
-                        </button>
-                        <button class="class-quick-chip" data-class="board_mini_stamp" style="color: #818cf8;">
-                            <span class="class-dot"></span> <span data-i18n="classes.board_mini_stamp_chip">Stamp</span>
-                        </button>
-                        <button class="class-quick-chip" data-class="board_standard" style="color: #4f46e5;">
-                            <span class="class-dot"></span> <span data-i18n="classes.board_standard_chip">Dev-Board</span>
-                        </button>
-                        <button class="class-quick-chip" data-class="board_module" style="color: #0284c7;">
-                            <span class="class-dot"></span> <span data-i18n="classes.board_module_chip">Modul</span>
-                        </button>
-                        <button class="class-quick-chip" data-class="oscillator" style="color: #eab308;">
-                            <span class="class-dot"></span> <span data-i18n="classes.oscillator_chip">Quarz</span>
-                        </button>
-                        <button class="class-quick-chip" data-class="motor_actuator" style="color: #f97316;">
-                            <span class="class-dot"></span> <span data-i18n="classes.motor_actuator_chip">Motor</span>
-                        </button>
-                        <button class="class-quick-chip" data-class="speaker_buzzer" style="color: #84cc16;">
-                            <span class="class-dot"></span> <span data-i18n="classes.speaker_buzzer_chip">Buzzer</span>
-                        </button>
-                        <button class="class-quick-chip" data-class="other" style="color: #94a3b8;">
-                            <span class="class-dot"></span> <span data-i18n="classes.other_chip">Other</span>
-                        </button>
                     </div>
 
                     <!-- Statuszeile unter dem Canvas -->
@@ -1665,19 +1621,19 @@
 
 
     <!-- PartLens Modular Scripts -->
-    <script src="/frontend/js/i18n.js?v=2.9.8"></script>
-    <script src="/frontend/js/state.js?v=2.9.8"></script>
-    <script src="/frontend/js/api.js?v=2.9.8"></script>
-    <script src="/frontend/js/analysis.js?v=2.9.8"></script>
-    <script src="/frontend/js/resistor.js?v=2.9.8"></script>
-    <script src="/frontend/js/canvas.js?v=2.9.8"></script>
-    <script src="/frontend/js/boxes.js?v=2.9.8"></script>
-    <script src="/frontend/js/footprints.js?v=2.9.8"></script>
-    <script src="/frontend/js/autolabel.js?v=2.9.8"></script>
-    <script src="/frontend/js/gallery.js?v=2.9.8"></script>
-    <script src="/frontend/js/import_modal.js?v=2.9.8"></script>
-    <script src="/frontend/js/export.js?v=2.9.8"></script>
-    <script src="/frontend/js/webcam.js?v=2.9.8"></script>
-    <script src="/frontend/js/app.js?v=2.9.8"></script>
+    <script src="/frontend/js/i18n.js?v=2.9.9"></script>
+    <script src="/frontend/js/state.js?v=2.9.9"></script>
+    <script src="/frontend/js/api.js?v=2.9.9"></script>
+    <script src="/frontend/js/analysis.js?v=2.9.9"></script>
+    <script src="/frontend/js/resistor.js?v=2.9.9"></script>
+    <script src="/frontend/js/canvas.js?v=2.9.9"></script>
+    <script src="/frontend/js/boxes.js?v=2.9.9"></script>
+    <script src="/frontend/js/footprints.js?v=2.9.9"></script>
+    <script src="/frontend/js/autolabel.js?v=2.9.9"></script>
+    <script src="/frontend/js/gallery.js?v=2.9.9"></script>
+    <script src="/frontend/js/import_modal.js?v=2.9.9"></script>
+    <script src="/frontend/js/export.js?v=2.9.9"></script>
+    <script src="/frontend/js/webcam.js?v=2.9.9"></script>
+    <script src="/frontend/js/app.js?v=2.9.9"></script>
 </body>
 </html>

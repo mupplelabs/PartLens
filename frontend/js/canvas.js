@@ -450,7 +450,9 @@ function bindOverlayCanvasInteractions(canvasEl) {
             dragMode = 'idle';
             if ((x2 - x1) >= 8 && (y2 - y1) >= 8) {
                 const classSelect = document.getElementById('box-class-select');
-                const defaultClass = classSelect?.value || 'ic';
+                const defaultClass = (typeof currentPaletteClass !== 'undefined' && currentPaletteClass)
+                    ? currentPaletteClass
+                    : (classSelect?.value || 'ic');
                 detectedBoxes.push({
                     x1: Math.round(x1), y1: Math.round(y1),
                     x2: Math.round(x2), y2: Math.round(y2),
@@ -462,25 +464,16 @@ function bindOverlayCanvasInteractions(canvasEl) {
                     kind: (defaultClass === 'ic' || defaultClass === 'transistor' || defaultClass === 'diode' || defaultClass === 'led') ? 'semiconductor' : (defaultClass === 'resistor' ? 'resistor' : 'other')
                 });
                 const newIdx = detectedBoxes.length - 1;
-                if (typeof setCanvasToolMode === 'function') {
-                    setCanvasToolMode('select');
-                } else {
-                    isDrawingManualBox = false;
-                }
+                // Werkzeug bleibt 'box' für flüssiges Durchzeichnen (Continuous Box Drawing wie in Affinity/Photoshop)
+                isDrawingManualBox = true;
                 selectComponentBox(newIdx, true);
-                if (typeof openQuickTagPopoverAt === 'function') {
-                    openQuickTagPopoverAt(e.clientX, e.clientY, newIdx);
-                }
                 const statusEl = document.getElementById('autolabel-status');
                 if (statusEl) {
                     statusEl.innerText = `Neue Box #${detectedBoxes.length} (${defaultClass}) gezeichnet: ${Math.round(x2 - x1)}×${Math.round(y2 - y1)} px.`;
                 }
             } else {
-                if (typeof setCanvasToolMode === 'function') {
-                    setCanvasToolMode('select');
-                } else {
-                    isDrawingManualBox = false;
-                }
+                // Bei Klick ohne Zug im Box-Modus verbleiben
+                isDrawingManualBox = true;
             }
             drawBboxOverlay();
             if (typeof renderObjectsList === 'function') renderObjectsList();

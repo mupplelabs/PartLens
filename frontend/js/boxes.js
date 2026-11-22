@@ -1,83 +1,100 @@
 // =====================================================================
-// BOUNDING BOXES INTERACTION, OBJECTS LIST, QUICK TAGS & SHORTCUTS
+// BOUNDING BOXES INTERACTION, OBJECTS LIST, UNIFIED PALETTE & SHORTCUTS
 // =====================================================================
 
 // =====================================================================
-// KLASSEN-SCHNELLAUSWAHL BAR (1-Click & Keyboard 1-9)
+// UNIFIED CLASS CONFIGURATION & HOTKEYS (1–0)
 // =====================================================================
-function renderClassQuickBar() {
-    const bar = document.getElementById('class-quick-bar');
-    if (!bar) return;
-    const headerText = window.t ? window.t('studio.class_header') : 'Klasse:';
-    const classes = (typeof knownDatasetClasses !== 'undefined' && Array.isArray(knownDatasetClasses)) ? knownDatasetClasses : [];
+let currentPaletteClass = 'ic';
+window.currentPaletteClass = currentPaletteClass;
 
-    const selBox = (typeof getSelectedComponentBox === 'function') ? getSelectedComponentBox() : null;
-    const activeClass = selBox ? selBox.label : (typeof boxClassSelect !== 'undefined' && boxClassSelect && boxClassSelect.value ? boxClassSelect.value : 'ic');
+const TOP_HOTKEY_CLASSES = [
+    { key: '1', classId: 'ic', labelKey: 'classes.ic_chip', defaultLabel: 'IC', color: '#3b82f6' },
+    { key: '2', classId: 'resistor', labelKey: 'classes.resistor_chip', defaultLabel: 'Widerstand', color: '#f59e0b' },
+    { key: '3', classId: 'capacitor', labelKey: 'classes.capacitor_chip', defaultLabel: 'Kondensator', color: '#8b5cf6' },
+    { key: '4', classId: 'transistor', labelKey: 'classes.transistor_chip', defaultLabel: 'Transistor', color: '#10b981' },
+    { key: '5', classId: 'diode', labelKey: 'classes.diode_chip', defaultLabel: 'Diode', color: '#ec4899' },
+    { key: '6', classId: 'led', labelKey: 'classes.led_chip', defaultLabel: 'LED', color: '#ef4444' },
+    { key: '7', classId: 'inductor', labelKey: 'classes.inductor_chip', defaultLabel: 'Induktor', color: '#06b6d4' },
+    { key: '8', classId: 'potentiometer', labelKey: 'classes.potentiometer_chip', defaultLabel: 'Poti', color: '#d97706' },
+    { key: '9', classId: 'switch_button', labelKey: 'classes.switch_button_chip', defaultLabel: 'Schalter', color: '#a855f7' },
+    { key: '0', classId: 'relay', labelKey: 'classes.relay_chip', defaultLabel: 'Relais', color: '#e11d48' }
+];
 
-    let html = `<span style="font-size: 0.7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-right: 4px;" data-i18n="studio.class_header">${headerText}</span>`;
+const SECONDARY_CLASSES = [
+    { classId: 'connector', labelKey: 'classes.connector_chip', defaultLabel: 'Stecker', color: '#14b8a6' },
+    { classId: 'display', labelKey: 'classes.display_chip', defaultLabel: 'Display', color: '#0ea5e9' },
+    { classId: 'board_mcu_stick', labelKey: 'classes.board_mcu_stick_chip', defaultLabel: 'MCU-Stick', color: '#6366f1' },
+    { classId: 'board_mini_stamp', labelKey: 'classes.board_mini_stamp_chip', defaultLabel: 'Stamp', color: '#818cf8' },
+    { classId: 'board_standard', labelKey: 'classes.board_standard_chip', defaultLabel: 'Dev-Board', color: '#4f46e5' },
+    { classId: 'board_module', labelKey: 'classes.board_module_chip', defaultLabel: 'Modul', color: '#0284c7' },
+    { classId: 'oscillator', labelKey: 'classes.oscillator_chip', defaultLabel: 'Quarz', color: '#eab308' },
+    { classId: 'motor_actuator', labelKey: 'classes.motor_actuator_chip', defaultLabel: 'Motor', color: '#f97316' },
+    { classId: 'speaker_buzzer', labelKey: 'classes.speaker_buzzer_chip', defaultLabel: 'Buzzer', color: '#84cc16' },
+    { classId: 'other', labelKey: 'classes.other_chip', defaultLabel: 'Sonstiges', color: '#94a3b8' }
+];
 
-    classes.forEach((c, idx) => {
-        const isActive = (c === activeClass);
-        const color = (typeof getClassColor === 'function') ? getClassColor(c) : '#3b82f6';
-        const shortcut = (idx < 9) ? `<span style="opacity: 0.6; font-size: 0.68rem;">(${idx + 1})</span>` : '';
-        const i18nKey = `classes.${c}_chip`;
-        const labelText = window.t ? window.t(i18nKey) : c;
-        html += `
-            <button class="class-quick-chip ${isActive ? 'active' : ''}" data-class="${c}" style="color: ${color};">
-                <span class="class-dot"></span> <span data-i18n="${i18nKey}">${labelText}</span> ${shortcut}
-            </button>
-        `;
-    });
-    bar.innerHTML = html;
-    bindClassQuickBarEvents();
+function updateActiveClassPill() {
+    const pillDot = document.getElementById('active-class-dot');
+    const pillName = document.getElementById('active-class-name');
+    const pillShortcut = document.getElementById('active-class-shortcut');
+    if (!pillDot || !pillName) return;
+
+    const activeCls = (selectedBoxIndex >= 0 && selectedBoxIndex < detectedBoxes.length)
+        ? (detectedBoxes[selectedBoxIndex].label || currentPaletteClass)
+        : currentPaletteClass;
+
+    const topItem = TOP_HOTKEY_CLASSES.find(item => item.classId === activeCls);
+    const secItem = SECONDARY_CLASSES.find(item => item.classId === activeCls);
+    const item = topItem || secItem;
+
+    const color = (typeof getClassColor === 'function') ? getClassColor(activeCls) : (item?.color || '#3b82f6');
+    const label = item
+        ? (window.t ? window.t(item.labelKey) : item.defaultLabel)
+        : activeCls;
+
+    pillDot.style.background = color;
+    pillName.textContent = label;
+    if (pillShortcut) {
+        pillShortcut.textContent = topItem ? `(${topItem.key})` : '';
+        pillShortcut.style.display = topItem ? 'inline' : 'none';
+    }
+
+    if (typeof boxClassSelect !== 'undefined' && boxClassSelect) {
+        boxClassSelect.value = activeCls;
+    }
 }
-window.renderClassQuickBar = renderClassQuickBar;
+window.updateActiveClassPill = updateActiveClassPill;
 
-function bindClassQuickBarEvents() {
-    const chips = document.querySelectorAll('.class-quick-chip');
-    chips.forEach(chip => {
-        chip.addEventListener('click', () => {
-            const chosenClass = chip.getAttribute('data-class');
-            if (selectedBoxIndex >= 0 && selectedBoxIndex < detectedBoxes.length) {
-                applyClassToBox(selectedBoxIndex, chosenClass);
-            } else {
-                if (typeof boxClassSelect !== 'undefined' && boxClassSelect) boxClassSelect.value = chosenClass;
-                chips.forEach(c => c.classList.toggle('active', c === chip));
-                const statusEl = document.getElementById('autolabel-status');
-                if (statusEl) statusEl.innerText = `Standard-Klasse für neue Boxen auf '${chosenClass}' gesetzt.`;
-            }
-        });
-    });
-}
-
-// Tastatur-Kürzel 1-9 zum sofortigen Ändern der Klasse der gewählten Box bzw. Vorbelegung
+// Tastatur-Kürzel 1-0 zum sofortigen Ändern der Klasse der gewählten Box bzw. Vorbelegung
 window.addEventListener('keydown', (e) => {
     const isTyping = document.activeElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
     if (isTyping) return;
-    const num = parseInt(e.key, 10);
-    if (num >= 1 && num <= 9) {
-        const chips = Array.from(document.querySelectorAll('.class-quick-chip'));
-        if (chips[num - 1]) {
+    if (e.key >= '0' && e.key <= '9') {
+        const topItem = TOP_HOTKEY_CLASSES.find(item => item.key === e.key);
+        if (topItem) {
             e.preventDefault();
-            chips[num - 1].click();
+            if (typeof selectPaletteClass === 'function') {
+                selectPaletteClass(topItem.classId);
+            }
         }
     }
 });
 
 function updateQuickPaletteActiveState() {
-    const selBox = (typeof getSelectedComponentBox === 'function') ? getSelectedComponentBox() : null;
-    const chips = document.querySelectorAll('.class-quick-chip');
-    chips.forEach(chip => {
-        const c = chip.getAttribute('data-class');
-        if (selBox && selBox.label === c) {
-            chip.classList.add('active');
-        } else {
-            chip.classList.remove('active');
-        }
-    });
+    updateActiveClassPill();
 }
+window.updateQuickPaletteActiveState = updateQuickPaletteActiveState;
 
-renderClassQuickBar();
+function renderClassQuickBar() {
+    updateActiveClassPill();
+}
+window.renderClassQuickBar = renderClassQuickBar;
+
+// Initiale Pill-Aktualisierung
+document.addEventListener('DOMContentLoaded', () => {
+    updateActiveClassPill();
+});
 
 // =====================================================================
 // CVAT / V7 STYLE OBJEKTE-LISTE (Inspector Tab 0)
@@ -222,23 +239,26 @@ if (btnBackToObjects) {
 }
 
 // =====================================================================
-// ROBOFLOW STYLE FLOATING CANVAS QUICK-TAG POPOVER
+// UNIFIED CLASS PALETTE & QUICK-TAG POPOVER (DESKTOP & MOBILE BOTTOM-SHEET)
 // =====================================================================
 const quickTagPopover = document.getElementById('canvas-quick-tag-popover');
 const popoverTag = document.getElementById('popover-box-tag');
 const popoverCloseBtn = document.getElementById('btn-popover-close');
 const popoverClassSelect = document.getElementById('popover-class-select');
 const popoverDelBtn = document.getElementById('popover-del-btn');
-const popoverClassBtns = document.querySelectorAll('.popover-class-btn');
+const paletteSearchInput = document.getElementById('palette-search-input');
+const activeClassPillBtn = document.getElementById('active-class-pill-btn');
 
 function populatePopoverClassSelect() {
     if (!popoverClassSelect) return;
     const currentVal = popoverClassSelect.value;
     popoverClassSelect.innerHTML = '';
     const classList = (typeof knownDatasetClasses !== 'undefined' && Array.isArray(knownDatasetClasses)) ? knownDatasetClasses : [
-        'resistor', 'capacitor', 'inductor', 'diode', 'led',
-        'transistor', 'ic', 'potentiometer', 'switch_button',
-        'relay', 'connector', 'display', 'board', 'other'
+        'ic', 'resistor', 'capacitor', 'transistor', 'diode',
+        'led', 'inductor', 'potentiometer', 'switch_button', 'relay',
+        'connector', 'display', 'board_mcu_stick', 'board_mini_stamp',
+        'board_standard', 'board_module', 'oscillator', 'motor_actuator',
+        'speaker_buzzer', 'other'
     ];
     classList.forEach(c => {
         const opt = document.createElement('option');
@@ -261,59 +281,198 @@ function populatePopoverClassSelect() {
 if (popoverClassSelect) {
     populatePopoverClassSelect();
     popoverClassSelect.addEventListener('change', () => {
-        if (selectedBoxIndex >= 0 && selectedBoxIndex < detectedBoxes.length) {
-            applyClassToBox(selectedBoxIndex, popoverClassSelect.value);
-            closeQuickTagPopover();
-        }
+        const chosen = popoverClassSelect.value;
+        selectPaletteClass(chosen);
     });
 }
 
-window.addEventListener('languageChanged', () => {
-    populatePopoverClassSelect();
-    if (typeof renderClassQuickBar === 'function') {
-        renderClassQuickBar();
+function renderUnifiedPalette() {
+    const topContainer = document.getElementById('palette-top-classes');
+    const secContainer = document.getElementById('palette-secondary-classes');
+    if (!topContainer || !secContainer) return;
+
+    const selBox = (typeof getSelectedComponentBox === 'function') ? getSelectedComponentBox() : null;
+    const targetClass = selBox ? selBox.label : currentPaletteClass;
+
+    // 1. Top 10 Buttons (Hotkeys 1–0)
+    topContainer.innerHTML = TOP_HOTKEY_CLASSES.map(item => {
+        const isActive = (item.classId === targetClass);
+        const color = (typeof getClassColor === 'function') ? getClassColor(item.classId) : item.color;
+        const label = window.t ? window.t(item.labelKey) : item.defaultLabel;
+        return `
+            <button type="button" class="popover-class-btn ${isActive ? 'active' : ''}" data-class="${item.classId}">
+                <span class="class-dot" style="background: ${color};"></span>
+                <span class="class-btn-name">${label}</span>
+                <span class="shortcut-badge">${item.key}</span>
+            </button>
+        `;
+    }).join('');
+
+    // 2. Weitere 10 Klassen
+    secContainer.innerHTML = SECONDARY_CLASSES.map(item => {
+        const isActive = (item.classId === targetClass);
+        const color = (typeof getClassColor === 'function') ? getClassColor(item.classId) : item.color;
+        const label = window.t ? window.t(item.labelKey) : item.defaultLabel;
+        return `
+            <button type="button" class="popover-class-btn ${isActive ? 'active' : ''}" data-class="${item.classId}">
+                <span class="class-dot" style="background: ${color};"></span>
+                <span class="class-btn-name">${label}</span>
+            </button>
+        `;
+    }).join('');
+
+    // Click Events
+    const allBtns = quickTagPopover.querySelectorAll('.popover-class-btn');
+    allBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            const cls = btn.getAttribute('data-class');
+            selectPaletteClass(cls);
+        });
+    });
+}
+
+function selectPaletteClass(cls) {
+    if (selectedBoxIndex >= 0 && selectedBoxIndex < detectedBoxes.length) {
+        applyClassToBox(selectedBoxIndex, cls);
     }
-    if (typeof renderObjectsList === 'function') {
-        renderObjectsList();
+    currentPaletteClass = cls;
+    window.currentPaletteClass = cls;
+    updateActiveClassPill();
+    closeQuickTagPopover();
+
+    const statusEl = document.getElementById('autolabel-status');
+    if (statusEl) {
+        statusEl.innerText = `Zeichen-Klasse auf '${cls}' gesetzt.`;
     }
-});
+}
+window.selectPaletteClass = selectPaletteClass;
+
+// Live Search Filter
+if (paletteSearchInput) {
+    paletteSearchInput.addEventListener('input', () => {
+        const q = paletteSearchInput.value.trim().toLowerCase();
+        const allBtns = quickTagPopover.querySelectorAll('.popover-class-btn');
+        allBtns.forEach(btn => {
+            const cls = btn.getAttribute('data-class') || '';
+            const txt = btn.textContent.toLowerCase();
+            const match = !q || cls.includes(q) || txt.includes(q);
+            btn.style.display = match ? 'inline-flex' : 'none';
+        });
+    });
+}
+
+function positionPopover(targetRect, mode) {
+    if (!quickTagPopover) return;
+    const isMobile = window.innerWidth <= 768;
+    quickTagPopover.classList.toggle('mobile-bottom-sheet', isMobile);
+
+    if (isMobile) {
+        quickTagPopover.style.left = '0';
+        quickTagPopover.style.top = 'auto';
+        quickTagPopover.style.bottom = '0';
+        quickTagPopover.style.right = '0';
+        quickTagPopover.style.width = '100%';
+        quickTagPopover.style.display = 'block';
+        return;
+    }
+
+    quickTagPopover.style.bottom = 'auto';
+    quickTagPopover.style.right = 'auto';
+    const pw = 340;
+    const ph = 420;
+
+    let left = targetRect.left;
+    let top = targetRect.top + targetRect.height + 6;
+
+    if (mode === 'box') {
+        left = targetRect.left + 15;
+        top = targetRect.top - 20;
+    }
+
+    if (left + pw > window.innerWidth - 12) left = Math.max(12, window.innerWidth - pw - 12);
+    if (top + ph > window.innerHeight - 12) top = Math.max(60, window.innerHeight - ph - 12);
+    if (left < 12) left = 12;
+    if (top < 60) top = 60;
+
+    quickTagPopover.style.left = `${left}px`;
+    quickTagPopover.style.top = `${top}px`;
+    quickTagPopover.style.width = `${pw}px`;
+    quickTagPopover.style.display = 'block';
+}
+
+function openPaletteForToolbar() {
+    if (!quickTagPopover) return;
+    const pillBtn = document.getElementById('active-class-pill-btn');
+    if (!pillBtn) return;
+
+    if (quickTagPopover.style.display === 'block' && quickTagPopover.getAttribute('data-origin') === 'toolbar') {
+        closeQuickTagPopover();
+        return;
+    }
+
+    quickTagPopover.setAttribute('data-origin', 'toolbar');
+    pillBtn.classList.add('open');
+    renderUnifiedPalette();
+
+    if (popoverTag) {
+        const color = (typeof getClassColor === 'function') ? getClassColor(currentPaletteClass) : '#3b82f6';
+        popoverTag.innerHTML = `<span class="class-dot" style="background:${color};"></span> Standard-Klasse für neue Boxen`;
+    }
+
+    if (popoverDelBtn) popoverDelBtn.style.display = 'none';
+    if (popoverClassSelect) popoverClassSelect.value = currentPaletteClass;
+    if (paletteSearchInput) {
+        paletteSearchInput.value = '';
+        paletteSearchInput.dispatchEvent(new Event('input'));
+        setTimeout(() => paletteSearchInput.focus(), 50);
+    }
+
+    positionPopover(pillBtn.getBoundingClientRect(), 'toolbar');
+}
+window.openPaletteForToolbar = openPaletteForToolbar;
+
+if (activeClassPillBtn) {
+    activeClassPillBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        openPaletteForToolbar();
+    });
+}
 
 function openQuickTagPopoverAt(clientX, clientY, boxIdx) {
     if (!quickTagPopover) return;
     if (boxIdx < 0 || boxIdx >= detectedBoxes.length) return;
     selectedBoxIndex = boxIdx;
     const box = detectedBoxes[boxIdx];
-    
+
+    quickTagPopover.setAttribute('data-origin', 'box');
+    renderUnifiedPalette();
+
     if (popoverTag) {
         const color = (typeof getClassColor === 'function') ? getClassColor(box.label) : '#3b82f6';
         popoverTag.innerHTML = `<span class="class-dot" style="background:${color};"></span> #${boxIdx + 1} ${box.label || 'Box'}`;
     }
-    if (popoverClassSelect) {
-        popoverClassSelect.value = box.label || 'ic';
+
+    if (popoverDelBtn) popoverDelBtn.style.display = 'inline-flex';
+    if (popoverClassSelect) popoverClassSelect.value = box.label || 'ic';
+    if (paletteSearchInput) {
+        paletteSearchInput.value = '';
+        paletteSearchInput.dispatchEvent(new Event('input'));
     }
 
-    popoverClassBtns.forEach(btn => {
-        const c = btn.getAttribute('data-class');
-        btn.classList.toggle('active', c === box.label);
-    });
-
-    const pw = 250;
-    const ph = 190;
-    let left = clientX + 10;
-    let top = clientY - 30;
-    if (left + pw > window.innerWidth - 10) left = Math.max(10, clientX - pw - 10);
-    if (top + ph > window.innerHeight - 10) top = Math.max(60, window.innerHeight - ph - 10);
-    if (top < 60) top = 60;
-    if (left < 10) left = 10;
-
-    quickTagPopover.style.left = `${left}px`;
-    quickTagPopover.style.top = `${top}px`;
-    quickTagPopover.style.display = 'block';
+    positionPopover({ left: clientX, top: clientY, width: 0, height: 0 }, 'box');
 }
 window.openQuickTagPopoverAt = openQuickTagPopoverAt;
 
 function closeQuickTagPopover() {
-    if (quickTagPopover) quickTagPopover.style.display = 'none';
+    if (quickTagPopover) {
+        quickTagPopover.style.display = 'none';
+        quickTagPopover.removeAttribute('data-origin');
+    }
+    const pillBtn = document.getElementById('active-class-pill-btn');
+    if (pillBtn) pillBtn.classList.remove('open');
 }
 window.closeQuickTagPopover = closeQuickTagPopover;
 
@@ -342,16 +501,21 @@ if (popoverDelBtn) {
     });
 }
 
-popoverClassBtns.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        const cls = btn.getAttribute('data-class');
-        if (selectedBoxIndex >= 0 && selectedBoxIndex < detectedBoxes.length) {
-            applyClassToBox(selectedBoxIndex, cls);
-            closeQuickTagPopover();
-        }
-    });
+// Global click outside to close popover
+window.addEventListener('click', (e) => {
+    if (!quickTagPopover || quickTagPopover.style.display !== 'block') return;
+    if (e.target.closest('#canvas-quick-tag-popover') || e.target.closest('#active-class-pill-btn')) {
+        return;
+    }
+    closeQuickTagPopover();
+});
+
+window.addEventListener('languageChanged', () => {
+    populatePopoverClassSelect();
+    updateActiveClassPill();
+    if (typeof renderObjectsList === 'function') {
+        renderObjectsList();
+    }
 });
 
 function applyClassToBox(idx, cls) {

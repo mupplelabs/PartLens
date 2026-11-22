@@ -617,24 +617,51 @@
             border-color: var(--primary);
         }
 
-        /* Roboflow Canvas Quick Tag Popover */
+        /* Affinity-Style Active Class Pill in Top Toolbar */
+        .active-class-pill {
+            padding: 4px 8px;
+            gap: 5px;
+            font-weight: 600;
+            background: var(--surface-glass);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-bright);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .active-class-pill:hover,
+        .active-class-pill.open {
+            border-color: var(--primary);
+            background: rgba(37, 99, 235, 0.12);
+        }
+        [data-theme="light"] .active-class-pill:hover,
+        [data-theme="light"] .active-class-pill.open {
+            background: rgba(37, 99, 235, 0.1);
+        }
+
+        /* Unified Class Palette & Quick Tag Popover */
         .canvas-quick-tag-popover {
             position: fixed;
             z-index: 1000;
             background: var(--surface-glass);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-md);
             box-shadow: var(--shadow-popover);
-            padding: 8px 10px;
-            width: 250px;
+            padding: 10px 12px;
+            width: 330px;
+            max-height: 460px;
+            overflow-y: auto;
             animation: popoverFadeIn 0.12s ease-out;
             font-family: inherit;
         }
         @keyframes popoverFadeIn {
             from { opacity: 0; transform: translateY(-4px) scale(0.97); }
             to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .sheet-drag-handle {
+            display: none;
         }
         .popover-header {
             display: flex;
@@ -666,27 +693,56 @@
             color: var(--text-bright);
             background: var(--surface-hover);
         }
+        .popover-search-wrap {
+            margin-bottom: 6px;
+        }
+        .palette-search-input {
+            width: 100%;
+            padding: 5px 8px;
+            font-size: 0.74rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--surface-elevated);
+            color: var(--text-bright);
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.15s ease;
+        }
+        .palette-search-input:focus {
+            border-color: var(--primary);
+        }
+        .palette-section-title {
+            font-size: 0.66rem;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
         .popover-quick-classes {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 4px;
-            margin-bottom: 6px;
         }
         .popover-class-btn {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            padding: 4px 6px;
+            gap: 6px;
+            padding: 5px 8px;
             background: var(--surface-elevated);
             border: 1px solid var(--border);
-            border-radius: 4px;
-            font-size: 0.72rem;
+            border-radius: 5px;
+            font-size: 0.73rem;
             font-weight: 500;
             color: var(--text);
             cursor: pointer;
-            transition: all 0.1s;
+            transition: all 0.1s ease;
             text-align: left;
             user-select: none;
+            box-sizing: border-box;
         }
         .popover-class-btn:hover {
             background: var(--surface-hover);
@@ -697,12 +753,28 @@
             background: var(--primary-muted);
             border-color: var(--primary);
             color: var(--primary);
+            font-weight: 700;
+        }
+        .popover-class-btn .class-btn-name {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .popover-class-btn .shortcut-badge {
+            margin-left: auto;
+            font-size: 0.65rem;
+            opacity: 0.75;
+            background: rgba(125, 125, 125, 0.2);
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-weight: 600;
         }
         .popover-input-row {
             display: flex;
             align-items: center;
             gap: 6px;
-            padding-top: 5px;
+            padding-top: 6px;
             border-top: 1px solid var(--border);
         }
         .popover-class-select {

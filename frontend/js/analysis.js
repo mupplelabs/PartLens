@@ -687,23 +687,34 @@ function prepareOcrImageDataUrl(overrideAngleDeg = null, forceNatural = false) {
         }
     }
 
-    // Falls das isolierte IC-Gehäuse hochkant steht (z.B. DIP-14 in IMG_2221.jpg durch EXIF-Hochformat),
-    // automatisch um -90° ins Querformat drehen, damit die Schrift (ISD 1820PY) waagerecht für OCR liegt!
+    // Falls das isolierte IC-Gehäuse gedreht ist (entweder durch gespeicherte box.rotation oder vertikales Gehäuse)
     const isVerticalHousing = sh > sw * 1.35;
-    if (isVerticalHousing) {
-        cropDescription += ' · vertikal → 90° horizontal ausgerichtet';
+    const baseRot = (selectedStage0Box && typeof selectedStage0Box.rotation === 'number')
+        ? selectedStage0Box.rotation
+        : (isVerticalHousing ? -90 : 0);
+
+    const userAngleDeg = overrideAngleDeg !== null ? overrideAngleDeg : Number(ocrAngleSlider.value || 0);
+    const totalAngleDeg = baseRot + userAngleDeg;
+    if (Math.abs(totalAngleDeg) > 0.1) {
+        cropDescription += ` · ${Math.round(totalAngleDeg * 10) / 10}° ausgerichtet`;
     }
 
     if (ocrPreviewLabel && !forceNatural) {
         ocrPreviewLabel.innerText = `Vorverarbeiteter OCR-Bildausschnitt (${cropDescription}):`;
     }
 
+    const rad = (totalAngleDeg * Math.PI) / 180;
+    const cos = Math.abs(Math.cos(rad));
+    const sin = Math.abs(Math.sin(rad));
+    const rotW = sw * cos + sh * sin;
+    const rotH = sw * sin + sh * cos;
+
     const maxDim = 780;
-    const scale = Math.min(1, maxDim / Math.max(sw, sh));
+    const scale = Math.min(1, maxDim / Math.max(rotW, rotH));
     const rawTargetW = Math.max(1, Math.round(sw * scale));
     const rawTargetH = Math.max(1, Math.round(sh * scale));
-    const innerW = isVerticalHousing ? rawTargetH : rawTargetW;
-    const innerH = isVerticalHousing ? rawTargetW : rawTargetH;
+    const innerW = Math.max(1, Math.round(rotW * scale));
+    const innerH = Math.max(1, Math.round(rotH * scale));
 
     // Weißer Ruhe-Rand um den Chip, damit Buchstaben nie am Bildrand kleben und Florence-2 kein extremes 6:1-Seitenverhältnis staucht
     const borderX = Math.round(Math.max(16, innerW * 0.04));
@@ -715,13 +726,11 @@ function prepareOcrImageDataUrl(overrideAngleDeg = null, forceNatural = false) {
     ocrPreviewCanvas.height = targetH;
     const octx = ocrPreviewCanvas.getContext('2d', { willReadFrequently: true });
 
-    const userAngleDeg = overrideAngleDeg !== null ? overrideAngleDeg : Number(ocrAngleSlider.value || 0);
-    const totalAngleDeg = (isVerticalHousing ? -90 : 0) + userAngleDeg;
     octx.fillStyle = '#ffffff';
     octx.fillRect(0, 0, targetW, targetH);
     octx.save();
     octx.translate(targetW / 2, targetH / 2);
-    octx.rotate((totalAngleDeg * Math.PI) / 180);
+    octx.rotate(rad);
     octx.drawImage(sourceEl, sx, sy, sw, sh, -rawTargetW / 2, -rawTargetH / 2, rawTargetW, rawTargetH);
     octx.restore();
 
@@ -1970,27 +1979,33 @@ function updateStage0CropPreview() {
     const bw = Math.max(8, selBox.x2 - selBox.x1);
     const bh = Math.max(8, selBox.y2 - selBox.y1);
     const isVert = bh > bw * 1.35 && selBox.leadType !== 'to92';
-    const dispW = isVert ? bh : bw;
-    const dispH = isVert ? bw : bh;
-    const scale = Math.min(180 / dispW, 95 / dispH);
-    const cw = Math.max(24, Math.round(dispW * scale));
-    const ch = Math.max(24, Math.round(dispH * scale));
+    const rotDeg = typeof selBox.rotation === 'number' ? selBox.rotation : (isVert ? -90 : 0);
+    const rad = (rotDeg * Math.PI) / 180;
+    const cos = Math.abs(Math.cos(rad));
+    const sin = Math.abs(Math.sin(rad));
+    const bbW = bw * cos + bh * sin;
+    const bbH = bw * sin + bh * cos;
+
+    const scale = Math.min(180 / bbW, 95 / bbH);
+    const cw = Math.max(24, Math.round(bbW * scale));
+    const ch = Math.max(24, Math.round(bbH * scale));
     stage0CropCanvas.width = cw;
     stage0CropCanvas.height = ch;
 
     cctx.save();
-    if (isVert) {
-        cctx.translate(cw / 2, ch / 2);
-        cctx.rotate(-Math.PI / 2);
-        cctx.drawImage(sourceEl, selBox.x1, selBox.y1, bw, bh, -ch / 2, -cw / 2, ch, cw);
-    } else {
-        cctx.drawImage(sourceEl, selBox.x1, selBox.y1, bw, bh, 0, 0, cw, ch);
-    }
+    cctx.fillStyle = '#0f172a';
+    cctx.fillRect(0, 0, cw, ch);
+    cctx.translate(cw / 2, ch / 2);
+    cctx.rotate(rad);
+    const drawW = bw * scale;
+    const drawH = bh * scale;
+    cctx.drawImage(sourceEl, selBox.x1, selBox.y1, bw, bh, -drawW / 2, -drawH / 2, drawW, drawH);
     cctx.restore();
 
     const confPct = selBox.confidence ? `${Math.round(selBox.confidence * 100)}%` : '';
     stage0CropTitle.innerText = `Box #${selectedBoxIndex + 1}: ${selBox.label}`;
-    stage0CropInfo.innerHTML = `<span class="meta-pill">${bw} × ${bh} px</span>` + (confPct ? ` <span class="meta-pill accent">${confPct}</span>` : '') + (isVert ? ` <span class="meta-pill">↻ 90°</span>` : '');
+    const rotBadge = Math.abs(rotDeg) > 0.1 ? ` <span class="meta-pill accent" title="Drehwinkel: ${rotDeg.toFixed(1)}°">↻ ${Math.round(rotDeg * 10) / 10}°</span>` : '';
+    stage0CropInfo.innerHTML = `<span class="meta-pill">${bw} × ${bh} px</span>` + (confPct ? ` <span class="meta-pill accent">${confPct}</span>` : '') + rotBadge;
 }
 
 function renderStage0Chips() {
@@ -2164,4 +2179,253 @@ window.addEventListener('languageChanged', () => {
         }
     }
 });
+
+// =====================================================================
+// BAUTEIL-AUSRICHTUNG & FREIES DREH-MODAL (INSPECTOR ZOOM & ROTATE)
+// =====================================================================
+function initCropRotateModal() {
+    const modal = document.getElementById('crop-rotate-modal');
+    const stage0Box = document.getElementById('stage0-crop-box');
+    const stage0Canvas = document.getElementById('stage0-crop-canvas');
+    if (!modal) return;
+
+    const canvas = document.getElementById('crop-rotate-canvas');
+    const viewport = document.getElementById('crop-rotate-viewport');
+    const slider = document.getElementById('crop-rotate-slider');
+    const numInput = document.getElementById('crop-rotate-num-input');
+    const angleBadge = document.getElementById('crop-rotate-angle-badge');
+    const boxTag = document.getElementById('crop-rotate-box-tag');
+    const guidelines = document.getElementById('crop-rotate-guidelines');
+    const toggleGrid = document.getElementById('crop-rotate-toggle-grid');
+    const btnContrast = document.getElementById('btn-crop-toggle-contrast');
+
+    const btnClose = document.getElementById('btn-close-crop-rotate-modal');
+    const btnCancel = document.getElementById('btn-cancel-crop-rotate');
+    const btnSave = document.getElementById('btn-save-crop-rotate');
+    const btnApplyOcr = document.getElementById('btn-apply-crop-rotate-and-ocr');
+
+    const btnLeft90 = document.getElementById('btn-crop-rot-left90');
+    const btnRight90 = document.getElementById('btn-crop-rot-right90');
+    const btn180 = document.getElementById('btn-crop-rot-180');
+    const btnReset = document.getElementById('btn-crop-rot-reset');
+    const btnStepMinus = document.getElementById('btn-crop-rot-step-minus');
+    const btnStepPlus = document.getElementById('btn-crop-rot-step-plus');
+
+    let currentAngle = 0;
+    let initialAngle = 0;
+    let contrastMode = 0; // 0: Normal, 1: High Contrast, 2: Inverted
+
+    function renderModalCrop() {
+        if (!canvas) return;
+        const selBox = getSelectedComponentBox();
+        const { el: sourceEl, ready } = getActiveMediaSource();
+        if (!selBox || !ready) return;
+
+        const bw = Math.max(8, selBox.x2 - selBox.x1);
+        const bh = Math.max(8, selBox.y2 - selBox.y1);
+
+        const rad = (currentAngle * Math.PI) / 180;
+        const cos = Math.abs(Math.cos(rad));
+        const sin = Math.abs(Math.sin(rad));
+        const bbW = bw * cos + bh * sin;
+        const bbH = bw * sin + bh * cos;
+
+        // Viewport hat feste Maße, Canvas hineinskalieren mit reichlich Details
+        const maxVpW = (viewport ? viewport.clientWidth : 560) - 24;
+        const maxVpH = (viewport ? viewport.clientHeight : 280) - 24;
+        const scale = Math.min(maxVpW / bbW, maxVpH / bbH, 4.0);
+
+        const cw = Math.max(30, Math.round(bbW * scale));
+        const ch = Math.max(30, Math.round(bbH * scale));
+        canvas.width = cw;
+        canvas.height = ch;
+
+        const ctx = canvas.getContext('2d');
+        ctx.save();
+        ctx.clearRect(0, 0, cw, ch);
+
+        // Filter anwenden
+        if (contrastMode === 1) {
+            ctx.filter = 'contrast(1.8) brightness(1.1) grayscale(1)';
+        } else if (contrastMode === 2) {
+            ctx.filter = 'invert(1) contrast(1.8) grayscale(1)';
+        } else {
+            ctx.filter = 'none';
+        }
+
+        ctx.translate(cw / 2, ch / 2);
+        ctx.rotate(rad);
+        const drawW = bw * scale;
+        const drawH = bh * scale;
+        ctx.drawImage(sourceEl, selBox.x1, selBox.y1, bw, bh, -drawW / 2, -drawH / 2, drawW, drawH);
+        ctx.restore();
+
+        // UI-Werte synchronisieren
+        if (angleBadge) {
+            const prefix = currentAngle > 0 ? '+' : '';
+            angleBadge.innerText = `${prefix}${currentAngle.toFixed(1)}°`;
+        }
+        if (slider && Math.abs(Number(slider.value) - currentAngle) > 0.1) {
+            slider.value = currentAngle;
+        }
+        if (numInput && Math.abs(Number(numInput.value) - currentAngle) > 0.1) {
+            numInput.value = currentAngle;
+        }
+    }
+
+    function setAngle(newAngle, updateLiveBox = true) {
+        let a = Number(newAngle) || 0;
+        while (a > 180) a -= 360;
+        while (a < -180) a += 360;
+        currentAngle = Math.round(a * 2) / 2;
+
+        if (updateLiveBox) {
+            const selBox = getSelectedComponentBox();
+            if (selBox) {
+                selBox.rotation = currentAngle;
+                updateStage0CropPreview();
+            }
+        }
+        renderModalCrop();
+    }
+
+    function openModal() {
+        const selBox = getSelectedComponentBox();
+        if (!selBox) {
+            if (typeof updateStudioStatus === 'function') {
+                updateStudioStatus('Bitte zuerst eine Bauteil-Box im Bild auswählen.', 'warning');
+            }
+            return;
+        }
+
+        const isVert = (selBox.y2 - selBox.y1) > (selBox.x2 - selBox.x1) * 1.35 && selBox.leadType !== 'to92';
+        currentAngle = typeof selBox.rotation === 'number' ? selBox.rotation : (isVert ? -90 : 0);
+        initialAngle = currentAngle;
+
+        if (boxTag) {
+            boxTag.innerText = `Box #${selectedBoxIndex + 1}: ${selBox.label}`;
+        }
+        modal.style.display = 'flex';
+        setAngle(currentAngle, false);
+    }
+
+    function closeModal(revert = false) {
+        if (revert) {
+            const selBox = getSelectedComponentBox();
+            if (selBox) {
+                selBox.rotation = initialAngle;
+                updateStage0CropPreview();
+            }
+        }
+        modal.style.display = 'none';
+    }
+
+    // Doppelklick auf Thumbnail
+    if (stage0Box) {
+        stage0Box.addEventListener('dblclick', openModal);
+    }
+    if (stage0Canvas) {
+        stage0Canvas.addEventListener('dblclick', openModal);
+    }
+
+    // Slider & Number Input
+    if (slider) {
+        slider.addEventListener('input', (e) => setAngle(Number(e.target.value)));
+    }
+    if (numInput) {
+        numInput.addEventListener('change', (e) => setAngle(Number(e.target.value)));
+        numInput.addEventListener('input', (e) => setAngle(Number(e.target.value)));
+    }
+
+    // Feinabstimmung & Schnell-Buttons
+    if (btnStepMinus) btnStepMinus.addEventListener('click', () => setAngle(currentAngle - 1));
+    if (btnStepPlus) btnStepPlus.addEventListener('click', () => setAngle(currentAngle + 1));
+    if (btnLeft90) btnLeft90.addEventListener('click', () => setAngle(currentAngle - 90));
+    if (btnRight90) btnRight90.addEventListener('click', () => setAngle(currentAngle + 90));
+    if (btn180) btn180.addEventListener('click', () => setAngle(currentAngle + 180));
+    if (btnReset) btnReset.addEventListener('click', () => setAngle(0));
+
+    // Hilfslinien Toggle
+    if (toggleGrid && guidelines) {
+        toggleGrid.addEventListener('change', () => {
+            guidelines.style.display = toggleGrid.checked ? 'block' : 'none';
+        });
+    }
+
+    // Kontrast Toggle
+    if (btnContrast) {
+        btnContrast.addEventListener('click', () => {
+            contrastMode = (contrastMode + 1) % 3;
+            const labels = ['Kontrast: Normal', 'Kontrast: Hoch (Laser)', 'Kontrast: Invertiert'];
+            btnContrast.innerText = labels[contrastMode];
+            renderModalCrop();
+        });
+    }
+
+    // Mausrad über Viewport dreht Bild frei um 1° (oder mit Shift um 0.5°)
+    if (viewport) {
+        viewport.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const step = e.shiftKey ? 0.5 : (e.altKey ? 5 : 1);
+            const delta = e.deltaY < 0 ? step : -step;
+            setAngle(currentAngle + delta);
+        }, { passive: false });
+
+        // Ziehen (Drag) über Viewport
+        let isDragging = false;
+        let startX = 0;
+        let startAngle = 0;
+
+        viewport.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX;
+            startAngle = currentAngle;
+            viewport.style.cursor = 'grabbing';
+        });
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - startX;
+            // 2 Pixel = 1 Grad
+            const dAngle = dx * 0.5;
+            setAngle(startAngle + dAngle);
+        });
+        window.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                if (viewport) viewport.style.cursor = 'grab';
+            }
+        });
+    }
+
+    // Speichern & OCR ausführen
+    if (btnSave) {
+        btnSave.addEventListener('click', () => {
+            const selBox = getSelectedComponentBox();
+            if (selBox) selBox.rotation = currentAngle;
+            closeModal(false);
+        });
+    }
+    if (btnApplyOcr) {
+        btnApplyOcr.addEventListener('click', () => {
+            const selBox = getSelectedComponentBox();
+            if (selBox) selBox.rotation = currentAngle;
+            closeModal(false);
+            executeOcrRecognition();
+        });
+    }
+
+    // Schließen
+    if (btnClose) btnClose.addEventListener('click', () => closeModal(false));
+    if (btnCancel) btnCancel.addEventListener('click', () => closeModal(false));
+
+    window.addEventListener('keydown', (e) => {
+        if (modal.style.display !== 'none' && e.key === 'Escape') {
+            closeModal(false);
+        }
+    });
+}
+
+// Initialisiere das Dreh- und Inspektions-Modal
+initCropRotateModal();
+
 

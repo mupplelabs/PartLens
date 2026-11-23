@@ -1,24 +1,28 @@
 {
   "id": "comp_1793133873_ca25dd",
   "split": "train",
-  "created_at": 1793133873,
+  "created_at": 1795391893,
   "box_count": 1,
   "classes": [
-    "other"
+    "ic"
   ],
-  "tags": [],
+  "tags": [
+    "CD4094BE",
+    "DIP-16",
+    "logic"
+  ],
   "boxes": [
     {
-      "class_id": 19,
-      "label": "other",
-      "xmin": 0.0,
-      "ymin": 0.0,
-      "xmax": 0.9829,
-      "ymax": 0.9839,
-      "confidence": 0.99,
-      "part_marking": null,
-      "footprint": null,
-      "ic_subgroup": null
+      "class_id": 6,
+      "label": "ic",
+      "xmin": 0.0443,
+      "ymin": 0.0524,
+      "xmax": 0.9386,
+      "ymax": 0.9516,
+      "confidence": 0.95,
+      "part_marking": "CD4094BE",
+      "footprint": "DIP-16",
+      "ic_subgroup": "logic"
     }
   ]
 }

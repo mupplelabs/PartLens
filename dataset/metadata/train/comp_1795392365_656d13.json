@@ -1,0 +1,28 @@
+{
+  "id": "comp_1795392365_656d13",
+  "split": "train",
+  "created_at": 1795392365,
+  "box_count": 1,
+  "classes": [
+    "ic"
+  ],
+  "tags": [
+    "CD4094BE",
+    "DIP-16",
+    "logic"
+  ],
+  "boxes": [
+    {
+      "class_id": 6,
+      "label": "ic",
+      "xmin": 0.0,
+      "ymin": 0.0,
+      "xmax": 0.9829,
+      "ymax": 0.9758,
+      "confidence": 0.99,
+      "part_marking": "CD4094BE",
+      "footprint": "DIP-16",
+      "ic_subgroup": "logic"
+    }
+  ]
+}

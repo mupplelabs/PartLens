@@ -375,12 +375,16 @@ async function initStudioBackground() {
         if (typeof runStage0Detection === 'function') {
             runStage0Detection();
         }
-    } else if (previewImage) {
+    } else if (previewImage && previewImage.getAttribute('src')) {
         previewImage.addEventListener('load', () => {
             if (typeof fitImageToWorkspace === 'function') {
                 fitImageToWorkspace();
             }
         }, { once: true });
+    }
+
+    if (typeof syncCanvasEmptyState === 'function') {
+        syncCanvasEmptyState();
     }
 
     // Fertig! Werkzeuge aktivieren & Bereit-Zustand melden

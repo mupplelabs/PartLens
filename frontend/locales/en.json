@@ -65,7 +65,14 @@
     "webcam_live_no_component": "Live: No component detected ({ms} ms) – hold a component to the camera",
     "webcam_live_detected": "Live: {count} component(s) ({ms} ms) – {focus}",
     "focus_component": "Component #{idx} focused",
-    "full_image_active": "Full image active"
+    "full_image_active": "Full image active",
+    "tool_open_file": "Open image file (or drag image onto canvas)",
+    "tool_close_image": "Close image & return to upload",
+    "box_deleted": "Component deleted",
+    "undo_btn": "Undo (Cmd+Z)",
+    "undo_done": "Undone: {desc}",
+    "no_undo": "No action to undo.",
+    "image_closed": "Image closed. Ready for new image."
   },
   "hud": {
     "opacity_title": "Box fill opacity (Key: O)",
@@ -136,8 +143,11 @@
     "ocr_btn": "OCR",
     "ocr_stop": "Stop",
     "btn_remove_box": "Remove Box (Del)",
+    "btn_prev_box": "Previous",
+    "btn_prev_box_title": "Previous component in image",
     "btn_next_box": "Next",
     "btn_next_box_title": "Next component in image",
+    "zero_boxes": "0 Boxes",
     "btn_save": "Save Annotation",
     "objects_in_image": "Objects in Image:",
     "no_marking": "No marking",
@@ -185,7 +195,27 @@
     "split_reason_standard": "Standard 80:20 train allocation",
     "split_reason_val_balancing": "20% validation balancing",
     "save_btn": "Save Sample to Dataset",
-    "status_ready": "Ready to save."
+    "status_ready": "Ready to save.",
+    "active_sample_badge": "Existing Sample",
+    "unload_sample": "Treat as new image",
+    "unload_sample_title": "Detach link and treat as new sample",
+    "save_changes_btn": "Save Changes to Sample",
+    "save_changes_title": "Updates bounding boxes and metadata of {id} directly in dataset (no duplicate image).",
+    "save_as_copy": "Duplicate as New Sample",
+    "save_as_copy_title": "Saves this image with current boxes as a brand new sample",
+    "already_saved_btn": "Already Saved",
+    "changes_saved_btn": "Changes Saved",
+    "approve_sample_title": "Approve as reviewed and load next sample (Cmd+Enter)",
+    "approve_btn": "Approve & Next",
+    "updating_sample": "Updating annotations for {id}...",
+    "sample_updated": "Changes to {id} successfully updated ({count} boxes).",
+    "sample_update_failed": "Update failed: {error}",
+    "duplicating_sample": "Duplicating image as new sample...",
+    "sample_duplicated": "Successfully duplicated as new sample {id}!",
+    "sample_detached": "Link detached. Next save will create a new sample."
+  },
+  "common": {
+    "or": "or"
   },
   "footprints": {
     "modal_title": "Select Footprint & Package",

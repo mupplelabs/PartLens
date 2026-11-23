@@ -18,12 +18,12 @@
         })();
     </script>
     <title>PartLens – Visual Part-DB & YOLO Studio</title>
-    <link rel="stylesheet" href="/frontend/css/base.css?v=2.9.13">
-    <link rel="stylesheet" href="/frontend/css/layout.css?v=2.9.13">
-    <link rel="stylesheet" href="/frontend/css/components.css?v=2.9.13">
-    <link rel="stylesheet" href="/frontend/css/studio.css?v=2.9.13">
-    <link rel="stylesheet" href="/frontend/css/gallery.css?v=2.9.13">
-    <link rel="stylesheet" href="/frontend/css/modals.css?v=2.9.13">
+    <link rel="stylesheet" href="/frontend/css/base.css?v=2.9.20">
+    <link rel="stylesheet" href="/frontend/css/layout.css?v=2.9.20">
+    <link rel="stylesheet" href="/frontend/css/components.css?v=2.9.20">
+    <link rel="stylesheet" href="/frontend/css/studio.css?v=2.9.20">
+    <link rel="stylesheet" href="/frontend/css/gallery.css?v=2.9.20">
+    <link rel="stylesheet" href="/frontend/css/modals.css?v=2.9.20">
 </head>
 <body class="view-studio-active">
 
@@ -103,74 +103,91 @@
                 <div class="studio-canvas-card">
                     <!-- Toolbar über dem Canvas -->
                     <div class="canvas-top-bar">
-                        <div class="tool-btn-group">
-                            <button id="mode-select-btn" class="btn-tool active" type="button" title="Auswählen &amp; Verschieben (Taste: V)" data-i18n-title="canvas.tool_select">
-                                <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 3 7 18 3-7 7-3L3 3z"/><path d="m13 13 6 6"/></svg>
+                        <div class="tool-btn-group" role="toolbar" aria-label="Canvas Werkzeuge">
+                            <!-- Datei / Bild öffnen (Folder Icon) -->
+                            <button id="btn-open-file-toolbar" class="btn-tool" type="button" title="Bilddatei öffnen (oder Bild auf Arbeitsfläche ziehen)" data-i18n-title="canvas.tool_open_file">
+                                <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                             </button>
-                            <button id="add-manual-box-btn" class="btn-tool" type="button" title="Neue Box zeichnen (Taste: R)" data-i18n-title="canvas.tool_draw">
-                                <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="3 3"/></svg>
-                            </button>
-                            <!-- Affinity-Style Active Class Pill -->
-                            <div class="active-class-pill-wrap" style="position: relative; display: inline-flex;">
-                                <button id="active-class-pill-btn" class="btn-tool active-class-pill" type="button" title="Aktive Zeichen-Klasse wählen (Tasten 1–0)" data-i18n-title="canvas.class_pill_title">
-                                    <span class="class-dot" id="active-class-dot" style="background: #3b82f6;"></span>
-                                    <span id="active-class-name" style="font-weight: 600; font-size: 0.74rem;">IC</span>
-                                    <span id="active-class-shortcut" style="opacity: 0.65; font-size: 0.68rem; margin-left: 2px;">(1)</span>
-                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left: 3px; opacity: 0.7;"><polyline points="6 9 12 15 18 9"/></svg>
+
+                            <!-- Cluster 1: Zeichen- & Auswahlmodi -->
+                            <div class="tool-cluster" role="group" aria-label="Zeichenwerkzeuge">
+                                <button id="mode-select-btn" class="btn-tool active" type="button" title="Auswählen &amp; Verschieben (Taste: V)" data-i18n-title="canvas.tool_select">
+                                    <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 3 7 18 3-7 7-3L3 3z"/><path d="m13 13 6 6"/></svg>
                                 </button>
-                            </div>
-                            <div class="filter-divider" style="height: 18px; margin: 0 2px;"></div>
-                            <button id="run-detect-btn" class="btn-tool" type="button" title="Smart Detect: Lokale Heuristik-Detektion (<10ms)" data-i18n-title="canvas.tool_detect">
-                                <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                            </button>
-                            <div class="autolabel-btn-combo" style="display: inline-flex; align-items: stretch;">
-                                <button id="run-autolabel-btn" class="btn-tool btn-tool-accent" type="button" title="Auto-Label: KI-Objekterkennung (Gemini / Lokales Vision-LLM)" data-i18n-title="canvas.tool_autolabel" style="border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: none;">
-                                    <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/></svg>
-                                    <span style="font-size: 0.74rem; font-weight: 700; margin-left: 2px;">AI</span>
+                                <button id="add-manual-box-btn" class="btn-tool" type="button" title="Neue Box zeichnen (Taste: R)" data-i18n-title="canvas.tool_draw">
+                                    <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="3 3"/></svg>
                                 </button>
-                                <button id="stop-autolabel-btn" class="btn-tool btn-danger-pulse" type="button" style="display: none; padding: 5px 8px; font-weight: 700; border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: none;" title="Laufende KI-Erkennung abbrechen" data-i18n-title="canvas.tool_autolabel_stop">
-                                    <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
-                                </button>
-                                <!-- Schnellauswahl der Erkennungsmodule im Studio -->
-                                <div class="autolabel-options-dropdown-wrap" style="position: relative; display: inline-flex;">
-                                    <button id="autolabel-options-btn" class="btn-tool btn-tool-accent" type="button" title="Erkennungsumfang anpassen (Bauform, OCR, IC-Typ)" data-i18n-title="canvas.tool_autolabel_options" style="padding: 5px 6px; border-top-left-radius: 0; border-bottom-left-radius: 0; border-left: 1px solid rgba(255,255,255,0.25);">
-                                        <svg class="tool-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-                                        <span id="autolabel-quick-badge" style="display: none; font-size: 0.65rem; font-weight: 700; color: #38bdf8;">Basis</span>
-                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle;"><polyline points="6 9 12 15 18 9"/></svg>
+                                <!-- Affinity-Style Active Class Pill -->
+                                <div class="active-class-pill-wrap" style="position: relative; display: inline-flex;">
+                                    <button id="active-class-pill-btn" class="btn-tool active-class-pill" type="button" title="Aktive Zeichen-Klasse wählen (Tasten 1–0)" data-i18n-title="canvas.class_pill_title">
+                                        <span class="class-dot" id="active-class-dot" style="background: #3b82f6;"></span>
+                                        <span id="active-class-name" style="font-weight: 600; font-size: 0.74rem;">IC</span>
+                                        <span id="active-class-shortcut" style="opacity: 0.65; font-size: 0.68rem; margin-left: 2px;">(1)</span>
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left: 3px; opacity: 0.7;"><polyline points="6 9 12 15 18 9"/></svg>
                                     </button>
-                                    <div id="autolabel-options-menu" style="display: none; position: fixed; z-index: 9999; min-width: 210px; background: var(--surface-elevated); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 8px; box-shadow: var(--shadow-popover);">
-                                        <div style="font-size: 0.7rem; font-weight: 700; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
-                                             Auto-Label Module
-                                        </div>
-                                        <label style="display: flex; align-items: center; gap: 8px; padding: 4px 6px; font-size: 0.76rem; cursor: pointer; border-radius: 4px; user-select: none;">
-                                            <input type="checkbox" id="quick-opt-footprint" checked style="accent-color: var(--primary);" />
-                                            <span>Footprint / Bauform</span>
-                                        </label>
-                                        <label style="display: flex; align-items: center; gap: 8px; padding: 4px 6px; font-size: 0.76rem; cursor: pointer; border-radius: 4px; user-select: none;">
-                                            <input type="checkbox" id="quick-opt-marking" checked style="accent-color: var(--primary);" />
-                                            <span>Beschriftung (OCR)</span>
-                                        </label>
-                                        <label style="display: flex; align-items: center; gap: 8px; padding: 4px 6px; font-size: 0.76rem; cursor: pointer; border-radius: 4px; user-select: none;">
-                                            <input type="checkbox" id="quick-opt-subgroup" checked style="accent-color: var(--primary);" />
-                                            <span>IC-Typ (Part-DB)</span>
-                                        </label>
-                                        <div style="border-top: 1px solid var(--border); margin-top: 6px; padding-top: 6px; display: flex; justify-content: space-between; align-items: center;">
-                                            <span style="font-size: 0.68rem; color: var(--muted);">Gespeichert</span>
-                                            <button type="button" id="close-autolabel-options-btn" class="btn" style="padding: 2px 7px; font-size: 0.68rem;">OK</button>
+                                </div>
+                            </div>
+
+                            <!-- Cluster 2: KI-Erkennung -->
+                            <div class="tool-cluster" role="group" aria-label="Erkennung">
+                                <button id="run-detect-btn" class="btn-tool" type="button" title="Smart Detect: Lokale Heuristik-Detektion (<10ms)" data-i18n-title="canvas.tool_detect">
+                                    <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                                </button>
+                                <div class="autolabel-btn-combo" style="display: inline-flex; align-items: stretch;">
+                                    <button id="run-autolabel-btn" class="btn-tool btn-tool-accent" type="button" title="Auto-Label: KI-Objekterkennung (Gemini / Lokales Vision-LLM)" data-i18n-title="canvas.tool_autolabel" style="border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: none;">
+                                        <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/></svg>
+                                        <span style="font-size: 0.74rem; font-weight: 700; margin-left: 2px;">AI</span>
+                                    </button>
+                                    <button id="stop-autolabel-btn" class="btn-tool btn-danger-pulse" type="button" style="display: none; padding: 5px 8px; font-weight: 700; border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: none;" title="Laufende KI-Erkennung abbrechen" data-i18n-title="canvas.tool_autolabel_stop">
+                                        <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+                                    </button>
+                                    <!-- Schnellauswahl der Erkennungsmodule im Studio -->
+                                    <div class="autolabel-options-dropdown-wrap" style="position: relative; display: inline-flex;">
+                                        <button id="autolabel-options-btn" class="btn-tool btn-tool-accent" type="button" title="Erkennungsumfang anpassen (Bauform, OCR, IC-Typ)" data-i18n-title="canvas.tool_autolabel_options" style="padding: 5px 6px; border-top-left-radius: 0; border-bottom-left-radius: 0; border-left: 1px solid rgba(255,255,255,0.25);">
+                                            <svg class="tool-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+                                            <span id="autolabel-quick-badge" style="display: none; font-size: 0.65rem; font-weight: 700; color: #38bdf8;">Basis</span>
+                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle;"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </button>
+                                        <div id="autolabel-options-menu" style="display: none; position: fixed; z-index: 9999; min-width: 210px; background: var(--surface-elevated); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 8px; box-shadow: var(--shadow-popover);">
+                                            <div style="font-size: 0.7rem; font-weight: 700; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
+                                                 Auto-Label Module
+                                            </div>
+                                            <label style="display: flex; align-items: center; gap: 8px; padding: 4px 6px; font-size: 0.76rem; cursor: pointer; border-radius: 4px; user-select: none;">
+                                                <input type="checkbox" id="quick-opt-footprint" checked style="accent-color: var(--primary);" />
+                                                <span>Footprint / Bauform</span>
+                                            </label>
+                                            <label style="display: flex; align-items: center; gap: 8px; padding: 4px 6px; font-size: 0.76rem; cursor: pointer; border-radius: 4px; user-select: none;">
+                                                <input type="checkbox" id="quick-opt-marking" checked style="accent-color: var(--primary);" />
+                                                <span>Beschriftung (OCR)</span>
+                                            </label>
+                                            <label style="display: flex; align-items: center; gap: 8px; padding: 4px 6px; font-size: 0.76rem; cursor: pointer; border-radius: 4px; user-select: none;">
+                                                <input type="checkbox" id="quick-opt-subgroup" checked style="accent-color: var(--primary);" />
+                                                <span>IC-Typ (Part-DB)</span>
+                                            </label>
+                                            <div style="border-top: 1px solid var(--border); margin-top: 6px; padding-top: 6px; display: flex; justify-content: space-between; align-items: center;">
+                                                <span style="font-size: 0.68rem; color: var(--muted);">Gespeichert</span>
+                                                <button type="button" id="close-autolabel-options-btn" class="btn" style="padding: 2px 7px; font-size: 0.68rem;">OK</button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="filter-divider" style="height: 18px; margin: 0 2px;"></div>
-                            <button id="toggle-isolate-box-btn" class="btn-tool" type="button" title="Fokus: Nicht ausgewählte Boxen ausblenden (Taste: F)" data-i18n-title="canvas.tool_isolate">
-                                <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
-                            </button>
-                            <button id="rotate-image-btn" class="btn-tool" type="button" title="Bild um 90° drehen" data-i18n-title="canvas.tool_rotate">
-                                <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><polyline points="21 3 21 8 16 8"/></svg>
-                            </button>
-                            <button id="clear-boxes-btn" class="btn-tool" type="button" style="color: var(--rose);" title="Alle Bounding Boxes im aktuellen Bild entfernen" data-i18n-title="canvas.tool_clear">
-                                <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                            </button>
+
+                            <!-- Cluster 3: Ansicht & Aktionen -->
+                            <div class="tool-cluster" role="group" aria-label="Ansicht und Aktionen">
+                                <button id="toggle-isolate-box-btn" class="btn-tool" type="button" title="Fokus: Nicht ausgewählte Boxen ausblenden (Taste: F)" data-i18n-title="canvas.tool_isolate">
+                                    <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
+                                </button>
+                                <button id="rotate-image-btn" class="btn-tool" type="button" title="Bild um 90° drehen" data-i18n-title="canvas.tool_rotate">
+                                    <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><polyline points="21 3 21 8 16 8"/></svg>
+                                </button>
+                                <button id="clear-boxes-btn" class="btn-tool" type="button" style="color: var(--rose);" title="Alle Bounding Boxes im aktuellen Bild entfernen" data-i18n-title="canvas.tool_clear">
+                                    <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </button>
+                                <button id="btn-close-image" class="btn-tool" type="button" style="display: none;" title="Bild schließen &amp; zum Upload zurückkehren" data-i18n-title="canvas.tool_close_image">
+                                    <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Rechts: Mode-Tabs (Upload vs Webcam) -->
@@ -187,8 +204,45 @@
                     <!-- Hero Canvas Stage -->
                     <div class="stage-viewport">
                         <div id="upload-panel" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;">
-                            <div class="image-stage-wrap">
-                                <img id="preview-image" src="/studies/F0526717-01.webp" alt="Bauteil-Vorschau" />
+                            <!-- Canvas Empty State (wenn kein Bild geladen ist) -->
+                            <div id="canvas-empty-state" class="canvas-empty-state">
+                                <div class="canvas-empty-dropzone" id="canvas-empty-dropzone">
+                                    <div class="canvas-empty-icon">
+                                        <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                            <polyline points="17 8 12 3 7 8"/>
+                                            <line x1="12" y1="3" x2="12" y2="15"/>
+                                        </svg>
+                                    </div>
+                                    <div class="canvas-empty-title">
+                                        <span data-i18n="canvas.dropzone_bold">Drag &amp; drop image here</span>
+                                    </div>
+                                    <div class="canvas-empty-sub">
+                                        <span data-i18n="canvas.dropzone_or">or click to browse</span>
+                                    </div>
+
+                                    <div class="canvas-empty-divider">
+                                        <span data-i18n="common.or">oder</span>
+                                    </div>
+
+                                    <div class="canvas-empty-select-wrap" onclick="event.stopPropagation()">
+                                        <select id="canvas-empty-sample-select" class="canvas-empty-select" title="Vorhandene PCB-Testbilder laden">
+                                            <option value="" data-i18n="canvas.samples_placeholder">Select test image...</option>
+                                            <option value="/studies/F0526717-01.webp">1) CD4094BE (DIP-16)</option>
+                                            <option value="/studies/IMG_2221.jpg">2) ISD 1820PY (2× IC)</option>
+                                            <option value="/studies/resistor_4k7.png">3) 4,7 kΩ (horizontal)</option>
+                                            <option value="/studies/resistors_2k2_row.jpg">4) 10× 2,2 kΩ (vertikal)</option>
+                                            <option value="/studies/transistors_2n2222.jpg">5) 3× 2N2222A (Transistor)</option>
+                                            <option value="/studies/6xDIP8.jpeg">6) 6× DIP-8 (Schaum/Holz)</option>
+                                            <option value="/studies/4xDIP14_teils_im_schatten.jpeg">7) 4× DIP-14 (Schatten)</option>
+                                            <option value="/studies/4xDIP14_zuviel_Licht.jpeg">8) 4× DIP-14 (starkes Licht)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="image-stage-wrap" style="display: none;">
+                                <img id="preview-image" src="" alt="Bauteil-Vorschau" />
                                 <canvas id="bbox-overlay-canvas"></canvas>
                                 <!-- Lupe für iPhone 16 Pro Toucheingabe -->
                                 <canvas id="touch-loupe-canvas" width="120" height="120"></canvas>
@@ -451,7 +505,7 @@
 
                         <!-- Freigestellter Ausschnitt -->
                         <div class="crop-hero-wrap">
-                            <div class="crop-canvas-box" id="stage0-crop-box" style="cursor: pointer;" title="Doppelklick zum Vergrößern &amp; freien Drehen" data-i18n-title="studio.crop_rotate_hint">
+                            <div class="crop-canvas-box" id="stage0-crop-box" style="cursor: pointer;" title="Klicken zum Vergrößern &amp; freien Drehen">
                                 <canvas id="stage0-crop-canvas"></canvas>
                                 <!-- Lupe & Dreh-Badge -->
                                 <div class="crop-inspect-hint" style="position: absolute; bottom: 3px; right: 3px; background: rgba(0,0,0,0.65); border: 1px solid rgba(255,255,255,0.25); border-radius: 4px; padding: 1px 4px; font-size: 0.65rem; color: #fff; pointer-events: none; display: flex; align-items: center; gap: 3px;">
@@ -651,14 +705,21 @@
                                 </details>
                             </div>
 
-                            <div style="display: flex; gap: 8px; justify-content: space-between;">
-                                <button id="delete-box-btn" class="btn btn-danger" type="button" style="flex: 1; padding: 6px 10px; font-size: 0.78rem;">
-                                    <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                    <span data-i18n="studio.btn_remove_box">Box löschen (Entf)</span>
+                            <div style="display: flex; gap: 6px; align-items: center; justify-content: space-between; margin-top: 4px;">
+                                <button id="prev-box-btn" class="btn btn-secondary" type="button" style="padding: 7px 10px; font-size: 0.78rem;" title="Vorheriges Bauteil" data-i18n-title="studio.btn_prev_box_title">
+                                    <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                                    <span data-i18n="studio.btn_prev_box">Zurück</span>
                                 </button>
-                                <button id="next-box-btn" class="btn" type="button" style="padding: 6px 10px; font-size: 0.78rem;" title="Nächstes Bauteil im Bild" data-i18n-title="studio.btn_next_box_title">
-                                    <span data-i18n="studio.btn_next_box">Nächste</span>
-                                    <svg class="tool-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                                <span id="box-stepper-label" style="font-size: 0.75rem; font-weight: 600; color: var(--muted); min-width: 65px; text-align: center;">Box 1 / 1</span>
+                                <button id="next-box-btn" class="btn btn-secondary" type="button" style="padding: 7px 10px; font-size: 0.78rem;" title="Nächstes Bauteil im Bild" data-i18n-title="studio.btn_next_box_title">
+                                    <span data-i18n="studio.btn_next_box">Weiter</span>
+                                    <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                                </button>
+                            </div>
+                            <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border); display: flex; justify-content: flex-end;">
+                                <button id="delete-box-btn" class="btn btn-danger" type="button" style="padding: 5px 10px; font-size: 0.74rem;">
+                                    <svg class="tool-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                    <span data-i18n="studio.btn_remove_box">Box löschen (Entf)</span>
                                 </button>
                             </div>
                         </div>
@@ -700,15 +761,42 @@
                             </select>
                         </div>
 
+                        <!-- Aktives Sample Banner (In-Place Edit Modus) -->
+                        <div id="active-sample-banner" style="display: none; padding: 8px 10px; margin-bottom: 12px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: var(--radius-md); font-size: 0.76rem;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px;">
+                                <span style="font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 5px;">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    <span data-i18n="curation.active_sample_badge">Bestehendes Sample</span>
+                                </span>
+                                <span id="active-sample-split-badge" class="badge" style="font-size: 0.68rem; padding: 2px 6px; background: var(--bg-hover);">train</span>
+                            </div>
+                            <div id="active-sample-id-display" style="font-family: monospace; font-size: 0.72rem; color: var(--text-secondary); word-break: break-all; margin-bottom: 6px;">
+                                sample_...
+                            </div>
+                            <div style="display: flex; gap: 6px;">
+                                <button id="unload-active-sample-btn" type="button" class="btn btn-secondary" style="font-size: 0.7rem; padding: 3px 8px; flex: 1; justify-content: center;" title="Verknüpfung lösen und als neues Sample behandeln" data-i18n-title="curation.unload_sample_title">
+                                    <span data-i18n="curation.unload_sample">Als neues Bild behandeln</span>
+                                </button>
+                            </div>
+                        </div>
+
                         <!-- Review Queue: Approve Button -->
-                        <button id="approve-sample-btn" class="btn btn-tool-accent" type="button" style="display: none; width: 100%; margin-bottom: 8px; padding: 9px 12px; font-weight: 700; font-size: 0.82rem; justify-content: center; gap: 6px;" title="Als geprüft freigeben und nächstes Sample laden (Cmd+Enter)">
+                        <button id="approve-sample-btn" class="btn btn-tool-accent" type="button" style="display: none; width: 100%; margin-bottom: 8px; padding: 9px 12px; font-weight: 700; font-size: 0.82rem; justify-content: center; gap: 6px;" title="Als geprüft freigeben und nächstes Sample laden (Cmd+Enter)" data-i18n-title="curation.approve_sample_title">
                             <svg class="tool-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                            <span id="approve-btn-text">Freigeben &amp; Weiter</span>
+                            <span id="approve-btn-text" data-i18n="curation.approve_btn">Freigeben &amp; Weiter</span>
                         </button>
 
                         <button id="save-dataset-btn" class="btn-save-dataset" type="button">
                             <svg class="tool-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                            <span data-i18n="curation.save_btn">Sample im Datensatz speichern</span>
+                            <span id="save-dataset-btn-text" data-i18n="curation.save_btn">Sample im Datensatz speichern</span>
+                        </button>
+                        <button id="save-as-copy-btn" class="btn btn-secondary" type="button" style="display: none; width: 100%; margin-top: 6px; padding: 7px 10px; font-size: 0.75rem; justify-content: center; gap: 6px;" title="Speichert dieses Bild mit aktuellen Boxen als völlig neues Sample" data-i18n-title="curation.save_as_copy_title">
+                            <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                            <span data-i18n="curation.save_as_copy">Als neues Sample duplizieren</span>
+                        </button>
+                        <button id="next-image-cta-btn" class="btn btn-secondary" type="button" style="display: none; width: 100%; margin-top: 8px; padding: 8px 12px; font-weight: 600; font-size: 0.8rem; justify-content: center; gap: 6px;">
+                            <svg class="tool-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <span data-i18n="curation.next_image_cta">Neues Bild für Annotation laden</span>
                         </button>
                         <div id="autolabel-status" style="font-size: 0.76rem; color: var(--text-secondary); margin-top: 8px; line-height: 1.35; text-align: center;" data-i18n="curation.status_ready">
                             Bereit zum Speichern.
@@ -1048,33 +1136,36 @@
                         </div>
                     </div>
 
-                    <!-- Modulare Feature-Toggles für LLM Auto-Labeling -->
-                    <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px;">
-                        <label class="field-label" style="margin-bottom: 8px; color: var(--accent); font-weight: 600;" data-i18n="settings.features_label">
-                            Erkennungsumfang &amp; Prompt-Module:
-                        </label>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px;">
-                            <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; background: var(--surface-hover); padding: 8px 10px; border-radius: 6px; cursor: not-allowed; opacity: 0.75;" title="Grundlegende Lokalisierung und YOLO-Klasse ist immer aktiv" data-i18n-title="settings.opt_box_title">
-                                <input type="checkbox" id="autolabel-opt-box" checked disabled style="accent-color: var(--accent);" />
-                                <span data-i18n="settings.opt_box">Box &amp; Grundklasse</span>
-                            </label>
-                            <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; background: var(--surface-hover); padding: 8px 10px; border-radius: 6px; cursor: pointer;" title="Physische Bauform erkennen (DIP, TO-92, SOIC, 0805...) und automatisch mit Part-DB Footprint-Katalog abgleichen" data-i18n-title="settings.opt_footprint_title">
-                                <input type="checkbox" id="autolabel-opt-footprint" checked style="accent-color: var(--accent);" />
-                                <span data-i18n="settings.opt_footprint">Bauform / Footprint</span>
-                            </label>
-                            <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; background: var(--surface-hover); padding: 8px 10px; border-radius: 6px; cursor: pointer;" title="Beschriftung / Bauteilbezeichnung (OCR) auf dem Bauteil ablesen (z.B. NE555, LM358, 2N2222)" data-i18n-title="settings.opt_marking_title">
-                                <input type="checkbox" id="autolabel-opt-marking" checked style="accent-color: var(--accent);" />
-                                <span data-i18n="settings.opt_marking">Beschriftung (OCR)</span>
-                            </label>
-                            <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; background: var(--surface-hover); padding: 8px 10px; border-radius: 6px; cursor: pointer;" title="IC-Kategorie für Part-DB ermitteln (analog, logic, mcu, special)" data-i18n-title="settings.opt_subgroup_title">
-                                <input type="checkbox" id="autolabel-opt-subgroup" checked style="accent-color: var(--accent);" />
-                                <span data-i18n="settings.opt_subgroup">IC-Typ / Subgruppe</span>
-                            </label>
+                    <!-- Modulare Feature-Toggles für LLM Auto-Labeling (Progressive Disclosure) -->
+                    <details class="settings-advanced-details" style="border-top: 1px solid var(--border); padding-top: 10px; margin-top: 12px;">
+                        <summary style="font-size: 0.8rem; font-weight: 600; color: var(--accent); cursor: pointer; user-select: none; padding: 4px 0; display: flex; align-items: center; justify-content: space-between;">
+                            <span data-i18n="settings.features_label">Erweiterte Prompt-Module &amp; Erkennungsumfang</span>
+                            <span style="font-size: 0.7rem; color: var(--muted); font-weight: normal;">(Klicken zum Anpassen)</span>
+                        </summary>
+                        <div style="padding-top: 10px;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px;">
+                                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; background: var(--surface-hover); padding: 8px 10px; border-radius: 6px; cursor: not-allowed; opacity: 0.75;" title="Grundlegende Lokalisierung und YOLO-Klasse ist immer aktiv" data-i18n-title="settings.opt_box_title">
+                                    <input type="checkbox" id="autolabel-opt-box" checked disabled style="accent-color: var(--accent);" />
+                                    <span data-i18n="settings.opt_box">Box &amp; Grundklasse</span>
+                                </label>
+                                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; background: var(--surface-hover); padding: 8px 10px; border-radius: 6px; cursor: pointer;" title="Physische Bauform erkennen (DIP, TO-92, SOIC, 0805...) und automatisch mit Part-DB Footprint-Katalog abgleichen" data-i18n-title="settings.opt_footprint_title">
+                                    <input type="checkbox" id="autolabel-opt-footprint" checked style="accent-color: var(--accent);" />
+                                    <span data-i18n="settings.opt_footprint">Bauform / Footprint</span>
+                                </label>
+                                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; background: var(--surface-hover); padding: 8px 10px; border-radius: 6px; cursor: pointer;" title="Beschriftung / Bauteilbezeichnung (OCR) auf dem Bauteil ablesen (z.B. NE555, LM358, 2N2222)" data-i18n-title="settings.opt_marking_title">
+                                    <input type="checkbox" id="autolabel-opt-marking" checked style="accent-color: var(--accent);" />
+                                    <span data-i18n="settings.opt_marking">Beschriftung (OCR)</span>
+                                </label>
+                                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; background: var(--surface-hover); padding: 8px 10px; border-radius: 6px; cursor: pointer;" title="IC-Kategorie für Part-DB ermitteln (analog, logic, mcu, special)" data-i18n-title="settings.opt_subgroup_title">
+                                    <input type="checkbox" id="autolabel-opt-subgroup" checked style="accent-color: var(--accent);" />
+                                    <span data-i18n="settings.opt_subgroup">IC-Typ / Subgruppe</span>
+                                </label>
+                            </div>
+                            <div style="font-size: 0.72rem; color: var(--muted); margin-top: 6px; line-height: 1.4;" data-i18n="settings.features_hint">
+                                Prompt und JSON-Schema passen sich dynamisch an. Deaktivierte Felder reduzieren die Inferenzzeit und Tokens des LLMs.
+                            </div>
                         </div>
-                        <div style="font-size: 0.72rem; color: var(--muted); margin-top: 6px; line-height: 1.4;" data-i18n="settings.features_hint">
-                            Prompt und JSON-Schema passen sich dynamisch an. Deaktivierte Felder reduzieren die Inferenzzeit und Tokens des LLMs.
-                        </div>
-                    </div>
+                    </details>
 
                     <!-- Speichern & Anwenden Button -->
                     <div style="border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
@@ -1671,19 +1762,19 @@
 
 
     <!-- PartLens Modular Scripts -->
-    <script src="/frontend/js/i18n.js?v=2.9.15"></script>
-    <script src="/frontend/js/state.js?v=2.9.15"></script>
-    <script src="/frontend/js/api.js?v=2.9.15"></script>
-    <script src="/frontend/js/analysis.js?v=2.9.15"></script>
-    <script src="/frontend/js/resistor.js?v=2.9.15"></script>
-    <script src="/frontend/js/canvas.js?v=2.9.15"></script>
-    <script src="/frontend/js/boxes.js?v=2.9.15"></script>
-    <script src="/frontend/js/footprints.js?v=2.9.15"></script>
-    <script src="/frontend/js/autolabel.js?v=2.9.16"></script>
-    <script src="/frontend/js/gallery.js?v=2.9.15"></script>
-    <script src="/frontend/js/import_modal.js?v=2.9.15"></script>
-    <script src="/frontend/js/export.js?v=2.9.15"></script>
-    <script src="/frontend/js/webcam.js?v=2.9.15"></script>
-    <script src="/frontend/js/app.js?v=2.9.15"></script>
+    <script src="/frontend/js/i18n.js?v=2.9.20"></script>
+    <script src="/frontend/js/state.js?v=2.9.20"></script>
+    <script src="/frontend/js/api.js?v=2.9.20"></script>
+    <script src="/frontend/js/analysis.js?v=2.9.20"></script>
+    <script src="/frontend/js/resistor.js?v=2.9.20"></script>
+    <script src="/frontend/js/canvas.js?v=2.9.20"></script>
+    <script src="/frontend/js/boxes.js?v=2.9.20"></script>
+    <script src="/frontend/js/footprints.js?v=2.9.20"></script>
+    <script src="/frontend/js/autolabel.js?v=2.9.20"></script>
+    <script src="/frontend/js/gallery.js?v=2.9.20"></script>
+    <script src="/frontend/js/import_modal.js?v=2.9.20"></script>
+    <script src="/frontend/js/export.js?v=2.9.20"></script>
+    <script src="/frontend/js/webcam.js?v=2.9.20"></script>
+    <script src="/frontend/js/app.js?v=2.9.20"></script>
 </body>
 </html>

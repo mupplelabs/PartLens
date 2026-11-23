@@ -632,3 +632,47 @@
             100% { filter: brightness(1.25); }
         }
 
+        /* Undo & Notification Toast */
+        .app-toast-container {
+            position: fixed;
+            bottom: 38px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .app-toast {
+            pointer-events: auto;
+            background: var(--surface-elevated);
+            border: 1px solid var(--border);
+            color: var(--text-bright);
+            padding: 8px 14px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-popover);
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: toastFadeIn 0.2s ease-out;
+        }
+        .app-toast-action {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 3px 8px;
+            font-size: 0.74rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .app-toast-action:hover {
+            background: var(--primary-hover);
+        }
+        @keyframes toastFadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+

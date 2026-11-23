@@ -1559,6 +1559,7 @@ async function openSampleInStudio(split, sampleId) {
         // Bild in Preview setzen (direkt via optimierter URL)
         previewImage.src = data.image_url || data.image_base64;
         previewImage.onload = () => {
+            if (typeof syncCanvasEmptyState === 'function') syncCanvasEmptyState();
             suppressAutoStage0 = false;
             resetStageZoomPan();
             const srcW = previewImage.naturalWidth || 640;
@@ -1609,6 +1610,12 @@ async function openSampleInStudio(split, sampleId) {
                 tags: data.tags || [],
                 isUnreviewed
             };
+
+            if (typeof resetSampleSavedState === 'function') {
+                resetSampleSavedState(false);
+            } else if (typeof updateCurationSampleUI === 'function') {
+                updateCurationSampleUI();
+            }
 
             const approveBtn = document.getElementById('approve-sample-btn');
             const mobileApproveBtn = document.getElementById('mobile-approve-btn');

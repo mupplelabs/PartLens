@@ -38,8 +38,8 @@
             --c-other: #94a3b8;
 
             --radius-sm: 4px;
-            --radius-md: 7px;
-            --radius-lg: 10px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
             --radius-full: 9999px;
             --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.05);
             --shadow-popover: 0 8px 30px rgba(0, 0, 0, 0.55);

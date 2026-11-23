@@ -53,3 +53,7 @@ watch/
 .env.*.local
 config/llm_config.json
 config/*.json
+
+# Local Agent Configurations & Specifications
+.agents/
+partdb-ai-app-spezifikation.md

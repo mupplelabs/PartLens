@@ -3,6 +3,117 @@
 // =====================================================================
 
 // =====================================================================
+// UNDO-HISTORIE & TOAST NOTIFICATION (Constraints & Recovery)
+// =====================================================================
+const boxHistoryStack = [];
+const MAX_BOX_HISTORY = 20;
+
+function pushBoxHistorySnapshot(actionDesc = '') {
+    try {
+        const snapshot = JSON.stringify(detectedBoxes);
+        boxHistoryStack.push({
+            boxes: snapshot,
+            selectedIndex: selectedBoxIndex,
+            desc: actionDesc,
+            timestamp: Date.now()
+        });
+        if (boxHistoryStack.length > MAX_BOX_HISTORY) {
+            boxHistoryStack.shift();
+        }
+        if (typeof resetSampleSavedState === 'function') {
+            resetSampleSavedState(false);
+        }
+    } catch (e) {
+        console.error('Snapshot error:', e);
+    }
+}
+window.pushBoxHistorySnapshot = pushBoxHistorySnapshot;
+
+function undoLastBoxAction() {
+    if (boxHistoryStack.length === 0) {
+        if (typeof updateStudioStatus === 'function') {
+            const msg = window.t ? window.t('canvas.no_undo') : 'Keine Aktion zum Rückgängigmachen vorhanden.';
+            updateStudioStatus(msg, 'ready');
+        }
+        return false;
+    }
+    const previous = boxHistoryStack.pop();
+    try {
+        detectedBoxes = JSON.parse(previous.boxes);
+        selectedBoxIndex = previous.selectedIndex;
+        if (selectedBoxIndex >= detectedBoxes.length) {
+            selectedBoxIndex = detectedBoxes.length - 1;
+        }
+        drawBboxOverlay();
+        renderStage0Chips();
+        if (typeof renderObjectsList === 'function') renderObjectsList();
+        updateStage0CropPreview();
+        if (typeof updateBoxEditBar === 'function') updateBoxEditBar();
+        if (typeof closeQuickTagPopover === 'function') closeQuickTagPopover();
+
+        removeUndoToast();
+        if (typeof resetSampleSavedState === 'function') {
+            resetSampleSavedState(false);
+        }
+        if (typeof updateStudioStatus === 'function') {
+            const desc = previous.desc || 'Box-Aktion';
+            const msg = window.t ? window.t('canvas.undo_done', { desc }) : `Rückgängig gemacht: ${desc}.`;
+            updateStudioStatus(msg, 'ready');
+        }
+        return true;
+    } catch (e) {
+        console.error('Undo restore error:', e);
+        return false;
+    }
+}
+window.undoLastBoxAction = undoLastBoxAction;
+
+let activeToastTimeout = null;
+function showUndoToast(msg = null) {
+    const text = msg || (window.t ? window.t('canvas.box_deleted') : 'Bauteil gelöscht');
+    const undoText = window.t ? window.t('canvas.undo_btn') : 'Rückgängig (Cmd+Z)';
+    let container = document.getElementById('app-toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'app-toast-container';
+        container.className = 'app-toast-container';
+        document.body.appendChild(container);
+    }
+    container.innerHTML = `
+        <div class="app-toast">
+            <span>${text}</span>
+            <button type="button" class="app-toast-action" id="btn-toast-undo">${undoText}</button>
+        </div>
+    `;
+    const undoBtn = document.getElementById('btn-toast-undo');
+    if (undoBtn) {
+        undoBtn.addEventListener('click', () => {
+            undoLastBoxAction();
+        });
+    }
+    if (activeToastTimeout) clearTimeout(activeToastTimeout);
+    activeToastTimeout = setTimeout(() => {
+        removeUndoToast();
+    }, 6000);
+}
+window.showUndoToast = showUndoToast;
+
+function removeUndoToast() {
+    const container = document.getElementById('app-toast-container');
+    if (container) container.innerHTML = '';
+}
+window.removeUndoToast = removeUndoToast;
+
+window.addEventListener('keydown', (e) => {
+    const isTyping = document.activeElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
+    if (isTyping) return;
+    if ((e.metaKey || e.ctrlKey) && (e.key === 'z' || e.key === 'Z') && !e.shiftKey) {
+        e.preventDefault();
+        undoLastBoxAction();
+    }
+});
+
+// =====================================================================
 // UNIFIED CLASS CONFIGURATION & HOTKEYS (1–0)
 // =====================================================================
 let currentPaletteClass = 'ic';
@@ -208,6 +319,7 @@ function renderObjectsList() {
         if (delBtn) {
             delBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
+                pushBoxHistorySnapshot('Bauteil #' + (idx + 1) + ' gelöscht');
                 detectedBoxes.splice(idx, 1);
                 selectedBoxIndex = detectedBoxes.length > 0 ? Math.min(idx, detectedBoxes.length - 1) : -1;
                 drawBboxOverlay();
@@ -215,6 +327,7 @@ function renderObjectsList() {
                 renderObjectsList();
                 updateStage0CropPreview();
                 updateBoxEditBar();
+                showUndoToast('Bauteil #' + (idx + 1) + ' gelöscht');
             });
         }
 
@@ -488,6 +601,7 @@ if (popoverDelBtn) {
         e.stopPropagation();
         e.preventDefault();
         if (selectedBoxIndex >= 0 && selectedBoxIndex < detectedBoxes.length) {
+            pushBoxHistorySnapshot('Box #' + (selectedBoxIndex + 1) + ' gelöscht');
             detectedBoxes.splice(selectedBoxIndex, 1);
             selectedBoxIndex = detectedBoxes.length > 0 ? Math.min(selectedBoxIndex, detectedBoxes.length - 1) : -1;
             drawBboxOverlay();
@@ -496,6 +610,7 @@ if (popoverDelBtn) {
             updateStage0CropPreview();
             if (typeof updateBoxEditBar === 'function') updateBoxEditBar();
             closeQuickTagPopover();
+            showUndoToast('Box gelöscht');
         }
     });
 }
@@ -619,6 +734,7 @@ if (clearBoxesBtn) {
     clearBoxesBtn.addEventListener('click', () => {
         if (detectedBoxes.length === 0) return;
         if (confirm('Möchtest du alle ' + detectedBoxes.length + ' Bounding Boxes im aktuellen Bild entfernen?')) {
+            pushBoxHistorySnapshot('Alle ' + detectedBoxes.length + ' Boxen entfernt');
             detectedBoxes = [];
             selectedBoxIndex = -1;
             drawBboxOverlay();
@@ -627,8 +743,9 @@ if (clearBoxesBtn) {
             if (typeof closeQuickTagPopover === 'function') closeQuickTagPopover();
             updateStage0CropPreview();
             if (typeof updateBoxEditBar === 'function') updateBoxEditBar();
+            showUndoToast('Alle Boxen entfernt');
             if (typeof updateStudioStatus === 'function') {
-                updateStudioStatus('Alle Bounding Boxes entfernt.', 'ready');
+                updateStudioStatus('Alle Bounding Boxes entfernt. Rückgängig mit Cmd+Z.', 'ready');
             }
         }
     });
@@ -657,11 +774,13 @@ if (quickSampleSelect) {
             sampleBtn.click();
         } else {
             if (previewImage.getAttribute('src') === val && previewImage.complete && previewImage.naturalWidth) {
+                if (typeof syncCanvasEmptyState === 'function') syncCanvasEmptyState();
                 if (typeof fitImageToWorkspace === 'function') fitImageToWorkspace();
                 else resetStageZoomPan();
                 runStage0Detection();
             } else {
                 previewImage.src = val;
+                if (typeof syncCanvasEmptyState === 'function') syncCanvasEmptyState();
                 if (previewImage.complete && previewImage.naturalWidth) {
                     resetStageZoomPan();
                 }
@@ -680,7 +799,15 @@ if (partMarkingInput) {
     });
 }
 
-// Nächste Box Button
+// Vorherige / Nächste Box Stepper
+const prevBoxBtn = document.getElementById('prev-box-btn');
+if (prevBoxBtn) {
+    prevBoxBtn.addEventListener('click', () => {
+        if (detectedBoxes.length === 0) return;
+        const prevIdx = (selectedBoxIndex - 1 + detectedBoxes.length) % detectedBoxes.length;
+        selectComponentBox(prevIdx, true);
+    });
+}
 const nextBoxBtn = document.getElementById('next-box-btn');
 if (nextBoxBtn) {
     nextBoxBtn.addEventListener('click', () => {

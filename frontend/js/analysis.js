@@ -2108,6 +2108,14 @@ function selectComponentBox(idx, triggerDownstream = true) {
             selectedBoxTag.innerText = window.t ? window.t('studio.full_image') : 'Gesamtbild';
         }
     }
+    const stepperLabel = document.getElementById('box-stepper-label');
+    if (stepperLabel) {
+        if (idx >= 0 && idx < detectedBoxes.length) {
+            stepperLabel.innerText = `Box ${idx + 1} / ${detectedBoxes.length}`;
+        } else {
+            stepperLabel.innerText = detectedBoxes.length > 0 ? `– / ${detectedBoxes.length}` : (window.t ? window.t('studio.zero_boxes') : '0 Boxen');
+        }
+    }
     if (typeof renderObjectsList === 'function') {
         renderObjectsList();
     }
@@ -2416,13 +2424,20 @@ function initCropRotateModal() {
         modal.style.display = 'none';
     }
 
-    // Doppelklick auf Thumbnail
+    // Einfachklick (und Doppelklick) auf Thumbnail öffnet Modal
     if (stage0Box) {
+        stage0Box.addEventListener('click', openModal);
         stage0Box.addEventListener('dblclick', openModal);
     }
     if (stage0Canvas) {
+        stage0Canvas.addEventListener('click', openModal);
         stage0Canvas.addEventListener('dblclick', openModal);
     }
+    const btnOpenCropRotate = document.getElementById('btn-open-crop-rotate-modal');
+    if (btnOpenCropRotate) {
+        btnOpenCropRotate.addEventListener('click', openModal);
+    }
+    window.openCropRotateModal = openModal;
 
     // Slider & Number Input
     if (slider) {

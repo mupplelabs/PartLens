@@ -66,6 +66,23 @@ async saveDatasetSample(payload) {
     });
 },
 
+async updateDatasetSampleBoxes(split, sampleId, boxes) {
+    const res = await fetch(`/api/dataset/samples/${encodeURIComponent(split)}/${encodeURIComponent(sampleId)}/boxes`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(boxes)
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        let errMsg = `HTTP ${res.status}`;
+        if (err && err.detail) {
+            errMsg = typeof err.detail === 'string' ? err.detail : JSON.stringify(err.detail);
+        }
+        throw new Error(errMsg);
+    }
+    return res.json();
+},
+
 async approveDatasetSample(split, sampleId) {
     const res = await fetch(`/api/dataset/sample/${encodeURIComponent(split)}/${encodeURIComponent(sampleId)}/approve`, {
         method: 'POST'
@@ -115,3 +132,4 @@ const res = await fetch('/api/dataset/import/abort', { method: 'POST' });
 return res.json();
 }
 };
+window.CTApi = CTApi;

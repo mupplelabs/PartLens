@@ -233,6 +233,7 @@ tabUpload.addEventListener('click', () => {
     uploadPanel.style.display = 'flex';
     webcamPanel.style.display = 'none';
     stopWebcam();
+    if (typeof syncCanvasEmptyState === 'function') syncCanvasEmptyState();
     if (typeof fitImageToWorkspace === 'function') fitImageToWorkspace();
     else resetStageZoomPan();
     runStage0Detection();
@@ -244,6 +245,7 @@ tabWebcam.addEventListener('click', async () => {
     tabUpload.classList.remove('active');
     uploadPanel.style.display = 'none';
     webcamPanel.style.display = 'flex';
+    if (typeof syncCanvasEmptyState === 'function') syncCanvasEmptyState();
     if (typeof fitImageToWorkspace === 'function') fitImageToWorkspace();
     else resetStageZoomPan();
     await startWebcam(cameraSelect.value || null);
@@ -313,6 +315,9 @@ if (captureWebcamBtn) {
         webcamPanel.style.display = 'none';
 
         // 4. Foto als Hauptbild im Studio setzen (triggert onload -> Detektion & OCR)
+        if (typeof resetSampleSavedState === 'function') {
+            resetSampleSavedState(true);
+        }
         isSnapshotPendingOcr = true;
         previewImage.src = snapshotDataUrl;
     });
@@ -345,6 +350,9 @@ customClassesInput.addEventListener('keydown', async (e) => {
 
 document.querySelectorAll('.sample-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+        if (typeof resetSampleSavedState === 'function') {
+            resetSampleSavedState(true);
+        }
         if (currentMode !== 'upload') {
             tabUpload.click();
         }
@@ -362,6 +370,7 @@ document.querySelectorAll('.sample-btn').forEach(btn => {
 });
 
 previewImage.addEventListener('load', async () => {
+    if (typeof syncCanvasEmptyState === 'function') syncCanvasEmptyState();
     if (typeof fitImageToWorkspace === 'function') fitImageToWorkspace();
     else resetStageZoomPan();
     if (typeof suppressAutoStage0 !== 'undefined' && suppressAutoStage0) {
@@ -383,18 +392,47 @@ previewImage.addEventListener('load', async () => {
     }
 });
 
-dropzone.addEventListener('click', () => fileInput.click());
-dropzone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropzone.classList.add('dragover');
-});
-dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
-dropzone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropzone.classList.remove('dragover');
-    const file = e.dataTransfer?.files?.[0];
-    if (file) handleFile(file);
-});
+if (dropzone) {
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+    });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+        const file = e.dataTransfer?.files?.[0];
+        if (file) handleFile(file);
+    });
+}
+
+// Stage Viewport Drag & Drop (Law of Proximity & Common Region)
+const stageViewport = document.querySelector('.stage-viewport');
+if (stageViewport) {
+    ['dragenter', 'dragover'].forEach(eventName => {
+        stageViewport.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            stageViewport.classList.add('stage-drag-active');
+            if (dropzone) dropzone.classList.add('dragover');
+        });
+    });
+    ['dragleave', 'dragend'].forEach(eventName => {
+        stageViewport.addEventListener(eventName, (e) => {
+            if (e.target === stageViewport || !stageViewport.contains(e.relatedTarget)) {
+                stageViewport.classList.remove('stage-drag-active');
+                if (dropzone) dropzone.classList.remove('dragover');
+            }
+        });
+    });
+    stageViewport.addEventListener('drop', (e) => {
+        e.preventDefault();
+        stageViewport.classList.remove('stage-drag-active');
+        if (dropzone) dropzone.classList.remove('dragover');
+        const file = e.dataTransfer?.files?.[0];
+        if (file) handleFile(file);
+    });
+}
 fileInput.addEventListener('change', () => {
     const file = fileInput.files?.[0];
     if (file) handleFile(file);
@@ -402,6 +440,9 @@ fileInput.addEventListener('change', () => {
 });
 
 function handleFile(file) {
+    if (typeof resetSampleSavedState === 'function') {
+        resetSampleSavedState(true);
+    }
     if (currentMode !== 'upload') {
         tabUpload.click();
     }
@@ -413,7 +454,108 @@ function handleFile(file) {
         } else {
             previewImage.src = e.target.result;
         }
+        if (typeof syncCanvasEmptyState === 'function') {
+            syncCanvasEmptyState();
+        }
     };
     reader.readAsDataURL(file);
 }
+
+// =====================================================================
+// CANVAS EMPTY STATE & TOOLBAR ACTIONS
+// =====================================================================
+function syncCanvasEmptyState() {
+    const emptyState = document.getElementById('canvas-empty-state');
+    const imageStageWrap = document.querySelector('#upload-panel .image-stage-wrap');
+    const zoomBar = document.getElementById('stage-zoom-bar');
+    const btnCloseImage = document.getElementById('btn-close-image');
+    if (!emptyState) return;
+
+    if (currentMode === 'webcam') {
+        emptyState.style.display = 'none';
+        if (imageStageWrap) imageStageWrap.style.display = '';
+        if (btnCloseImage) btnCloseImage.style.display = 'none';
+        return;
+    }
+
+    const src = previewImage ? (previewImage.getAttribute('src') || '') : '';
+    const hasImage = Boolean(src && src.trim() !== '' && src !== 'about:blank' && !src.endsWith('/'));
+
+    if (hasImage) {
+        emptyState.style.display = 'none';
+        if (imageStageWrap) imageStageWrap.style.display = 'inline-flex';
+        if (zoomBar) zoomBar.style.display = '';
+        if (btnCloseImage) btnCloseImage.style.display = 'inline-flex';
+    } else {
+        emptyState.style.display = 'flex';
+        if (imageStageWrap) imageStageWrap.style.display = 'none';
+        if (zoomBar) zoomBar.style.display = 'none';
+        if (btnCloseImage) btnCloseImage.style.display = 'none';
+    }
+}
+window.syncCanvasEmptyState = syncCanvasEmptyState;
+
+function unloadCurrentImage() {
+    if (previewImage) {
+        previewImage.removeAttribute('src');
+        previewImage.src = '';
+    }
+    detectedBoxes = [];
+    selectedBoxIndex = -1;
+    window.currentActiveSample = null;
+    drawBboxOverlay();
+    renderStage0Chips();
+    if (typeof renderObjectsList === 'function') renderObjectsList();
+    if (typeof updateStage0CropPreview === 'function') updateStage0CropPreview();
+    if (typeof updateCurationSampleUI === 'function') updateCurationSampleUI();
+    if (typeof resetSampleSavedState === 'function') resetSampleSavedState(true);
+    syncCanvasEmptyState();
+    if (typeof updateStudioStatus === 'function') {
+        const msg = window.t ? window.t('canvas.image_closed') : 'Bild geschlossen. Bereit für neues Bild.';
+        updateStudioStatus(msg, 'ready');
+    }
+}
+window.unloadCurrentImage = unloadCurrentImage;
+
+// Folder Icon in Toolbar (Bilddatei öffnen)
+const btnOpenFileToolbar = document.getElementById('btn-open-file-toolbar');
+if (btnOpenFileToolbar) {
+    btnOpenFileToolbar.addEventListener('click', () => {
+        fileInput?.click();
+    });
+}
+
+// Bild schließen Button
+const btnCloseImage = document.getElementById('btn-close-image');
+if (btnCloseImage) {
+    btnCloseImage.addEventListener('click', () => {
+        unloadCurrentImage();
+    });
+}
+
+// Canvas Empty State Dropzone Klick
+const canvasEmptyDropzone = document.getElementById('canvas-empty-dropzone');
+if (canvasEmptyDropzone) {
+    canvasEmptyDropzone.addEventListener('click', (e) => {
+        if (e.target && e.target.closest('#canvas-empty-sample-select')) return;
+        fileInput?.click();
+    });
+}
+
+// Canvas Empty State Test-Bilder Select
+const canvasEmptySampleSelect = document.getElementById('canvas-empty-sample-select');
+if (canvasEmptySampleSelect) {
+    canvasEmptySampleSelect.addEventListener('change', () => {
+        const val = canvasEmptySampleSelect.value;
+        if (!val) return;
+        if (quickSampleSelect) {
+            quickSampleSelect.value = val;
+            quickSampleSelect.dispatchEvent(new Event('change'));
+        }
+        canvasEmptySampleSelect.value = '';
+    });
+}
+
+// Initialer Check beim Start
+syncCanvasEmptyState();
 

@@ -1389,6 +1389,9 @@ if (clearFpBtn) {
 if (deleteBoxBtn) {
     deleteBoxBtn.addEventListener('click', () => {
         if (selectedBoxIndex >= 0 && selectedBoxIndex < detectedBoxes.length) {
+            if (typeof pushBoxHistorySnapshot === 'function') {
+                pushBoxHistorySnapshot('Box #' + (selectedBoxIndex + 1) + ' gelöscht');
+            }
             detectedBoxes.splice(selectedBoxIndex, 1);
             selectedBoxIndex = detectedBoxes.length > 0 ? Math.min(selectedBoxIndex, detectedBoxes.length - 1) : -1;
             drawBboxOverlay();
@@ -1397,6 +1400,9 @@ if (deleteBoxBtn) {
             if (typeof closeQuickTagPopover === 'function') closeQuickTagPopover();
             updateStage0CropPreview();
             updateBoxEditBar();
+            if (typeof showUndoToast === 'function') {
+                showUndoToast('Box gelöscht');
+            }
         }
     });
 }
@@ -1849,6 +1855,124 @@ function normalizeLabelForYolo(rawLabel) {
     return 'other';
 }
 
+let isCurrentSampleSaved = false;
+
+function updateCurationSampleUI() {
+    const activeSampleBanner = document.getElementById('active-sample-banner');
+    const activeSampleIdDisplay = document.getElementById('active-sample-id-display');
+    const activeSampleSplitBadge = document.getElementById('active-sample-split-badge');
+    const saveAsCopyBtn = document.getElementById('save-as-copy-btn');
+    const saveBtn = document.getElementById('save-dataset-btn');
+
+    if (window.currentActiveSample && window.currentActiveSample.id) {
+        if (activeSampleBanner) activeSampleBanner.style.display = 'block';
+        if (activeSampleIdDisplay) activeSampleIdDisplay.innerText = window.currentActiveSample.id;
+        if (activeSampleSplitBadge) activeSampleSplitBadge.innerText = window.currentActiveSample.split || 'train';
+        if (saveAsCopyBtn) saveAsCopyBtn.style.display = 'inline-flex';
+
+        if (saveBtn && !isCurrentSampleSaved) {
+            const btnText = window.t ? window.t('curation.save_changes_btn') : 'Änderungen an Sample speichern';
+            saveBtn.title = window.t
+                ? window.t('curation.save_changes_title', { id: window.currentActiveSample.id })
+                : `Aktualisiert Bounding Boxes und Metadaten von ${window.currentActiveSample.id} direkt im Datensatz (kein neues Bild).`;
+            saveBtn.innerHTML = `
+                <svg class="tool-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                <span id="save-dataset-btn-text" data-i18n="curation.save_changes_btn">${btnText}</span>
+            `;
+        }
+    } else {
+        if (activeSampleBanner) activeSampleBanner.style.display = 'none';
+        if (saveAsCopyBtn) saveAsCopyBtn.style.display = 'none';
+
+        if (saveBtn && !isCurrentSampleSaved) {
+            const defaultText = window.t ? window.t('curation.save_btn') : 'Sample im Datensatz speichern';
+            saveBtn.title = defaultText;
+            saveBtn.innerHTML = `
+                <svg class="tool-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                <span id="save-dataset-btn-text" data-i18n="curation.save_btn">${defaultText}</span>
+            `;
+        }
+    }
+}
+window.updateCurationSampleUI = updateCurationSampleUI;
+window.addEventListener('languageChanged', () => {
+    updateCurationSampleUI();
+});
+
+function resetSampleSavedState(resetActiveSample = false) {
+    isCurrentSampleSaved = false;
+    if (resetActiveSample) {
+        window.currentActiveSample = null;
+    }
+    if (saveDatasetBtn) {
+        saveDatasetBtn.disabled = false;
+    }
+    updateCurationSampleUI();
+    const nextImageCtaBtn = document.getElementById('next-image-cta-btn');
+    if (nextImageCtaBtn) {
+        nextImageCtaBtn.style.display = 'none';
+    }
+}
+window.resetSampleSavedState = resetSampleSavedState;
+
+const unloadActiveSampleBtn = document.getElementById('unload-active-sample-btn');
+if (unloadActiveSampleBtn) {
+    unloadActiveSampleBtn.addEventListener('click', () => {
+        window.currentActiveSample = null;
+        resetSampleSavedState(true);
+        if (autolabelStatus) {
+            autolabelStatus.innerText = window.t
+                ? window.t('curation.sample_detached')
+                : 'Verknüpfung gelöst. Nächstes Speichern erstellt ein neues Bild-Sample.';
+        }
+    });
+}
+
+function buildBoxesPayload() {
+    const { w: srcW, h: srcH } = getActiveMediaSource();
+    return detectedBoxes.map(b => {
+        const ymin = Math.max(0.0, Math.min(1.0, (b.y1 || 0) / srcH));
+        const xmin = Math.max(0.0, Math.min(1.0, (b.x1 || 0) / srcW));
+        const ymax = Math.max(0.0, Math.min(1.0, (b.y2 || 0) / srcH));
+        const xmax = Math.max(0.0, Math.min(1.0, (b.x2 || 0) / srcW));
+        return {
+            label: normalizeLabelForYolo(b.label),
+            ymin: Math.min(ymin, ymax),
+            xmin: Math.min(xmin, xmax),
+            ymax: Math.max(ymin, ymax),
+            xmax: Math.max(xmin, xmax),
+            confidence: b.confidence !== undefined ? b.confidence : 1.0,
+            part_marking: b.partMarking || null,
+            ic_subgroup: b.icSubgroup || null,
+            footprint: b.footprint || null
+        };
+    });
+}
+
+async function updateDatasetSampleBoxesSafe(split, id, boxes) {
+    if (typeof CTApi !== 'undefined' && typeof CTApi.updateDatasetSampleBoxes === 'function') {
+        return CTApi.updateDatasetSampleBoxes(split, id, boxes);
+    }
+    if (typeof window.CTApi !== 'undefined' && typeof window.CTApi.updateDatasetSampleBoxes === 'function') {
+        return window.CTApi.updateDatasetSampleBoxes(split, id, boxes);
+    }
+    // Robuster Direktaufruf als Fallback
+    const res = await fetch(`/api/dataset/samples/${encodeURIComponent(split)}/${encodeURIComponent(id)}/boxes`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(boxes)
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        let errMsg = `HTTP ${res.status}`;
+        if (err && err.detail) {
+            errMsg = typeof err.detail === 'string' ? err.detail : JSON.stringify(err.detail);
+        }
+        throw new Error(errMsg);
+    }
+    return res.json();
+}
+
 if (saveDatasetBtn) {
     saveDatasetBtn.addEventListener('click', async () => {
         if (detectedBoxes.length === 0) {
@@ -1856,6 +1980,69 @@ if (saveDatasetBtn) {
             return;
         }
 
+        const boxesPayload = buildBoxesPayload();
+
+        // -------------------------------------------------------------
+        // FALL 1: Bestehendes Sample bearbeiten (In-Place Update ohne neues Bild)
+        // -------------------------------------------------------------
+        if (window.currentActiveSample && window.currentActiveSample.id) {
+            const { split, id } = window.currentActiveSample;
+            saveDatasetBtn.disabled = true;
+            autolabelStatus.innerText = window.t
+                ? window.t('curation.updating_sample', { id })
+                : `Aktualisiere Annotationen für ${id}...`;
+
+            try {
+                const resData = await updateDatasetSampleBoxesSafe(split, id, boxesPayload);
+
+                if (datasetCounterBadge && resData.stats) {
+                    datasetCounterBadge.innerText = typeof window.formatDatasetBadge === 'function'
+                        ? window.formatDatasetBadge(resData.stats.train_images, resData.stats.val_images, resData.stats.total_annotations)
+                        : `Datensatz: ${resData.stats.train_images} Train • ${resData.stats.val_images} Val (${resData.stats.total_annotations} Boxen)`;
+                }
+
+                autolabelStatus.innerText = window.t
+                    ? window.t('curation.sample_updated', { id, count: resData.box_count || boxesPayload.length })
+                    : `Änderungen an ${id} erfolgreich aktualisiert (${resData.box_count || boxesPayload.length} Boxen).`;
+
+                // Inkrementelle Aktualisierung der Datensatz-Galerie im Cache
+                if (typeof cachedGallerySamples !== 'undefined' && Array.isArray(cachedGallerySamples)) {
+                    const cachedItem = cachedGallerySamples.find(s => s.id === id && s.split === split);
+                    if (cachedItem) {
+                        cachedItem.boxes = boxesPayload;
+                        cachedItem.box_count = boxesPayload.length;
+                        cachedItem.classes = Array.from(new Set(boxesPayload.map(b => b.label)));
+                    }
+                }
+
+                if (viewDataset && viewDataset.classList.contains('active') && typeof renderFilteredGallery === 'function') {
+                    renderFilteredGallery();
+                }
+
+                isCurrentSampleSaved = true;
+                saveDatasetBtn.disabled = false;
+                const savedText = window.t ? window.t('curation.changes_saved_btn') : 'Änderungen gespeichert';
+                saveDatasetBtn.innerHTML = `
+                    <svg class="tool-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>${savedText}</span>
+                `;
+                setTimeout(() => {
+                    updateCurationSampleUI();
+                }, 2500);
+
+            } catch (err) {
+                console.error('Fehler beim Aktualisieren des Samples:', err);
+                autolabelStatus.innerText = window.t
+                    ? window.t('curation.sample_update_failed', { error: err.message })
+                    : `Aktualisieren fehlgeschlagen: ${err.message}`;
+                saveDatasetBtn.disabled = false;
+            }
+            return;
+        }
+
+        // -------------------------------------------------------------
+        // FALL 2: Neues Bild-Sample im Datensatz anlegen
+        // -------------------------------------------------------------
         const imgB64 = captureCurrentImageBase64();
         if (!imgB64) {
             alert(window.t ? window.t('autolabel.no_image_to_save') : 'Kein Bild zum Speichern vorhanden!');
@@ -1866,36 +2053,14 @@ if (saveDatasetBtn) {
         autolabelStatus.innerText = 'Speichere Bild und YOLO-Label auf dem Server...';
 
         try {
-            const { w: srcW, h: srcH } = getActiveMediaSource();
-            const boxesPayload = detectedBoxes.map(b => {
-                const ymin = Math.max(0.0, Math.min(1.0, (b.y1 || 0) / srcH));
-                const xmin = Math.max(0.0, Math.min(1.0, (b.x1 || 0) / srcW));
-                const ymax = Math.max(0.0, Math.min(1.0, (b.y2 || 0) / srcH));
-                const xmax = Math.max(0.0, Math.min(1.0, (b.x2 || 0) / srcW));
-                return {
-                    label: normalizeLabelForYolo(b.label),
-                    ymin: Math.min(ymin, ymax),
-                    xmin: Math.min(xmin, xmax),
-                    ymax: Math.max(ymin, ymax),
-                    xmax: Math.max(xmin, xmax),
-                    confidence: b.confidence !== undefined ? b.confidence : 1.0,
-                    part_marking: b.partMarking || null,
-                    ic_subgroup: b.icSubgroup || null,
-                    footprint: b.footprint || null
-                };
-            });
-
+            const chosenSplit = datasetSplit ? datasetSplit.value : 'train';
             const payload = {
                 image_base64: imgB64,
                 boxes: boxesPayload,
-                split: datasetSplit ? datasetSplit.value : 'train'
+                split: chosenSplit
             };
 
-            const response = await fetch('/api/dataset/sample', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            const response = await CTApi.saveDatasetSample(payload);
 
             if (!response.ok) {
                 const err = await response.json().catch(() => ({}));
@@ -1922,7 +2087,6 @@ if (saveDatasetBtn) {
                 ? window.t('autolabel.saved_as', { id: resData.sample_id, count: resData.annotations_saved })
                 : `Gespeichert als ${resData.sample_id} (${resData.annotations_saved} Boxen)!`;
 
-            // Inkrementelle Aktualisierung der Datensatz-Galerie ohne blockierenden Full-Fetch
             const newSampleObj = {
                 id: resData.sample_id,
                 split: payload.split,
@@ -1938,23 +2102,125 @@ if (saveDatasetBtn) {
                 cachedGallerySamples.unshift(newSampleObj);
             }
 
-            // Nur wenn der Datensatz-Tab aktuell aktiv ist, Ansicht direkt rendern
             if (viewDataset && viewDataset.classList.contains('active') && typeof renderFilteredGallery === 'function') {
                 renderFilteredGallery();
+            }
+
+            // Nach erfolgreichem Speichern wird dieses Bild nun als aktives Sample geführt
+            window.currentActiveSample = {
+                split: payload.split,
+                id: resData.sample_id,
+                tags: []
+            };
+
+            isCurrentSampleSaved = true;
+            saveDatasetBtn.disabled = false;
+            const alreadySavedText = window.t ? window.t('curation.already_saved_btn') : 'Bereits gespeichert';
+            saveDatasetBtn.innerHTML = `
+                <svg class="tool-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>${alreadySavedText}</span>
+            `;
+            updateCurationSampleUI();
+
+            const nextImageCtaBtn = document.getElementById('next-image-cta-btn');
+            if (nextImageCtaBtn) {
+                nextImageCtaBtn.style.display = 'inline-flex';
+                nextImageCtaBtn.onclick = () => {
+                    resetSampleSavedState(true);
+                    document.getElementById('file-input')?.click();
+                };
             }
         } catch (err) {
             console.error('Fehler beim Speichern:', err);
             autolabelStatus.innerText = window.t
                 ? window.t('autolabel.save_failed', { error: err.message })
                 : `Speichern fehlgeschlagen: ${err.message}`;
-        } finally {
             saveDatasetBtn.disabled = false;
+        }
+    });
+}
+
+const saveAsCopyBtn = document.getElementById('save-as-copy-btn');
+if (saveAsCopyBtn) {
+    saveAsCopyBtn.addEventListener('click', async () => {
+        if (detectedBoxes.length === 0) {
+            alert(window.t ? window.t('autolabel.no_boxes_to_save') : 'Es gibt keine Bounding Boxes zum Duplizieren!');
+            return;
+        }
+        const imgB64 = captureCurrentImageBase64();
+        if (!imgB64) {
+            alert(window.t ? window.t('autolabel.no_image_to_save') : 'Kein Bild zum Duplizieren vorhanden!');
+            return;
+        }
+
+        saveAsCopyBtn.disabled = true;
+        autolabelStatus.innerText = window.t
+            ? window.t('curation.duplicating_sample')
+            : 'Dupliziere Bild als neues Sample...';
+
+        try {
+            const boxesPayload = buildBoxesPayload();
+            const chosenSplit = datasetSplit ? datasetSplit.value : (window.currentActiveSample?.split || 'train');
+            const payload = {
+                image_base64: imgB64,
+                boxes: boxesPayload,
+                split: chosenSplit
+            };
+
+            const response = await CTApi.saveDatasetSample(payload);
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.detail || `HTTP ${response.status}`);
+            }
+
+            const resData = await response.json();
+            if (datasetCounterBadge && resData.stats) {
+                datasetCounterBadge.innerText = typeof window.formatDatasetBadge === 'function'
+                    ? window.formatDatasetBadge(resData.stats.train_images, resData.stats.val_images, resData.stats.total_annotations)
+                    : `Datensatz: ${resData.stats.train_images} Train • ${resData.stats.val_images} Val (${resData.stats.total_annotations} Boxen)`;
+            }
+
+            const newSampleObj = {
+                id: resData.sample_id,
+                split: payload.split,
+                image_url: `/dataset/images/${payload.split}/${resData.sample_id}.jpg`,
+                thumb_url: `/api/dataset/thumbnails/${payload.split}/${resData.sample_id}`,
+                boxes: boxesPayload,
+                box_count: boxesPayload.length,
+                classes: Array.from(new Set(boxesPayload.map(b => b.label))),
+                created_at: Math.floor(Date.now() / 1000)
+            };
+
+            if (typeof cachedGallerySamples !== 'undefined' && Array.isArray(cachedGallerySamples)) {
+                cachedGallerySamples.unshift(newSampleObj);
+            }
+
+            if (viewDataset && viewDataset.classList.contains('active') && typeof renderFilteredGallery === 'function') {
+                renderFilteredGallery();
+            }
+
+            window.currentActiveSample = {
+                split: payload.split,
+                id: resData.sample_id,
+                tags: []
+            };
+
+            autolabelStatus.innerText = window.t
+                ? window.t('curation.sample_duplicated', { id: resData.sample_id })
+                : `Erfolgreich als neues Sample ${resData.sample_id} dupliziert!`;
+            updateCurationSampleUI();
+        } catch (err) {
+            console.error('Fehler beim Duplizieren:', err);
+            autolabelStatus.innerText = `Duplizieren fehlgeschlagen: ${err.message}`;
+        } finally {
+            saveAsCopyBtn.disabled = false;
         }
     });
 }
 
 // Initialisierung der Widerstands-Dropdowns
 initResistorSelectors();
+updateCurationSampleUI();
 
 
 async function syncLlmSettingsWithServer() {

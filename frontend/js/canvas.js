@@ -449,6 +449,9 @@ function bindOverlayCanvasInteractions(canvasEl) {
             manualDrawCurrent = null;
             dragMode = 'idle';
             if ((x2 - x1) >= 8 && (y2 - y1) >= 8) {
+                if (typeof resetSampleSavedState === 'function') {
+                    resetSampleSavedState();
+                }
                 const classSelect = document.getElementById('box-class-select');
                 const defaultClass = (typeof currentPaletteClass !== 'undefined' && currentPaletteClass)
                     ? currentPaletteClass

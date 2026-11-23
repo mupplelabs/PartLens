@@ -65,7 +65,14 @@
     "webcam_live_no_component": "Live: Kein Bauteil erkannt ({ms} ms) – halte ein Bauteil vor die Kamera",
     "webcam_live_detected": "Live: {count} Bauteile ({ms} ms) – {focus}",
     "focus_component": "Bauteil #{idx} fokussiert",
-    "full_image_active": "Gesamtbild aktiv"
+    "full_image_active": "Gesamtbild aktiv",
+    "tool_open_file": "Bilddatei öffnen (oder Bild auf Arbeitsfläche ziehen)",
+    "tool_close_image": "Bild schließen & zum Upload zurückkehren",
+    "box_deleted": "Bauteil gelöscht",
+    "undo_btn": "Rückgängig (Cmd+Z)",
+    "undo_done": "Rückgängig gemacht: {desc}",
+    "no_undo": "Keine Aktion zum Rückgängigmachen vorhanden.",
+    "image_closed": "Bild geschlossen. Bereit für neues Bild."
   },
   "hud": {
     "opacity_title": "Box-Flächenfüllung Transparenz (Taste: O)",
@@ -136,8 +143,11 @@
     "ocr_btn": "OCR",
     "ocr_stop": "Stopp",
     "btn_remove_box": "Box löschen (Entf)",
-    "btn_next_box": "Nächste",
+    "btn_prev_box": "Zurück",
+    "btn_prev_box_title": "Vorheriges Bauteil im Bild",
+    "btn_next_box": "Weiter",
     "btn_next_box_title": "Nächstes Bauteil im Bild",
+    "zero_boxes": "0 Boxen",
     "btn_save": "Annotation speichern",
     "objects_in_image": "Objekte im Bild:",
     "no_marking": "Keine Markierung",
@@ -185,7 +195,27 @@
     "split_reason_standard": "Standard 80:20 Train-Allokation",
     "split_reason_val_balancing": "20% Val-Balancing",
     "save_btn": "Sample im Datensatz speichern",
-    "status_ready": "Bereit zum Speichern."
+    "status_ready": "Bereit zum Speichern.",
+    "active_sample_badge": "Bestehendes Sample",
+    "unload_sample": "Als neues Bild behandeln",
+    "unload_sample_title": "Verknüpfung lösen und als neues Sample behandeln",
+    "save_changes_btn": "Änderungen an Sample speichern",
+    "save_changes_title": "Aktualisiert Bounding Boxes und Metadaten von {id} direkt im Datensatz (kein neues Bild).",
+    "save_as_copy": "Als neues Sample duplizieren",
+    "save_as_copy_title": "Speichert dieses Bild mit aktuellen Boxen als völlig neues Sample",
+    "already_saved_btn": "Bereits gespeichert",
+    "changes_saved_btn": "Änderungen gespeichert",
+    "approve_sample_title": "Als geprüft freigeben und nächstes Sample laden (Cmd+Enter)",
+    "approve_btn": "Freigeben & Weiter",
+    "updating_sample": "Aktualisiere Annotationen für {id}...",
+    "sample_updated": "Änderungen an {id} erfolgreich aktualisiert ({count} Boxen).",
+    "sample_update_failed": "Aktualisieren fehlgeschlagen: {error}",
+    "duplicating_sample": "Dupliziere Bild als neues Sample...",
+    "sample_duplicated": "Erfolgreich als neues Sample {id} dupliziert!",
+    "sample_detached": "Verknüpfung gelöst. Nächstes Speichern erstellt ein neues Bild-Sample."
+  },
+  "common": {
+    "or": "oder"
   },
   "footprints": {
     "modal_title": "Footprint & Bauform wählen",

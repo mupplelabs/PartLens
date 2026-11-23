@@ -18,12 +18,12 @@
         })();
     </script>
     <title>PartLens – Visual Part-DB & YOLO Studio</title>
-    <link rel="stylesheet" href="/frontend/css/base.css?v=2.9.20">
-    <link rel="stylesheet" href="/frontend/css/layout.css?v=2.9.20">
-    <link rel="stylesheet" href="/frontend/css/components.css?v=2.9.20">
-    <link rel="stylesheet" href="/frontend/css/studio.css?v=2.9.20">
-    <link rel="stylesheet" href="/frontend/css/gallery.css?v=2.9.20">
-    <link rel="stylesheet" href="/frontend/css/modals.css?v=2.9.20">
+    <link rel="stylesheet" href="/frontend/css/base.css?v=2.9.21">
+    <link rel="stylesheet" href="/frontend/css/layout.css?v=2.9.21">
+    <link rel="stylesheet" href="/frontend/css/components.css?v=2.9.21">
+    <link rel="stylesheet" href="/frontend/css/studio.css?v=2.9.21">
+    <link rel="stylesheet" href="/frontend/css/gallery.css?v=2.9.21">
+    <link rel="stylesheet" href="/frontend/css/modals.css?v=2.9.21">
 </head>
 <body class="view-studio-active">
 
@@ -226,7 +226,7 @@
                                     </div>
 
                                     <div class="canvas-empty-select-wrap" onclick="event.stopPropagation()">
-                                        <select id="canvas-empty-sample-select" class="canvas-empty-select" title="Vorhandene PCB-Testbilder laden">
+                                        <select id="canvas-empty-sample-select" class="canvas-empty-select" title="Vorhandene PCB-Testbilder laden" data-i18n-title="canvas.samples_select_title">
                                             <option value="" data-i18n="canvas.samples_placeholder">Select test image...</option>
                                             <option value="/studies/F0526717-01.webp">1) CD4094BE (DIP-16)</option>
                                             <option value="/studies/IMG_2221.jpg">2) ISD 1820PY (2× IC)</option>
@@ -275,10 +275,10 @@
 
                             <div class="webcam-controls-bar" id="webcam-controls-bar" style="display: none;">
                                 <select id="camera-select" style="max-width: 180px; padding: 4px; font-size: 0.75rem;"></select>
-                                <button id="toggle-webcam-btn" class="btn btn-primary" type="button" style="padding: 4px 8px; font-size: 0.75rem;" title="Stream anhalten / fortsetzen">
+                                <button id="toggle-webcam-btn" class="btn btn-primary" type="button" style="padding: 4px 8px; font-size: 0.75rem;" title="Stream anhalten / fortsetzen" data-i18n-title="webcam.toggle_stream_title">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
                                 </button>
-                                <button id="capture-webcam-btn" class="btn btn-ocr" type="button" style="padding: 4px 8px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 4px;">
+                                <button id="capture-webcam-btn" class="btn btn-ocr" type="button" style="padding: 4px 8px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 4px;" title="Foto für Erkennung aufnehmen" data-i18n-title="webcam.capture_title">
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                                     <span>Snapshot</span>
                                 </button>
@@ -303,7 +303,7 @@
                         <!-- Floating Stage Controls (Zoom, Pan & CVAT-Style Box-Opacity) -->
                         <div class="stage-zoom-bar dock-bottom-right" id="stage-zoom-bar" role="toolbar" aria-label="Stage Steuerung">
                             <!-- Collapsed / Minimized Compact Pill -->
-                            <div class="stage-hud-expand-hint" id="stage-hud-expand-hint" title="Stage-HUD aufklappen (Taste: H)">
+                            <div class="stage-hud-expand-hint" id="stage-hud-expand-hint" title="Stage-HUD aufklappen (Taste: H)" data-i18n-title="hud.expand_title">
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                                 <span id="stage-hud-compact-val">100%</span>
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
@@ -312,7 +312,7 @@
                             <!-- Full Expanded Controls -->
                             <div class="stage-hud-content" id="stage-hud-content">
                                 <!-- Dock Position Toggle Button (Unten-Rechts / Unten-Mitte) -->
-                                <button id="stage-hud-dock-btn" class="stage-zoom-btn" type="button" title="Position wechseln: Zu Unten-Mitte andocken">
+                                <button id="stage-hud-dock-btn" class="stage-zoom-btn" type="button" title="Position wechseln: Zu Unten-Mitte andocken" data-i18n-title="hud.dock_title">
                                     <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 15h6v4h-6z"/></svg>
                                 </button>
                                 <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.18); margin: 0 3px;"></div>
@@ -371,7 +371,7 @@
                                 <span class="stage-hint-sep">·</span>
                                 <span class="stage-hint-item"><span class="stage-hint-key" data-i18n="hud.hint_space">Leertaste</span> <span data-i18n="hud.hint_pan">Pan</span></span>
                             </div>
-                            <button type="button" class="stage-hint-close-btn" id="btn-close-stage-hint" title="Hinweisleiste schließen">
+                            <button type="button" class="stage-hint-close-btn" id="btn-close-stage-hint" title="Hinweisleiste schließen" data-i18n-title="hud.close_hint_title">
                                 <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                             </button>
                         </div>
@@ -382,7 +382,7 @@
                         <div class="sheet-drag-handle"></div>
                         <div class="popover-header">
                             <span class="popover-tag" id="popover-box-tag">#1 Box</span>
-                            <button type="button" class="btn-popover-close" id="btn-popover-close" title="Schließen (Esc)">
+                            <button type="button" class="btn-popover-close" id="btn-popover-close" title="Schließen (Esc)" data-i18n-title="canvas.popover_close_title">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                             </button>
                         </div>
@@ -408,8 +408,8 @@
 
                         <!-- Footer: Part-DB Dropdown & Löschen-Button -->
                         <div class="popover-input-row" id="popover-footer-row" style="margin-top: 8px;">
-                            <select id="popover-class-select" class="popover-class-select" title="Alle Part-DB Klassen"></select>
-                            <button type="button" id="popover-del-btn" class="btn-popover-del" title="Box löschen (Entf)">
+                            <select id="popover-class-select" class="popover-class-select" title="Alle Part-DB Klassen" data-i18n-title="canvas.popover_class_select_title"></select>
+                            <button type="button" id="popover-del-btn" class="btn-popover-del" title="Box löschen (Entf)" data-i18n-title="canvas.popover_del_title">
                                 <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                             </button>
                         </div>
@@ -422,7 +422,7 @@
                             <strong data-i18n="canvas.dropzone_bold">Bild hierher ziehen</strong> <span data-i18n="canvas.dropzone_or">oder klicken zum Auswählen</span>
                             <input type="file" id="file-input" accept="image/*" style="display: none;" />
                         </div>
-                        <select id="quick-sample-select" style="padding: 5px 9px; font-size: 0.78rem; width: auto; max-width: 185px; height: 32px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface-elevated); color: var(--text); cursor: pointer;" title="Vorhandene PCB-Testbilder laden">
+                        <select id="quick-sample-select" style="padding: 5px 9px; font-size: 0.78rem; width: auto; max-width: 185px; height: 32px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface-elevated); color: var(--text); cursor: pointer;" title="Vorhandene PCB-Testbilder laden" data-i18n-title="canvas.samples_select_title">
                             <option value="" data-i18n="canvas.samples_placeholder">Testbilder auswählen...</option>
                             <option value="/studies/F0526717-01.webp">1) CD4094BE (DIP-16)</option>
                             <option value="/studies/IMG_2221.jpg">2) ISD 1820PY (2× IC)</option>
@@ -505,7 +505,7 @@
 
                         <!-- Freigestellter Ausschnitt -->
                         <div class="crop-hero-wrap">
-                            <div class="crop-canvas-box" id="stage0-crop-box" style="cursor: pointer;" title="Klicken zum Vergrößern &amp; freien Drehen">
+                            <div class="crop-canvas-box" id="stage0-crop-box" style="cursor: pointer;" title="Klicken zum Vergrößern &amp; freien Drehen" data-i18n-title="studio.crop_click_hint">
                                 <canvas id="stage0-crop-canvas"></canvas>
                                 <!-- Lupe & Dreh-Badge -->
                                 <div class="crop-inspect-hint" style="position: absolute; bottom: 3px; right: 3px; background: rgba(0,0,0,0.65); border: 1px solid rgba(255,255,255,0.25); border-radius: 4px; padding: 1px 4px; font-size: 0.65rem; color: #fff; pointer-events: none; display: flex; align-items: center; gap: 3px;">
@@ -586,7 +586,7 @@
                                         <div id="footprint-preview-name" class="footprint-preview-title">-</div>
                                         <div id="footprint-preview-sub" class="footprint-preview-sub">-</div>
                                     </div>
-                                    <button type="button" id="clear-footprint-btn" class="btn-clear-fp" title="Footprint entfernen">
+                                    <button type="button" id="clear-footprint-btn" class="btn-clear-fp" title="Footprint entfernen" data-i18n-title="studio.footprint_clear_title">
                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                     </button>
                                 </div>
@@ -595,17 +595,17 @@
                             <div class="form-group" style="margin-bottom: 8px;">
                                 <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
                                     <label class="field-label" for="part-marking-input" style="margin-bottom: 0;" data-i18n="studio.marking_label">Beschriftung (Part Marking):</label>
-                                    <span id="ocr-engine-quick-toggle" style="font-size: 0.68rem; cursor: pointer; color: var(--accent); opacity: 0.9; user-select: none;" title="Klicken, um zwischen Tesseract.js und Florence-2 VisionLM umzuschalten">
+                                    <span id="ocr-engine-quick-toggle" style="font-size: 0.68rem; cursor: pointer; color: var(--accent); opacity: 0.9; user-select: none;" title="Klicken, um zwischen Tesseract.js und Florence-2 VisionLM umzuschalten" data-i18n-title="studio.ocr_engine_switch_title">
                                         Engine: <strong id="ocr-engine-quick-label">Tesseract</strong> <span style="font-size: 0.62rem; opacity: 0.8;">(Wechseln)</span>
                                     </span>
                                 </div>
                                 <div style="display: flex; gap: 6px;">
                                     <input type="text" id="part-marking-input" placeholder="z.B. CD4094BE, 2N2222, 4K7..." data-i18n-placeholder="studio.marking_placeholder" />
-                                    <button id="run-ocr-btn" class="btn btn-ocr" type="button" style="padding: 6px 10px; font-size: 0.78rem; white-space: nowrap;" title="Texterkennung auf diesem Ausschnitt ausführen">
+                                    <button id="run-ocr-btn" class="btn btn-ocr" type="button" style="padding: 6px 10px; font-size: 0.78rem; white-space: nowrap;" title="Texterkennung auf diesem Ausschnitt ausführen" data-i18n-title="studio.ocr_run_title">
                                         <svg class="tool-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                                         <span data-i18n="studio.ocr_btn">OCR</span>
                                     </button>
-                                    <button id="stop-ocr-btn" class="btn btn-danger-pulse" type="button" style="display: none; padding: 6px 10px; font-size: 0.78rem; font-weight: 700; white-space: nowrap;" title="Laufende Texterkennung sofort stoppen">
+                                    <button id="stop-ocr-btn" class="btn btn-danger-pulse" type="button" style="display: none; padding: 6px 10px; font-size: 0.78rem; font-weight: 700; white-space: nowrap;" title="Laufende Texterkennung sofort stoppen" data-i18n-title="studio.ocr_stop_title">
                                         <svg class="tool-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
                                         <span data-i18n="studio.ocr_stop">Stopp</span>
                                     </button>
@@ -637,10 +637,10 @@
                                 <!-- Modus-Umschalter: 4 Ringe vs 5 Ringe & Gehäusekörper -->
                                 <div class="resistor-mode-bar">
                                     <div class="resistor-mode-segmented">
-                                        <button type="button" id="resistor-mode-4-btn" class="resistor-mode-btn active" title="Standard Kohleschicht / Metalloxid (E12/E24, ±5%)" data-i18n="studio.resistor.mode_4band">4 Ringe</button>
-                                        <button type="button" id="resistor-mode-5-btn" class="resistor-mode-btn" title="Präzisions-Metallschicht (E48/E96, ±1%)" data-i18n="studio.resistor.mode_5band">5 Ringe</button>
+                                        <button type="button" id="resistor-mode-4-btn" class="resistor-mode-btn active" title="Standard Kohleschicht / Metalloxid (E12/E24, ±5%)" data-i18n="studio.resistor.mode_4band" data-i18n-title="studio.resistor.mode_4band_title">4 Ringe</button>
+                                        <button type="button" id="resistor-mode-5-btn" class="resistor-mode-btn" title="Präzisions-Metallschicht (E48/E96, ±1%)" data-i18n="studio.resistor.mode_5band" data-i18n-title="studio.resistor.mode_5band_title">5 Ringe</button>
                                     </div>
-                                    <div class="resistor-body-toggle" title="Widerstands-Grundkörper umschalten">
+                                    <div class="resistor-body-toggle" title="Widerstands-Grundkörper umschalten" data-i18n-title="studio.resistor.body_toggle_title">
                                         <span style="font-size: 0.65rem; color: var(--muted);" data-i18n="studio.resistor.body_label">Körper:</span>
                                         <button type="button" id="resistor-body-type-btn" class="btn btn-tool" style="padding: 2px 6px; font-size: 0.66rem;">Kohle (Beige)</button>
                                     </div>
@@ -663,11 +663,11 @@
                                 <div class="resistor-visual-wrap">
                                     <div class="resistor-lead"></div>
                                     <div id="resistor-body-graphic" class="resistor-body resistor-body-carbon">
-                                        <div id="vis-band-1" class="resistor-band active" data-band-index="0" title="1. Ziffer"></div>
-                                        <div id="vis-band-2" class="resistor-band" data-band-index="1" title="2. Ziffer"></div>
-                                        <div id="vis-band-3" class="resistor-band" data-band-index="2" title="3. Ziffer / Multiplikator"></div>
-                                        <div id="vis-band-4" class="resistor-band tol" data-band-index="3" title="Multiplikator / Toleranz"></div>
-                                        <div id="vis-band-5" class="resistor-band tol" data-band-index="4" style="display: none;" title="Toleranz"></div>
+                                        <div id="vis-band-1" class="resistor-band active" data-band-index="0" title="1. Ziffer" data-i18n-title="studio.resistor.band_1_title"></div>
+                                        <div id="vis-band-2" class="resistor-band" data-band-index="1" title="2. Ziffer" data-i18n-title="studio.resistor.band_2_title"></div>
+                                        <div id="vis-band-3" class="resistor-band" data-band-index="2" title="3. Ziffer / Multiplikator" data-i18n-title="studio.resistor.band_3_title"></div>
+                                        <div id="vis-band-4" class="resistor-band tol" data-band-index="3" title="Multiplikator / Toleranz" data-i18n-title="studio.resistor.band_4_title"></div>
+                                        <div id="vis-band-5" class="resistor-band tol" data-band-index="4" style="display: none;" title="Toleranz" data-i18n-title="studio.resistor.band_5_title"></div>
                                     </div>
                                     <div class="resistor-lead"></div>
                                 </div>
@@ -929,7 +929,7 @@
                     <button class="btn-filter-pill active gallery-split-btn" data-split="all" type="button" data-i18n="gallery.split_all">Alle</button>
                     <button class="btn-filter-pill gallery-split-btn" data-split="train" type="button"><span class="chip-dot" style="width:7px; height:7px; border-radius:50%; background:#22c55e; display:inline-block; margin-right:4px;"></span>Train</button>
                     <button class="btn-filter-pill gallery-split-btn" data-split="val" type="button"><span class="chip-dot" style="width:7px; height:7px; border-radius:50%; background:#3b82f6; display:inline-block; margin-right:4px;"></span>Val</button>
-                    <button id="gallery-unreviewed-btn" class="btn-filter-pill" type="button" style="display: none; border-color: rgba(245, 158, 11, 0.4); color: var(--amber);" title="Nur ungesichtete Bilder anzeigen">
+                    <button id="gallery-unreviewed-btn" class="btn-filter-pill" type="button" style="display: none; border-color: rgba(245, 158, 11, 0.4); color: var(--amber);" title="Nur ungesichtete Bilder anzeigen" data-i18n-title="gallery.unreviewed_title">
                         <span class="chip-dot" style="width:7px; height:7px; border-radius:50%; background:var(--amber); display:inline-block; margin-right:4px;"></span>
                         <span id="gallery-unreviewed-btn-text">Inbox (0)</span>
                     </button>
@@ -964,13 +964,13 @@
                     <span id="pagination-range-text">Zeige 0–0 von 0 Samples</span>
                 </div>
                 <div class="pagination-controls">
-                    <button id="pagination-first-btn" class="btn btn-tool btn-pagination" type="button" title="Erste Seite" disabled>«</button>
-                    <button id="pagination-prev-btn" class="btn btn-tool btn-pagination" type="button" title="Vorherige Seite" disabled>‹</button>
+                    <button id="pagination-first-btn" class="btn btn-tool btn-pagination" type="button" title="Erste Seite" data-i18n-title="gallery.page_first_title" disabled>«</button>
+                    <button id="pagination-prev-btn" class="btn btn-tool btn-pagination" type="button" title="Vorherige Seite" data-i18n-title="gallery.page_prev_title" disabled>‹</button>
                     <span class="pagination-page-indicator">
                         <span data-i18n="gallery.page_page">Seite</span> <input type="number" id="pagination-page-input" min="1" max="1" value="1" aria-label="Seitenzahl" /> <span data-i18n="gallery.page_of">von</span> <span id="pagination-total-pages">1</span>
                     </span>
-                    <button id="pagination-next-btn" class="btn btn-tool btn-pagination" type="button" title="Nächste Seite" disabled>›</button>
-                    <button id="pagination-last-btn" class="btn btn-tool btn-pagination" type="button" title="Letzte Seite" disabled>»</button>
+                    <button id="pagination-next-btn" class="btn btn-tool btn-pagination" type="button" title="Nächste Seite" data-i18n-title="gallery.page_next_title" disabled>›</button>
+                    <button id="pagination-last-btn" class="btn btn-tool btn-pagination" type="button" title="Letzte Seite" data-i18n-title="gallery.page_last_title" disabled>»</button>
                 </div>
                 <div class="pagination-size-select">
                     <label for="pagination-size-select-input" class="pagination-size-label" data-i18n="gallery.page_size_label">Pro Seite:</label>
@@ -991,12 +991,12 @@
                         <span id="batch-selection-label" class="batch-selection-label" data-i18n="gallery.batch_selected">ausgewählt</span>
                     </div>
                     <div class="batch-actions-group">
-                        <button id="batch-select-all-btn" class="btn btn-sm btn-tool" type="button" title="Alle gefilterten Samples auswählen oder abwählen" data-i18n="gallery.batch_select_all">Alle auswählen</button>
-                        <button id="batch-delete-btn" class="btn btn-sm btn-danger" type="button" disabled title="Ausgewählte Samples löschen" style="display: inline-flex; align-items: center; gap: 4px;">
+                        <button id="batch-select-all-btn" class="btn btn-sm btn-tool" type="button" title="Alle gefilterten Samples auswählen oder abwählen" data-i18n="gallery.batch_select_all" data-i18n-title="gallery.batch_select_all_title">Alle auswählen</button>
+                        <button id="batch-delete-btn" class="btn btn-sm btn-danger" type="button" disabled title="Ausgewählte Samples löschen" data-i18n-title="gallery.batch_delete_title" style="display: inline-flex; align-items: center; gap: 4px;">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                             <span data-i18n="gallery.btn_delete_selected">Löschen</span>
                         </button>
-                        <button id="batch-cancel-btn" class="btn btn-sm btn-tool" type="button" title="Auswahlmodus beenden" data-i18n="gallery.batch_cancel">Fertig</button>
+                        <button id="batch-cancel-btn" class="btn btn-sm btn-tool" type="button" title="Auswahlmodus beenden" data-i18n="gallery.batch_cancel" data-i18n-title="gallery.batch_cancel_title">Fertig</button>
                     </div>
                 </div>
             </div>
@@ -1127,7 +1127,7 @@
                         </label>
                         <div style="display: flex; gap: 6px;">
                             <input type="password" id="openai-api-key" placeholder="sk-... (optional für lokale Server frei lassen)" data-i18n-placeholder="settings.openai_key_placeholder" />
-                            <button id="toggle-openai-key-vis-btn" type="button" class="btn" style="padding: 6px 10px;" title="Key anzeigen/verbergen">
+                            <button id="toggle-openai-key-vis-btn" type="button" class="btn" style="padding: 6px 10px;" title="Key anzeigen/verbergen" data-i18n-title="settings.key_visibility_title">
                                 <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                             </button>
                         </div>
@@ -1187,7 +1187,7 @@
                             <span data-i18n="settings.token_card_title">LLM Token-Verbrauch &amp; Statistiken</span>
                         </span>
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <button id="refresh-token-usage-btn" type="button" class="btn" style="padding: 4px 8px; font-size: 0.75rem;" title="Aktualisieren">
+                            <button id="refresh-token-usage-btn" type="button" class="btn" style="padding: 4px 8px; font-size: 0.75rem;" title="Aktualisieren" data-i18n-title="settings.token_refresh_title">
                                 <svg class="tool-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
                             </button>
                             <button id="reset-token-usage-btn" type="button" class="btn" style="padding: 4px 8px; font-size: 0.72rem; color: var(--amber);" data-i18n="settings.token_btn_reset">
@@ -1673,13 +1673,13 @@
             </div>
             <div class="app-modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 14px;">
                 <!-- Viewport mit Canvas & optionalen Hilfslinien -->
-                <div class="crop-rotate-viewport-wrap" id="crop-rotate-viewport" style="position: relative; width: 100%; height: 280px; background: #070b12; border-radius: var(--radius-md); border: 1px solid var(--border); overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: grab; user-select: none; touch-action: none;" title="Mausrad / Geste: Zoom · Ziehen: Verschieben · Doppelklick: Zoom Reset">
+                <div class="crop-rotate-viewport-wrap" id="crop-rotate-viewport" style="position: relative; width: 100%; height: 280px; background: #070b12; border-radius: var(--radius-md); border: 1px solid var(--border); overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: grab; user-select: none; touch-action: none;" title="Mausrad / Geste: Zoom · Ziehen: Verschieben · Doppelklick: Zoom Reset" data-i18n-title="studio.crop_viewport_title">
                     <canvas id="crop-rotate-canvas" style="max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none;"></canvas>
                     <!-- Hilfslinien-Overlay -->
                     <div id="crop-rotate-guidelines" class="crop-rotate-guidelines" style="position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(56, 189, 248, 0.22) 28px);"></div>
                     <!-- Zoom Level Badge & Expandable Slider Popover -->
                     <div class="crop-zoom-control-wrap" style="position: absolute; bottom: 8px; left: 8px; display: flex; align-items: center; gap: 8px; z-index: 10;">
-                        <button type="button" id="crop-zoom-level-badge" class="crop-zoom-pill-btn" style="background: rgba(15, 23, 42, 0.88); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 9999px; padding: 2px 10px; font-family: ui-monospace, monospace; font-size: 0.74rem; font-weight: 700; color: #ffffff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.8); box-shadow: 0 2px 6px rgba(0,0,0,0.5); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; pointer-events: auto;" title="Klick: Zoom-Schieberegler öffnen / schließen">
+                        <button type="button" id="crop-zoom-level-badge" class="crop-zoom-pill-btn" style="background: rgba(15, 23, 42, 0.88); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 9999px; padding: 2px 10px; font-family: ui-monospace, monospace; font-size: 0.74rem; font-weight: 700; color: #ffffff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.8); box-shadow: 0 2px 6px rgba(0,0,0,0.5); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; pointer-events: auto;" title="Klick: Zoom-Schieberegler öffnen / schließen" data-i18n-title="studio.crop_zoom_badge_title">
                             <span id="crop-zoom-text">100%</span>
                             <svg class="zoom-pill-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="opacity: 0.75; transition: transform 0.2s;"><polyline points="6 9 12 15 18 9"/></svg>
                         </button>
@@ -1687,7 +1687,7 @@
                             <span style="font-size: 0.7rem; color: #94a3b8; font-weight: 600;">80%</span>
                             <input type="range" id="crop-zoom-slider" min="80" max="1000" step="10" value="100" style="width: 120px; accent-color: var(--primary); cursor: pointer;">
                             <span style="font-size: 0.7rem; color: #94a3b8; font-weight: 600;">1000%</span>
-                            <button type="button" id="crop-zoom-reset-btn" style="padding: 2px 6px; font-size: 0.68rem; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: #fff; cursor: pointer;" title="Auf 100% zurücksetzen">Reset</button>
+                            <button type="button" id="crop-zoom-reset-btn" style="padding: 2px 6px; font-size: 0.68rem; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: #fff; cursor: pointer;" title="Auf 100% zurücksetzen" data-i18n-title="studio.crop_zoom_reset_title">Reset</button>
                         </div>
                     </div>
                 </div>
@@ -1699,10 +1699,10 @@
                             Drehwinkel (frei):
                         </label>
                         <div style="display: flex; align-items: center; gap: 6px;">
-                            <button type="button" class="btn btn-tool" id="btn-crop-rot-step-minus" title="-1° Feinabstimmung" style="padding: 2px 8px; font-size: 0.75rem;">-1°</button>
+                            <button type="button" class="btn btn-tool" id="btn-crop-rot-step-minus" title="-1° Feinabstimmung" data-i18n-title="studio.crop_rot_step_minus_title" style="padding: 2px 8px; font-size: 0.75rem;">-1°</button>
                             <input type="number" id="crop-rotate-num-input" min="-180" max="180" step="0.5" value="0" style="width: 68px; text-align: center; padding: 3px 6px; font-size: 0.8rem; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-family: monospace;">
                             <span style="font-size: 0.8rem; color: var(--muted);">°</span>
-                            <button type="button" class="btn btn-tool" id="btn-crop-rot-step-plus" title="+1° Feinabstimmung" style="padding: 2px 8px; font-size: 0.75rem;">+1°</button>
+                            <button type="button" class="btn btn-tool" id="btn-crop-rot-step-plus" title="+1° Feinabstimmung" data-i18n-title="studio.crop_rot_step_plus_title" style="padding: 2px 8px; font-size: 0.75rem;">+1°</button>
                         </div>
                     </div>
 
@@ -1717,16 +1717,16 @@
                     <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
                         <!-- 90-Grad Schnellschritte -->
                         <div style="display: flex; align-items: center; gap: 6px;">
-                            <button type="button" class="btn btn-tool" id="btn-crop-rot-left90" title="90° nach links drehen" style="padding: 4px 9px; font-size: 0.75rem;">
+                            <button type="button" class="btn btn-tool" id="btn-crop-rot-left90" title="90° nach links drehen" data-i18n-title="studio.crop_rot_left90_title" style="padding: 4px 9px; font-size: 0.75rem;">
                                 ↺ -90°
                             </button>
-                            <button type="button" class="btn btn-tool" id="btn-crop-rot-right90" title="90° nach rechts drehen" style="padding: 4px 9px; font-size: 0.75rem;">
+                            <button type="button" class="btn btn-tool" id="btn-crop-rot-right90" title="90° nach rechts drehen" data-i18n-title="studio.crop_rot_right90_title" style="padding: 4px 9px; font-size: 0.75rem;">
                                 ↻ +90°
                             </button>
-                            <button type="button" class="btn btn-tool" id="btn-crop-rot-180" title="180° drehen (auf den Kopf)" style="padding: 4px 9px; font-size: 0.75rem;">
+                            <button type="button" class="btn btn-tool" id="btn-crop-rot-180" title="180° drehen (auf den Kopf)" data-i18n-title="studio.crop_rot_180_title" style="padding: 4px 9px; font-size: 0.75rem;">
                                 ↻ 180°
                             </button>
-                            <button type="button" class="btn btn-tool" id="btn-crop-rot-reset" title="Drehung auf 0° zurücksetzen" style="padding: 4px 9px; font-size: 0.75rem;">
+                            <button type="button" class="btn btn-tool" id="btn-crop-rot-reset" title="Drehung auf 0° zurücksetzen" data-i18n-title="studio.crop_rot_reset_title" style="padding: 4px 9px; font-size: 0.75rem;">
                                 0° Reset
                             </button>
                         </div>
@@ -1737,7 +1737,7 @@
                                 <input type="checkbox" id="crop-rotate-toggle-grid" checked>
                                 <span data-i18n="studio.crop_guidelines">Hilfslinien</span>
                             </label>
-                            <button type="button" class="btn btn-tool" id="btn-crop-toggle-contrast" title="Kontrast für Lasergravur umschalten" style="padding: 4px 8px; font-size: 0.74rem;">
+                            <button type="button" class="btn btn-tool" id="btn-crop-toggle-contrast" title="Kontrast für Lasergravur umschalten" data-i18n-title="studio.crop_toggle_contrast_title" style="padding: 4px 8px; font-size: 0.74rem;">
                                 Kontrast: Normal
                             </button>
                         </div>
@@ -1745,7 +1745,7 @@
                 </div>
             </div>
             <div class="app-modal-footer" style="padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;">
-                <button type="button" class="btn btn-tool" id="btn-cancel-crop-rotate">
+                <button type="button" class="btn btn-tool" id="btn-cancel-crop-rotate" title="Schließen" data-i18n="common.close" data-i18n-title="common.close">
                     Schließen
                 </button>
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -1762,19 +1762,19 @@
 
 
     <!-- PartLens Modular Scripts -->
-    <script src="/frontend/js/i18n.js?v=2.9.20"></script>
-    <script src="/frontend/js/state.js?v=2.9.20"></script>
-    <script src="/frontend/js/api.js?v=2.9.20"></script>
-    <script src="/frontend/js/analysis.js?v=2.9.20"></script>
-    <script src="/frontend/js/resistor.js?v=2.9.20"></script>
-    <script src="/frontend/js/canvas.js?v=2.9.20"></script>
-    <script src="/frontend/js/boxes.js?v=2.9.20"></script>
-    <script src="/frontend/js/footprints.js?v=2.9.20"></script>
-    <script src="/frontend/js/autolabel.js?v=2.9.20"></script>
-    <script src="/frontend/js/gallery.js?v=2.9.20"></script>
-    <script src="/frontend/js/import_modal.js?v=2.9.20"></script>
-    <script src="/frontend/js/export.js?v=2.9.20"></script>
-    <script src="/frontend/js/webcam.js?v=2.9.20"></script>
-    <script src="/frontend/js/app.js?v=2.9.20"></script>
+    <script src="/frontend/js/i18n.js?v=2.9.21"></script>
+    <script src="/frontend/js/state.js?v=2.9.21"></script>
+    <script src="/frontend/js/api.js?v=2.9.21"></script>
+    <script src="/frontend/js/analysis.js?v=2.9.21"></script>
+    <script src="/frontend/js/resistor.js?v=2.9.21"></script>
+    <script src="/frontend/js/canvas.js?v=2.9.21"></script>
+    <script src="/frontend/js/boxes.js?v=2.9.21"></script>
+    <script src="/frontend/js/footprints.js?v=2.9.21"></script>
+    <script src="/frontend/js/autolabel.js?v=2.9.21"></script>
+    <script src="/frontend/js/gallery.js?v=2.9.21"></script>
+    <script src="/frontend/js/import_modal.js?v=2.9.21"></script>
+    <script src="/frontend/js/export.js?v=2.9.21"></script>
+    <script src="/frontend/js/webcam.js?v=2.9.21"></script>
+    <script src="/frontend/js/app.js?v=2.9.21"></script>
 </body>
 </html>

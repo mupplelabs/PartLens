@@ -56,6 +56,8 @@
     "popover_del_title": "Delete box (Del)",
     "dropzone_bold": "Drag & drop image here",
     "dropzone_or": "or click to browse",
+    "dropzone_mobile_title": "Take a photo or choose image",
+    "dropzone_mobile_sub": "Tap for camera or photo library",
     "samples_placeholder": "Select test image...",
     "status_ready": "Ready.",
     "ai_analyzing": "AI analyzing components",
@@ -101,6 +103,8 @@
     "hint_pan": "Pan"
   },
   "studio": {
+    "palette_top10": "Top 10 (Hotkeys 1–0)",
+    "palette_more": "More components",
     "class_header": "Class:",
     "tab_objects": "Objects",
     "tab_details": "Details",
@@ -230,6 +234,7 @@
     "active_sample_badge": "Existing Sample",
     "unload_sample": "Treat as new image",
     "unload_sample_title": "Detach link and treat as new sample",
+    "next_image_cta": "Load new image for annotation",
     "save_changes_btn": "Save Changes to Sample",
     "save_changes_title": "Updates bounding boxes and metadata of {id} directly in dataset (no duplicate image).",
     "save_as_copy": "Duplicate as New Sample",

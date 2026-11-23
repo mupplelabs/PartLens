@@ -56,6 +56,8 @@
     "popover_del_title": "Box löschen (Entf)",
     "dropzone_bold": "Bild hierher ziehen",
     "dropzone_or": "oder klicken zum Auswählen",
+    "dropzone_mobile_title": "Foto aufnehmen oder Bild wählen",
+    "dropzone_mobile_sub": "Tippen für Kamera oder Mediathek",
     "samples_placeholder": "Testbilder auswählen...",
     "status_ready": "Bereit.",
     "ai_analyzing": "KI analysiert Bauteile",
@@ -101,6 +103,8 @@
     "hint_pan": "Pan"
   },
   "studio": {
+    "palette_top10": "Top 10 (Hotkeys 1–0)",
+    "palette_more": "Weitere Bauteile",
     "class_header": "Klasse:",
     "tab_objects": "Objekte",
     "tab_details": "Details",
@@ -230,6 +234,7 @@
     "active_sample_badge": "Bestehendes Sample",
     "unload_sample": "Als neues Bild behandeln",
     "unload_sample_title": "Verknüpfung lösen und als neues Sample behandeln",
+    "next_image_cta": "Neues Bild für Annotation laden",
     "save_changes_btn": "Änderungen an Sample speichern",
     "save_changes_title": "Aktualisiert Bounding Boxes und Metadaten von {id} direkt im Datensatz (kein neues Bild).",
     "save_as_copy": "Als neues Sample duplizieren",

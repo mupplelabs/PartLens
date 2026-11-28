@@ -93,19 +93,47 @@ python server.py --help
 
 ### Option B: Docker & Docker Compose
 
+Docker Compose manages two coordinated services:
+- **`component-tracker`**: The main PartLens studio and FastAPI backend (runs on port `8000`).
+- **`partlens-ingestion`**: Automated watch-folder sidecar service that monitors for incoming component photos (e.g. from smartphone uploads, NAS drops, or network folders).
+
 ```bash
-# Start with Docker Compose
+# Start both services (App + Watch-Folder Ingestion)
 docker compose up -d
+
+# Or run only the main PartLens application without watch-folder ingestion
+docker compose up -d component-tracker
 
 # Check logs
 docker compose logs -f
+
+# Check ingestion watcher logs specifically
+docker compose logs -f partlens-ingestion
 ```
 
-The Docker container automatically mounts:
-- `./dataset` (for training and validation data)
-- `./config` (for server-side LLM settings and API keys)
-- `./cache` (for thumbnails and Part-DB footprint data)
-- Host network mapping (`host.docker.internal`) to connect with local Ollama instances.
+#### Mounted Volumes
+- `./dataset`: Persistent training and validation dataset (YOLO format + metadata sidecars).
+- `./config`: Server-side LLM configurations, provider preferences, and encrypted API keys.
+- `./cache`: Pre-generated image thumbnails and Part-DB footprint geometry cache.
+- `./watch`: Target directory monitored by `partlens-ingestion` for incoming images.
+- `./studies` (read-only): Bundled PCB sample images.
+- Host network mapping (`host.docker.internal`): Direct connection to local Ollama or LM Studio instances running on the host machine.
+
+#### Automated Watch-Folder Ingestion
+The `partlens-ingestion` service automatically streamlines continuous component capture:
+1. **Monitors `./watch`** for newly added images (`.jpg`, `.jpeg`, `.png`, `.webp`, `.heic`, `.bmp`).
+2. **Transfer Stability & HEIC Conversion**: Waits for file writes to settle, verifies image integrity, and automatically converts iOS HEIC images to standardized JPEG.
+3. **Automated AI Pre-Labeling**: Passes the image to the PartLens Auto-Label API using the active multimodal LLM.
+4. **Dataset Integration**: Saves the detected boxes and metadata into the dataset with `needs-review,watch-import` tags.
+5. **Archiving**: Moves processed files to `./watch/.processed/YYYY-MM/` (or `./watch/.failed/` on corruption).
+
+**Ingestion Configuration (Environment Variables in `docker-compose.yml` or `.env`):**
+| Variable | Default | Description |
+|---|---|---|
+| `INGESTION_QUIET_PERIOD_SEC` | `300` | Quiet debounce window in seconds before batch processing triggers |
+| `INGESTION_MAX_WAIT_SEC` | `900` | Maximum wait ceiling in seconds before batch forces execution |
+| `FILE_STABILITY_DELAY_SEC` | `10` | Verification delay in seconds to ensure file write completion |
+| `DEFAULT_TAGS` | `needs-review,watch-import` | Comma-separated tags added to auto-imported dataset samples |
 
 ---
 
@@ -186,6 +214,10 @@ PartLens/
 │   ├── css/                      # Responsive stylesheets (studio, layout, components)
 │   └── js/                       # Modular vanilla JavaScript controllers
 ├── dataset/                      # YOLO images, labels, and metadata sidecars
+├── ingestion/                    # Automated watch-folder ingestion sidecar
+│   ├── Dockerfile                # Ingestion container image definition
+│   ├── requirements.txt          # Ingestion dependencies (watchdog, pillow-heif, httpx)
+│   └── watcher.py                # Watcher daemon with debounced batching & HEIC conversion
 ├── models/                       # Optional local model weights and ONNX files
 ├── studies/                      # Sample PCB test images
 ├── Dockerfile                    # Multi-stage production container

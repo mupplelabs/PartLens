@@ -93,19 +93,47 @@ python server.py --help
 
 ### Variante B: Docker & Docker Compose
 
+Docker Compose verwaltet zwei aufeinander abgestimmte Container-Dienste:
+- **`component-tracker`**: Das PartLens Studio und FastAPI-Backend (erreichbar auf Port `8000`).
+- **`partlens-ingestion`**: Automatisierter Watch-Folder-Sidecar-Dienst zur kontinuierlichen Erfassung eingehender Bauteilfotos (z. B. via Smartphone-Upload, Netzlaufwerk/NAS oder Scan-Ordner).
+
 ```bash
-# Mit Docker Compose starten
+# Beide Dienste starten (Haupt-App + Watch-Folder-Ingestion)
 docker compose up -d
 
-# Logs ansehen
+# Oder nur die PartLens-Hauptanwendung ohne Watch-Folder starten
+docker compose up -d component-tracker
+
+# Logs aller Dienste anzeigen
 docker compose logs -f
+
+# Spezifische Logs des Ingestion-Watchers anzeigen
+docker compose logs -f partlens-ingestion
 ```
 
-Der Container bindet automatisch folgende Verzeichnisse ein:
-- `./dataset` (Trainings- und Validierungsdaten)
-- `./config` (LLM-Einstellungen und API-Schlüssel)
-- `./cache` (Thumbnails und Part-DB-Footprint-Cache)
-- Host-Netzwerk-Routing (`host.docker.internal`), um lokale Ollama-Instanzen auf dem Host-Rechner direkt ansprechen zu können.
+#### Eingebundene Volumes
+- `./dataset`: Persistenter Trainings- und Validierungsdatensatz (YOLO-Format + Metadaten-Sidecars).
+- `./config`: Server-seitige LLM-Konfigurationen, Provider-Einstellungen und geschützte API-Schlüssel.
+- `./cache`: Vorberechnete Bild-Thumbnails und Part-DB-Footprint-Geometrien.
+- `./watch`: Zielordner, der von `partlens-ingestion` auf neue Bauteilfotos überwacht wird.
+- `./studies` (schreibgeschützt): Mitgelieferte PCB-Testbilder.
+- Host-Netzwerk-Routing (`host.docker.internal`): Direkte Anbindung an lokale Ollama- oder LM-Studio-Instanzen auf dem Host-System.
+
+#### Automatisierte Watch-Folder-Ingestion
+Der `partlens-ingestion`-Dienst optimiert den Erfassungsworkflow für größere Bildmengen:
+1. **Überwacht `./watch`** auf neu abgelegte Bilddateien (`.jpg`, `.jpeg`, `.png`, `.webp`, `.heic`, `.bmp`).
+2. **Transferstabilität & HEIC-Konvertierung**: Wartet das Ende von Datei-Schreibvorgängen ab, prüft die Bildintegrität und konvertiert iOS-HEIC-Bilder automatisch in standardisiertes JPEG.
+3. **Automatisches KI-Vorlabeling**: Übergibt das Bild an die PartLens Auto-Label-API mit dem aktuell konfigurierten multimodalen Vision-LLM.
+4. **Datensatz-Integration**: Speichert die erkannten Bounding Boxes und Klassen automatisch mit den Tags `needs-review,watch-import` im Datensatz.
+5. **Archivierung**: Verschiebt erfolgreich verarbeitete Originale nach `./watch/.processed/YYYY-MM/` (bzw. beschädigte Dateien nach `./watch/.failed/`).
+
+**Ingestion-Konfiguration (Umgebungsvariablen in `docker-compose.yml` oder `.env`):**
+| Variable | Standard | Beschreibung |
+|---|---|---|
+| `INGESTION_QUIET_PERIOD_SEC` | `300` | Ruhezeitfenster (Debounce) in Sekunden, bevor ein Batch verarbeitet wird |
+| `INGESTION_MAX_WAIT_SEC` | `900` | Maximales Wartezeit-Limit in Sekunden, nach dem ein Batch zwingend ausgeführt wird |
+| `FILE_STABILITY_DELAY_SEC` | `10` | Prüfverzögerung in Sekunden, um vollständige Dateiübertragungen abzusichern |
+| `DEFAULT_TAGS` | `needs-review,watch-import` | Kommagetrennte Tags für automatisch importierte Datensatz-Samples |
 
 ---
 
@@ -186,6 +214,10 @@ PartLens/
 │   ├── css/                      # Stylesheets (Studio, Layout, Komponenten)
 │   └── js/                       # Modulare Vanilla-JavaScript Controller
 ├── dataset/                      # YOLO-Bilder, Labeldateien und Metadaten
+├── ingestion/                    # Automatisierter Watch-Folder-Ingestion-Sidecar
+│   ├── Dockerfile                # Container-Definition für den Watcher
+│   ├── requirements.txt          # Abhängigkeiten (watchdog, pillow-heif, httpx)
+│   └── watcher.py                # Watcher-Daemon mit Debounce-Batching & HEIC-Konvertierung
 ├── models/                       # Lokale Modellgewichte und ONNX-Dateien
 ├── studies/                      # Testbilder für Platinenanalysen
 ├── Dockerfile                    # Multi-Stage Produktions-Dockerfile
